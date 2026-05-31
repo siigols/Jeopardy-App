@@ -19,9 +19,25 @@ export interface Category {
   tiles: Tile[]
 }
 
+export interface CategoryColor {
+  tile: string
+  hover: string
+  header: string
+}
+
+export interface GameTheme {
+  categoryColors: CategoryColor[]
+  accent?: string
+  bg?: string
+  decorations?: 'football'
+}
+
 export interface Game {
   title: string
+  description?: string
   categories: Category[]
+  theme?: GameTheme
+  tiebreaker?: SimpleQuestion
 }
 
 export interface Team {

@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import type { Team, Tile } from '../types/game'
-import type { Game } from '../types/game'
+import type { Team, Tile, Game } from '../types/game'
 import GameBoard from '../components/Board/GameBoard'
 import QuestionView from '../components/Question/QuestionView'
-import ScoreBoard from '../components/ScoreBoard/ScoreBoard'
+import FootballDecorations from '../components/FootballDecorations'
+import { useSounds } from '../hooks/useSounds'
 import styles from './GameScreen.module.css'
+
+const TEAM_COLORS = ['#e74c3c', '#3b82f6', '#22c55e', '#f97316']
 
 interface Props {
   game: Game
@@ -12,6 +14,7 @@ interface Props {
   theme: 'dark' | 'light'
   onThemeToggle: () => void
   onReset: () => void
+  onGameComplete: (teams: Team[]) => void
 }
 
 interface ActiveTile {
@@ -19,16 +22,22 @@ interface ActiveTile {
   tileIndex: number
 }
 
-export default function GameScreen({ game, teams: initialTeams, theme, onThemeToggle, onReset }: Props) {
+export default function GameScreen({ game, teams: initialTeams, theme, onThemeToggle, onReset, onGameComplete }: Props) {
   const [categories, setCategories] = useState(game.categories)
   const [teams, setTeams] = useState(initialTeams)
   const [active, setActive] = useState<ActiveTile | null>(null)
+  const { playOpen } = useSounds()
+
+  const teamColors = Object.fromEntries(
+    teams.map((team, index) => [team.id, TEAM_COLORS[index % TEAM_COLORS.length]])
+  )
 
   const activeTile: Tile | null = active
     ? categories[active.categoryIndex].tiles[active.tileIndex]
     : null
 
   function handleTileClick(ci: number, ti: number) {
+    playOpen()
     setActive({ categoryIndex: ci, tileIndex: ti })
   }
 
@@ -36,22 +45,28 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     if (!active) return
     const points = categories[active.categoryIndex].tiles[active.tileIndex].points
 
+    const updatedTeams = teamId !== null
+      ? teams.map(t => t.id === teamId ? { ...t, score: t.score + points } : t)
+      : teams
+
     if (teamId !== null) {
-      setTeams(prev =>
-        prev.map(t => t.id === teamId ? { ...t, score: t.score + points } : t)
-      )
+      setTeams(updatedTeams)
     }
 
-    setCategories(prev => {
-      const next = prev.map(cat => ({ ...cat, tiles: [...cat.tiles] }))
-      next[active.categoryIndex].tiles[active.tileIndex] = {
-        ...next[active.categoryIndex].tiles[active.tileIndex],
-        answered: true,
-      }
-      return next
-    })
+    const nextCategories = categories.map(cat => ({ ...cat, tiles: [...cat.tiles] }))
+    nextCategories[active.categoryIndex].tiles[active.tileIndex] = {
+      ...nextCategories[active.categoryIndex].tiles[active.tileIndex],
+      answered: true,
+    }
+    setCategories(nextCategories)
 
-    setActive(null)
+    // Check if game is now complete — transition immediately without showing the board
+    const gameComplete = nextCategories.every(cat => cat.tiles.every(t => t.answered))
+    if (gameComplete) {
+      onGameComplete(updatedTeams)
+    } else {
+      setActive(null)
+    }
   }
 
   function handleAdjust(teamId: string, delta: number) {
@@ -60,36 +75,57 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     )
   }
 
-  const allAnswered = categories.every(cat => cat.tiles.every(t => t.answered))
+
+  // Apply per-board theme overrides as CSS custom properties
+  const themeStyle = game.theme ? {
+    ...(game.theme.bg ? { '--color-bg': game.theme.bg } : {}),
+    ...(game.theme.accent ? { '--color-accent': game.theme.accent, '--color-btn-primary': game.theme.accent } : {}),
+  } as React.CSSProperties : undefined
+
+  const isFootball = game.theme?.decorations === 'football'
 
   return (
-    <div className={styles.screen}>
-      <div className={styles.topBar}>
-        <h1 className={styles.title}>{game.title}</h1>
-        <div className={styles.topActions}>
-          <button className={styles.iconBtn} onClick={onThemeToggle} title="Toggle theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-          <button className={styles.iconBtn} onClick={onReset} title="New game">
-            ↩ Reset
-          </button>
+    <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''}`} style={themeStyle}>
+      {isFootball && <FootballDecorations />}
+      <header className={styles.topBar}>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>{game.title}</h1>
+          <div className={styles.controls}>
+            <button className={styles.iconBtn} onClick={onThemeToggle} title="Bytt tema">
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
+            <button className={styles.iconBtn} onClick={onReset} title="Nytt spill">
+              ↩
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className={styles.boardWrapper}>
-        <GameBoard categories={categories} onTileClick={handleTileClick} />
-      </div>
-
-      {allAnswered && (
-        <div className={styles.winBanner}>
-          🎉 Game Over! Final scores above.
+        <div className={styles.scoresRow}>
+          {teams.map((team, i) => (
+            <div
+              key={team.id}
+              className={styles.teamChip}
+              style={{ '--team-color': teamColors[team.id] } as React.CSSProperties}
+            >
+              <span className={styles.teamName}>{team.name}</span>
+              <button className={styles.adjBtn} onClick={() => handleAdjust(team.id, -100)} aria-label="trekk fra">−</button>
+              <span key={team.score} className={styles.teamScore}>{team.score}</span>
+              <button className={styles.adjBtn} onClick={() => handleAdjust(team.id, 100)} aria-label="legg til">+</button>
+            </div>
+          ))}
         </div>
-      )}
+      </header>
 
-      <ScoreBoard teams={teams} onAdjust={handleAdjust} />
+      <main className={styles.boardArea}>
+        <GameBoard
+          categories={categories}
+          onTileClick={handleTileClick}
+          theme={game.theme}
+        />
+      </main>
 
       {activeTile && (
-        <QuestionView tile={activeTile} teams={teams} onAward={handleAward} />
+        <QuestionView tile={activeTile} teams={teams} teamColors={teamColors} onAward={handleAward} />
       )}
     </div>
   )

@@ -1,0 +1,478 @@
+/* ── Confetti keyframes ───────────────────────────────── */
+@keyframes confettiFall {
+  0%   { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 1; }
+  50%  { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(1080deg) scale(0.6); opacity: 0; }
+}
+
+@keyframes confettiSway {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(25px); }
+  75%      { transform: translateX(-25px); }
+}
+
+@keyframes spotlightPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1) translateX(-50%); }
+  50%      { opacity: 0.6; transform: scale(1.12) translateX(-50%); }
+}
+
+@keyframes bgShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes titleReveal {
+  0%   { opacity: 0; transform: translateY(-40px) scale(0.7) rotate(-2deg); filter: blur(8px); }
+  50%  { opacity: 1; transform: translateY(8px) scale(1.08) rotate(1deg); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: blur(0); }
+}
+
+@keyframes titleShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes podiumRise {
+  0%   { transform: translateY(100px) scale(0.8); opacity: 0; }
+  60%  { transform: translateY(-8px) scale(1.02); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg) scale(1); }
+  25%      { transform: translateY(-14px) rotate(5deg) scale(1.15); }
+  50%      { transform: translateY(-8px) rotate(-2deg) scale(1.05); }
+  75%      { transform: translateY(-12px) rotate(3deg) scale(1.1); }
+}
+
+@keyframes scoreCountUp {
+  0%   { transform: scale(0) rotateY(90deg); opacity: 0; }
+  60%  { transform: scale(1.3) rotateY(-10deg); opacity: 1; }
+  100% { transform: scale(1) rotateY(0); opacity: 1; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(245, 197, 24, 0.3), inset 0 0 20px rgba(245, 197, 24, 0.05); }
+  50%      { box-shadow: 0 0 80px rgba(245, 197, 24, 0.6), 0 0 120px rgba(245, 197, 24, 0.2), inset 0 0 40px rgba(245, 197, 24, 0.1); }
+}
+
+@keyframes rankSlideIn {
+  from { opacity: 0; transform: translateX(-40px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes starburst {
+  0%   { transform: scale(0) rotate(0deg); opacity: 1; }
+  50%  { transform: scale(1.5) rotate(180deg); opacity: 0.8; }
+  100% { transform: scale(2) rotate(360deg); opacity: 0; }
+}
+
+@keyframes floatEmoji {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+  50%  { transform: translateY(-30px) rotate(15deg); opacity: 0.9; }
+  100% { transform: translateY(0) rotate(-5deg); opacity: 0.7; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50%      { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Screen layout ───────────────────────────────────── */
+.screen {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: var(--color-bg);
+  background-image: radial-gradient(ellipse at 30% 20%, rgba(245, 197, 24, 0.04) 0%, transparent 50%),
+                    radial-gradient(ellipse at 70% 80%, rgba(231, 76, 60, 0.03) 0%, transparent 50%),
+                    radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
+  background-size: 200% 200%;
+  animation: bgShift 12s ease-in-out infinite;
+  overflow: hidden;
+}
+
+/* ── Spotlight background ────────────────────────────── */
+.spotlight {
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140vw;
+  height: 80vh;
+  background: radial-gradient(ellipse at center, rgba(245, 197, 24, 0.18) 0%, rgba(245, 197, 24, 0.05) 40%, transparent 70%);
+  animation: spotlightPulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.spotlightSecondary {
+  position: absolute;
+  bottom: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 50vh;
+  background: radial-gradient(ellipse at center, rgba(231, 76, 60, 0.08) 0%, transparent 60%);
+  animation: spotlightPulse 5s ease-in-out infinite 1.5s;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Starburst behind winner ─────────────────────────── */
+.starburst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  margin: -150px 0 0 -150px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(245, 197, 24, 0.15) 0deg,
+    transparent 30deg,
+    rgba(245, 197, 24, 0.15) 60deg,
+    transparent 90deg,
+    rgba(245, 197, 24, 0.15) 120deg,
+    transparent 150deg,
+    rgba(245, 197, 24, 0.15) 180deg,
+    transparent 210deg,
+    rgba(245, 197, 24, 0.15) 240deg,
+    transparent 270deg,
+    rgba(245, 197, 24, 0.15) 300deg,
+    transparent 330deg,
+    rgba(245, 197, 24, 0.15) 360deg
+  );
+  animation: starburst 4s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Floating celebration emojis ─────────────────────── */
+.floatingEmoji {
+  position: absolute;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: floatEmoji 3s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+/* ── Sparkle dots ────────────────────────────────────── */
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+/* ── Confetti layer ──────────────────────────────────── */
+.confettiLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  top: -20px;
+  border-radius: 2px;
+  animation: confettiFall linear infinite, confettiSway ease-in-out infinite;
+}
+
+/* ── Title ───────────────────────────────────────────── */
+.title {
+  font-family: 'Georgia', serif;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-weight: bold;
+  color: var(--color-accent);
+  text-align: center;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  animation: titleReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: relative;
+  z-index: 4;
+  /* Shimmer overlay */
+  background: linear-gradient(
+    90deg,
+    var(--color-accent) 0%,
+    #fff 45%,
+    #fff 55%,
+    var(--color-accent) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) both, titleShimmer 3s linear infinite 1.5s;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  text-align: center;
+  margin-bottom: 36px;
+  animation: slideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+  position: relative;
+  z-index: 4;
+}
+
+/* ── Podium container ────────────────────────────────── */
+.podiumArea {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 44px;
+  position: relative;
+  z-index: 4;
+}
+
+/* ── Individual podium block ─────────────────────────── */
+.podiumBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 20px 20px 4px 4px;
+  padding: 24px 20px 18px;
+  min-width: 110px;
+  position: relative;
+  animation: podiumRise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  backdrop-filter: blur(8px);
+}
+
+.podiumBlock:nth-child(1) { animation-delay: 0.6s; }
+.podiumBlock:nth-child(2) { animation-delay: 0.3s; }
+.podiumBlock:nth-child(3) { animation-delay: 0.9s; }
+
+.first {
+  background: linear-gradient(180deg, rgba(245, 197, 24, 0.3) 0%, rgba(245, 197, 24, 0.08) 100%);
+  border: 2px solid rgba(245, 197, 24, 0.6);
+  min-height: 220px;
+  animation: podiumRise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both, glowPulse 2.5s ease-in-out infinite 1.5s;
+}
+
+.second {
+  background: linear-gradient(180deg, rgba(192, 192, 192, 0.25) 0%, rgba(192, 192, 192, 0.06) 100%);
+  border: 2px solid rgba(192, 192, 192, 0.5);
+  min-height: 170px;
+}
+
+.third {
+  background: linear-gradient(180deg, rgba(205, 127, 50, 0.25) 0%, rgba(205, 127, 50, 0.06) 100%);
+  border: 2px solid rgba(205, 127, 50, 0.5);
+  min-height: 140px;
+}
+
+/* ── Crown / medal ───────────────────────────────────── */
+.crown {
+  font-size: 2.8rem;
+  margin-bottom: 8px;
+  animation: crownBounce 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(245, 197, 24, 0.5));
+}
+
+.medal {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  animation: floatEmoji 2.5s ease-in-out infinite;
+}
+
+/* ── Podium team name ────────────────────────────────── */
+.podiumName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin-bottom: 10px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Podium score ────────────────────────────────────── */
+.podiumScore {
+  font-family: 'Georgia', serif;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--color-accent);
+  animation: scoreCountUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.2s both;
+}
+
+/* ── Podium placement label ──────────────────────────── */
+.placement {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  color: var(--color-text);
+  margin-top: 12px;
+}
+
+/* ── Full ranking list ───────────────────────────────── */
+.rankingSection {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 4;
+}
+
+.rankingTitle {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text);
+  opacity: 0.45;
+  text-align: center;
+  margin-bottom: 12px;
+  font-weight: 600;
+  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1s both;
+}
+
+.rankItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  margin-bottom: 8px;
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  animation: rankSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.rankItem:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+.rankNumber {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.5;
+  color: var(--color-text);
+  min-width: 20px;
+}
+
+.rankColorDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rankName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.rankScore {
+  font-family: 'Georgia', serif;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--color-accent);
+}
+
+/* ── Actions ─────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 36px;
+  position: relative;
+  z-index: 4;
+  animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.4s both;
+}
+
+.primaryBtn {
+  background: var(--color-btn-primary);
+  color: var(--color-btn-primary-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 12px 32px;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+.primaryBtn:hover {
+  background: var(--color-accent-hover);
+  box-shadow: 0 6px 28px rgba(245, 166, 35, 0.45);
+  transform: translateY(-2px);
+}
+
+.primaryBtn:active {
+  transform: scale(0.95);
+}
+
+.secondaryBtn {
+  background: var(--color-chip-bg);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--color-chip-border);
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.secondaryBtn:active {
+  transform: scale(0.95);
+}
+
+/* ── Football-themed extras ──────────────────────────── */
+.footballScreen {
+  /* Allow decoration z-index stacking */
+}
+
+/* ── Team color integration on podium blocks ─────────── */
+.podiumBlock[style] {
+  /* team color injected via --team-color custom property */
+}
+
+.first[style] {
+  border-color: var(--team-color, rgba(245, 197, 24, 0.5));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team-color, #f5c518) 25%, transparent) 0%, color-mix(in srgb, var(--team-color, #f5c518) 8%, transparent) 100%);
+}
+
+.second[style] {
+  border-color: var(--team-color, rgba(192, 192, 192, 0.4));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team-color, #c0c0c0) 20%, transparent) 0%, color-mix(in srgb, var(--team-color, #c0c0c0) 6%, transparent) 100%);
+}
+
+.third[style] {
+  border-color: var(--team-color, rgba(205, 127, 50, 0.4));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team-color, #cd7f32) 20%, transparent) 0%, color-mix(in srgb, var(--team-color, #cd7f32) 6%, transparent) 100%);
+}

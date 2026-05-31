@@ -5,81 +5,115 @@
   align-items: center;
   justify-content: center;
   padding: 32px 16px;
-  gap: 32px;
+  gap: 12px;
+  position: relative;
+}
+
+.backBtn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: transparent;
+  color: var(--color-text);
+  opacity: 0.45;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-chip-border);
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.backBtn:hover {
+  opacity: 0.9;
+  border-color: var(--color-accent);
 }
 
 .title {
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(2rem, 6vw, 4rem);
   font-family: 'Georgia', serif;
   font-weight: bold;
   color: var(--color-accent);
-  letter-spacing: 4px;
-  text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.5);
+  letter-spacing: 6px;
+}
+
+.boardName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  opacity: 0.4;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
 }
 
 .card {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 215, 0, 0.3);
-  border-radius: 12px;
-  padding: 36px 48px;
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  border-radius: 16px;
+  padding: 32px 40px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   width: 100%;
-  max-width: 480px;
-  backdrop-filter: blur(6px);
+  max-width: 440px;
+  backdrop-filter: blur(12px);
 }
 
 .subtitle {
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   color: var(--color-text);
-  opacity: 0.7;
+  opacity: 0.45;
   text-align: center;
-  margin: 0;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .label {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--color-text);
-  opacity: 0.7;
+  opacity: 0.5;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .countBtns {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .countBtn {
   flex: 1;
-  padding: 10px 0;
-  font-size: 1rem;
-  font-weight: bold;
-  background-color: rgba(255, 255, 255, 0.08);
+  padding: 9px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: transparent;
   color: var(--color-text);
-  border: 2px solid transparent;
-  border-radius: 6px;
+  border: 1px solid var(--color-chip-border);
+  border-radius: 8px;
+  opacity: 0.6;
   transition: all 0.15s;
 }
 
 .countBtn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+  border-color: var(--color-accent);
 }
 
 .countBtn.active {
-  background-color: var(--color-btn-primary);
+  background: var(--color-accent);
   color: var(--color-btn-primary-text);
   border-color: var(--color-accent);
+  opacity: 1;
 }
 
 .inputs {
@@ -89,12 +123,12 @@
 }
 
 .input {
-  background-color: var(--color-input-bg);
-  border: 2px solid var(--color-input-border);
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
   color: var(--color-text);
   padding: 10px 14px;
-  font-size: 1rem;
-  border-radius: 6px;
+  font-size: 0.95rem;
+  border-radius: 8px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -104,17 +138,18 @@
 }
 
 .startBtn {
-  background-color: var(--color-btn-primary);
+  background: var(--color-accent);
   color: var(--color-btn-primary-text);
-  font-size: 1.1rem;
-  font-weight: bold;
-  padding: 16px;
-  border-radius: 6px;
-  letter-spacing: 0.08em;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: 10px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-top: 8px;
+  margin-top: 4px;
+  transition: background 0.15s, transform 0.1s;
 }
 
 .startBtn:hover {
-  background-color: var(--color-accent-hover);
+  background: var(--color-accent-hover);
 }
