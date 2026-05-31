@@ -1,0 +1,101 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-overlay-bg);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 48px;
+}
+
+.points {
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  color: var(--color-accent);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.revealBtn {
+  background-color: var(--color-btn-primary);
+  color: var(--color-btn-primary-text);
+  font-size: 1.25rem;
+  font-weight: bold;
+  padding: 16px 48px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.revealBtn:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.awardSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.awardLabel {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  opacity: 0.8;
+  letter-spacing: 0.05em;
+}
+
+.awardButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.teamBtn {
+  background-color: var(--color-btn-secondary);
+  color: var(--color-btn-secondary-text);
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 12px 32px;
+  border-radius: 6px;
+  min-width: 140px;
+}
+
+.teamBtn:hover {
+  background-color: var(--color-tile-hover);
+}
+
+.skipBtn {
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: 1rem;
+  padding: 12px 32px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.3);
+  opacity: 0.7;
+}
+
+.skipBtn:hover {
+  opacity: 1;
+  border-color: rgba(255,255,255,0.6);
+}

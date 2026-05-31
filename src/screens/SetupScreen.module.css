@@ -1,0 +1,120 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  gap: 32px;
+}
+
+.title {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  color: var(--color-accent);
+  letter-spacing: 4px;
+  text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 36px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 480px;
+  backdrop-filter: blur(6px);
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+  opacity: 0.7;
+  text-align: center;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.countBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.countBtn {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.countBtn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.countBtn.active {
+  background-color: var(--color-btn-primary);
+  color: var(--color-btn-primary-text);
+  border-color: var(--color-accent);
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input {
+  background-color: var(--color-input-bg);
+  border: 2px solid var(--color-input-border);
+  color: var(--color-text);
+  padding: 10px 14px;
+  font-size: 1rem;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--color-accent);
+}
+
+.startBtn {
+  background-color: var(--color-btn-primary);
+  color: var(--color-btn-primary-text);
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 16px;
+  border-radius: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.startBtn:hover {
+  background-color: var(--color-accent-hover);
+}

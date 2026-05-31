@@ -1,0 +1,95 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  font-family: 'Georgia', serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* ── Dark theme (default) ─────────────────────────────────── */
+[data-theme='dark'] {
+  --color-bg: #060047;
+  --color-board-bg: #04003a;
+  --color-tile: #060ce9;
+  --color-tile-hover: #1a1fff;
+  --color-tile-answered: #1a1a3a;
+  --color-tile-answered-text: #2a2a5a;
+  --color-header: #060ce9;
+  --color-header-text: #ffffff;
+  --color-text: #ffffff;
+  --color-accent: #ffd700;
+  --color-accent-hover: #ffec60;
+  --color-score-bg: rgba(4, 0, 58, 0.92);
+  --color-score-border: #ffd700;
+  --color-overlay-bg: #04003a;
+  --color-btn-primary: #ffd700;
+  --color-btn-primary-text: #060047;
+  --color-btn-secondary: #1a1fff;
+  --color-btn-secondary-text: #ffffff;
+  --color-btn-danger: #c0392b;
+  --color-btn-danger-text: #ffffff;
+  --color-input-bg: #0a0060;
+  --color-input-border: #ffd700;
+  --shadow-tile: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* ── Light theme ──────────────────────────────────────────── */
+[data-theme='light'] {
+  --color-bg: #f0f0f0;
+  --color-board-bg: #e0e0e0;
+  --color-tile: #2563eb;
+  --color-tile-hover: #1d4ed8;
+  --color-tile-answered: #cbd5e1;
+  --color-tile-answered-text: #94a3b8;
+  --color-header: #1e3a8a;
+  --color-header-text: #ffffff;
+  --color-text: #1e293b;
+  --color-accent: #f59e0b;
+  --color-accent-hover: #d97706;
+  --color-score-bg: rgba(240, 240, 240, 0.95);
+  --color-score-border: #2563eb;
+  --color-overlay-bg: #1e3a8a;
+  --color-btn-primary: #f59e0b;
+  --color-btn-primary-text: #1e293b;
+  --color-btn-secondary: #2563eb;
+  --color-btn-secondary-text: #ffffff;
+  --color-btn-danger: #dc2626;
+  --color-btn-danger-text: #ffffff;
+  --color-input-bg: #ffffff;
+  --color-input-border: #2563eb;
+  --shadow-tile: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+input {
+  font-family: inherit;
+  border-radius: 4px;
+}
