@@ -1,6 +1,8 @@
 import { useState, type CSSProperties } from 'react'
 import type { Tile, Team } from '../../types/game'
+import type { TeamInfo } from '../../types/socket-events'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
+import BuzzerBadge from '../BuzzerBadge/BuzzerBadge'
 import { useSounds } from '../../hooks/useSounds'
 import styles from './QuestionView.module.css'
 
@@ -8,10 +10,11 @@ interface Props {
   tile: Tile
   teams: Team[]
   teamColors: Record<string, string>
+  buzzerWinner: TeamInfo | null
   onAward: (teamId: string | null) => void
 }
 
-export default function QuestionView({ tile, teams, teamColors, onAward }: Props) {
+export default function QuestionView({ tile, teams, teamColors, buzzerWinner, onAward }: Props) {
   const [revealed, setReveal] = useState(false)
   const { playReveal, playAward, playSkip } = useSounds()
 
@@ -41,6 +44,10 @@ export default function QuestionView({ tile, teams, teamColors, onAward }: Props
 
   return (
     <div className={styles.overlay}>
+      {buzzerWinner && (
+        <BuzzerBadge teamName={buzzerWinner.name} teamColor={buzzerWinner.color} />
+      )}
+
       <div className={styles.points}>{tile.points}</div>
 
       <div className={styles.body}>

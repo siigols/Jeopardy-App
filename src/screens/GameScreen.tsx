@@ -1,12 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Team, Tile, Game } from '../types/game'
+import type { TeamInfo } from '../types/socket-events'
 import GameBoard from '../components/Board/GameBoard'
 import QuestionView from '../components/Question/QuestionView'
+import SessionPanel from '../components/SessionPanel/SessionPanel'
 import FootballDecorations from '../components/FootballDecorations'
 import { useSounds } from '../hooks/useSounds'
+import { useSocket } from '../hooks/useSocket'
 import styles from './GameScreen.module.css'
 
 const TEAM_COLORS = ['#e74c3c', '#3b82f6', '#22c55e', '#f97316']
+
+function generateCode(): string {
+  return Math.random().toString(36).slice(2, 8).toUpperCase()
+}
 
 interface Props {
   game: Game
@@ -26,7 +33,11 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
   const [categories, setCategories] = useState(game.categories)
   const [teams, setTeams] = useState(initialTeams)
   const [active, setActive] = useState<ActiveTile | null>(null)
+  const [buzzerWinner, setBuzzerWinner] = useState<TeamInfo | null>(null)
+  const [showBuzzerPanel, setShowBuzzerPanel] = useState(false)
   const { playOpen } = useSounds()
+  const socket = useSocket()
+  const sessionCode = useRef(generateCode()).current
 
   const teamColors = Object.fromEntries(
     teams.map((team, index) => [team.id, TEAM_COLORS[index % TEAM_COLORS.length]])
@@ -36,9 +47,40 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     ? categories[active.categoryIndex].tiles[active.tileIndex]
     : null
 
+  // Register session with server once on mount
+  useEffect(() => {
+    const teamInfos: TeamInfo[] = teams.map((team, index) => ({
+      index,
+      name: team.name,
+      color: TEAM_COLORS[index % TEAM_COLORS.length],
+    }))
+
+    function register() {
+      socket.emit('create-session', { code: sessionCode, teams: teamInfos }, () => {})
+    }
+
+    if (socket.connected) {
+      register()
+    } else {
+      socket.once('connect', register)
+    }
+
+    socket.on('buzzed', (winner) => {
+      setBuzzerWinner(winner)
+    })
+
+    return () => {
+      socket.off('buzzed')
+      socket.off('connect', register)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleTileClick(ci: number, ti: number) {
     playOpen()
     setActive({ categoryIndex: ci, tileIndex: ti })
+    setBuzzerWinner(null)
+    socket.emit('question-open', { code: sessionCode })
   }
 
   function handleAward(teamId: string | null) {
@@ -59,8 +101,9 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
       answered: true,
     }
     setCategories(nextCategories)
+    setBuzzerWinner(null)
+    socket.emit('question-close', { code: sessionCode })
 
-    // Check if game is now complete — transition immediately without showing the board
     const gameComplete = nextCategories.every(cat => cat.tiles.every(t => t.answered))
     if (gameComplete) {
       onGameComplete(updatedTeams)
@@ -75,14 +118,18 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     )
   }
 
-
-  // Apply per-board theme overrides as CSS custom properties
   const themeStyle = game.theme ? {
     ...(game.theme.bg ? { '--color-bg': game.theme.bg } : {}),
     ...(game.theme.accent ? { '--color-accent': game.theme.accent, '--color-btn-primary': game.theme.accent } : {}),
   } as React.CSSProperties : undefined
 
   const isFootball = game.theme?.decorations === 'football'
+
+  const sessionTeams = teams.map((team, index) => ({
+    name: team.name,
+    color: TEAM_COLORS[index % TEAM_COLORS.length],
+    index,
+  }))
 
   return (
     <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''}`} style={themeStyle}>
@@ -91,6 +138,14 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
         <div className={styles.titleRow}>
           <h1 className={styles.title}>{game.title}</h1>
           <div className={styles.controls}>
+            <button
+              className={styles.iconBtn}
+              onClick={() => setShowBuzzerPanel(p => !p)}
+              title="Buzzer-panel"
+              style={{ fontSize: '1rem' }}
+            >
+              📡
+            </button>
             <button className={styles.iconBtn} onClick={onThemeToggle} title="Bytt tema">
               {theme === 'dark' ? '☀' : '☾'}
             </button>
@@ -101,7 +156,7 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
         </div>
 
         <div className={styles.scoresRow}>
-          {teams.map((team, i) => (
+          {teams.map((team) => (
             <div
               key={team.id}
               className={styles.teamChip}
@@ -114,6 +169,10 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
             </div>
           ))}
         </div>
+
+        {showBuzzerPanel && (
+          <SessionPanel sessionCode={sessionCode} teams={sessionTeams} />
+        )}
       </header>
 
       <main className={styles.boardArea}>
@@ -125,7 +184,13 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
       </main>
 
       {activeTile && (
-        <QuestionView tile={activeTile} teams={teams} teamColors={teamColors} onAward={handleAward} />
+        <QuestionView
+          tile={activeTile}
+          teams={teams}
+          teamColors={teamColors}
+          buzzerWinner={buzzerWinner}
+          onAward={handleAward}
+        />
       )}
     </div>
   )

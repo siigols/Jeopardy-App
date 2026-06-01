@@ -71,6 +71,256 @@ const footballWorldCup: Game = {
         },
       ],
     },
+        {
+      name: 'VM-historikk',
+      tiles: [
+        {
+          points: 200,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'I hvilket land ble det aller første fotball-VM arrangert i 1930?',
+            answer: 'Uruguay',
+          },
+        },
+        {
+          points: 400,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvilket land har vunnet flest VM-titler i fotball (5 ganger)?',
+            answer: 'Brasil',
+          },
+        },
+        {
+          points: 600,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvem scoret det beryktede «Hånd til Gud»-målet i VM 1986?',
+            answer: 'Diego Maradona',
+          },
+        },
+        {
+          points: 800,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvilket land vant VM-finalen i 2022 mot Frankrike etter straffesparkkonkurranse?',
+            answer: 'Argentina',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvem er VM-historiens toppscorer med 16 mål, og spilte for Tyskland?',
+            answer: 'Miroslav Klose',
+          },
+        },
+      ],
+    },
+    {
+      name: 'Norge i VM',
+      tiles: [
+        {
+          points: 200,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'I hvilke tre VM-sluttspill har det norske herrelandslaget deltatt?',
+            answer: '1938, 1994 og 1998',
+          },
+        },
+        {
+          points: 400,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvem scoret det avgjørende straffesparket da Norge slo Brasil 2–1 i VM 1998?',
+            answer: 'Kjetil Rekdal',
+          },
+        },
+        {
+          points: 600,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hva er kallenavnet til mangeårig norsk landslagstrener Egil Olsen?',
+            answer: 'Drillo',
+          },
+        },
+        {
+          points: 800,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'For hvilken engelske klubb spiller den norske superstjernen Erling Haaland?',
+            answer: 'Manchester City',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hva heter Erling Haalands far, som selv spilte for det norske A-landslaget?',
+            answer: 'Alf-Inge Haaland',
+          },
+        },
+      ],
+    },
+    {
+      name: 'Frankrike i VM',
+      tiles: [
+        {
+          points: 200,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'I hvilket år vant Frankrike sitt første VM, som vertsnasjon?',
+            answer: '1998',
+          },
+        },
+        {
+          points: 400,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvem scoret to hoder-mål i VM-finalen 1998 for Frankrike mot Brasil?',
+            answer: 'Zinedine Zidane',
+          },
+        },
+        {
+          points: 600,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvem satte rekorden for flest mål i ett enkelt VM med 13 mål for Frankrike i 1958?',
+            answer: 'Just Fontaine',
+          },
+        },
+        {
+          points: 800,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvem vant Gullstøvelen (toppscorer) i VM 2022 med 8 mål for Frankrike?',
+            answer: 'Kylian Mbappé',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvilken fransk landslagstrener ledet Frankrike til VM-gullet i 1998?',
+            answer: 'Aimé Jacquet',
+          },
+        },
+      ],
+    },
+    {
+      name: 'Stjernespillere',
+      tiles: [
+        {
+          points: 200,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvilken nasjonalitet har Antoine Griezmann?',
+            answer: 'Fransk',
+          },
+        },
+        {
+          points: 400,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hva er Zinedine Zidanes kjente kallenavn?',
+            answer: 'Zizou',
+          },
+        },
+        {
+          points: 600,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvilken norsk spiller satte Premier League-rekord med 36 mål i sesongen 2022/23?',
+            answer: 'Erling Haaland',
+          },
+        },
+        {
+          points: 800,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvilken norsk spiller er kaptein på Arsenal og tidligere spilte på lån i Real Madrid?',
+            answer: 'Martin Ødegaard',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Kylian Mbappé signerte for hvilken spansk storklubb i 2024?',
+            answer: 'Real Madrid',
+          },
+        },
+      ],
+    },
+    {
+      name: 'Regler & fakta',
+      tiles: [
+        {
+          points: 200,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hvor mange spillere er det på hvert lag under en fotballkamp?',
+            answer: '11 spillere',
+          },
+        },
+        {
+          points: 400,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hva kalles det når en spiller scorer tre mål i én og samme kamp?',
+            answer: 'Hat-trick',
+          },
+        },
+        {
+          points: 600,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hva er den ordinære spilletiden i en fotballkamp (uten ekstra tid)?',
+            answer: '90 minutter',
+          },
+        },
+        {
+          points: 800,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Hva står forkortelsen VAR for i moderne fotball?',
+            answer: 'Video Assistant Referee',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'simple',
+            question: 'Nøyaktig hvor bredt er et offisielt fotballmål ifølge reglene?',
+            answer: '7,32 meter',
+          },
+        },
+      ],
+    },
   ],
 }
 
