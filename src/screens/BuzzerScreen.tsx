@@ -108,7 +108,7 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
           <button className={`${styles.buzzBtn} ${styles.btnWon}`} disabled>
             ✓
           </button>
-          <p className={styles.statusText}>Du buzzet inn!</p>
+          <p className={styles.statusText}>Du bezzerwizzet!</p>
         </>
       )}
 

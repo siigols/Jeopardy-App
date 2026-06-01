@@ -13,7 +13,7 @@ export default function BuzzerBadge({ teamName, teamColor }: Props) {
       style={{ '--team-color': teamColor } as CSSProperties}
     >
       <span className={styles.dot} />
-      <span className={styles.label}>{teamName} buzzet inn!</span>
+      <span className={styles.label}>{teamName} bezzerwizzet!</span>
     </div>
   )
 }
