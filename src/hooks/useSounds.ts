@@ -58,5 +58,12 @@ export function useSounds() {
     tone(180, 0.1, 0.12, 0.08, 'sawtooth', 90)
   }
 
-  return { playOpen, playReveal, playAward, playSkip }
+  function playBuzz() {
+    // Punchy buzz-in: low thump + rising sawtooth sweep + high shimmer
+    tone(200, 0,    0.05, 0.55, 'square')
+    tone(140, 0,    0.35, 0.45, 'sawtooth', 440)
+    tone(880, 0.08, 0.25, 0.20, 'sine', 660)
+  }
+
+  return { playOpen, playReveal, playAward, playSkip, playBuzz }
 }

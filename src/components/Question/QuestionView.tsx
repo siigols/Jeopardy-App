@@ -1,8 +1,7 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import type { Tile, Team } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
-import BuzzerBadge from '../BuzzerBadge/BuzzerBadge'
 import { useSounds } from '../../hooks/useSounds'
 import styles from './QuestionView.module.css'
 
@@ -16,7 +15,11 @@ interface Props {
 
 export default function QuestionView({ tile, teams, teamColors, buzzerWinner, onAward }: Props) {
   const [revealed, setReveal] = useState(false)
-  const { playReveal, playAward, playSkip } = useSounds()
+  const { playReveal, playAward, playSkip, playBuzz } = useSounds()
+
+  useEffect(() => {
+    if (buzzerWinner) playBuzz()
+  }, [buzzerWinner])
 
   function handleReveal() {
     playReveal()
@@ -43,9 +46,14 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
   }
 
   return (
-    <div className={styles.overlay}>
+    <div
+      className={`${styles.overlay}${buzzerWinner ? ` ${styles.buzzed}` : ''}`}
+      style={buzzerWinner ? ({ '--team-color': buzzerWinner.color } as CSSProperties) : undefined}
+    >
       {buzzerWinner && (
-        <BuzzerBadge teamName={buzzerWinner.name} teamColor={buzzerWinner.color} />
+        <div className={styles.buzzerLabel}>
+          {buzzerWinner.name} bezzerwizzet!
+        </div>
       )}
 
       <div className={styles.points}>{tile.points}</div>
