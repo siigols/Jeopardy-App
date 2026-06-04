@@ -1,4 +1,5 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState, useRef, type CSSProperties } from 'react'
+import { useSound } from 'react-sounds'
 import { useSocket } from '../hooks/useSocket'
 import type { TeamInfo } from '../types/socket-events'
 import styles from './BuzzerScreen.module.css'
@@ -16,6 +17,17 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
   const [teamName, setTeamName] = useState('')
   const [teamColor, setTeamColor] = useState('#888')
   const [winner, setWinner] = useState<TeamInfo | null>(null)
+  const prevState = useRef<BuzzerState>('connecting')
+
+  const { play: playHeartbeat } = useSound('ambient/heartbeat')
+  const { play: playBuzzPress } = useSound('ui/button_hard')
+
+  useEffect(() => {
+    if (state === 'won' && prevState.current !== 'won') {
+      playHeartbeat()
+    }
+    prevState.current = state
+  }, [state])
 
   useEffect(() => {
     function join() {
@@ -65,6 +77,7 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
 
   function handleBuzz() {
     if (state !== 'ready') return
+    playBuzzPress()
     socket.emit('buzz', { code: sessionCode, teamIndex })
   }
 

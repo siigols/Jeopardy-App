@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function PodiumScreen({ teams, game, onPlayAgain, onNewBoard }: Props) {
-  const { playAward } = useSounds()
+  const { playAward, playHover } = useSounds()
 
   // Play victory fanfare on mount — triple chord for maximum celebration
   useEffect(() => {
@@ -215,10 +215,10 @@ export default function PodiumScreen({ teams, game, onPlayAgain, onNewBoard }: P
 
       {/* Actions */}
       <div className={styles.actions}>
-        <button className={styles.primaryBtn} onClick={onPlayAgain}>
+        <button className={styles.primaryBtn} onMouseEnter={playHover} onClick={onPlayAgain}>
           Spill igjen
         </button>
-        <button className={styles.secondaryBtn} onClick={onNewBoard}>
+        <button className={styles.secondaryBtn} onMouseEnter={playHover} onClick={onNewBoard}>
           Velg nytt brett
         </button>
       </div>

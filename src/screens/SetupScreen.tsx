@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Team } from '../types/game'
+import { useSounds } from '../hooks/useSounds'
 import styles from './SetupScreen.module.css'
 
 interface Props {
@@ -13,6 +14,7 @@ const DEFAULT_NAMES = ['Lag 1', 'Lag 2', 'Lag 3', 'Lag 4']
 export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
   const [teamCount, setTeamCount] = useState(2)
   const [names, setNames] = useState<string[]>(DEFAULT_NAMES)
+  const { playClick, playHover, playStart } = useSounds()
 
   function handleNameChange(index: number, value: string) {
     setNames(prev => {
@@ -28,12 +30,13 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
       name: name.trim() || `Lag ${i + 1}`,
       score: 0,
     }))
+    playStart()
     onStart(teams)
   }
 
   return (
     <div className={styles.screen}>
-      <button className={styles.backBtn} onClick={onBack}>← Tilbake</button>
+      <button className={styles.backBtn} onMouseEnter={playHover} onClick={() => { playClick(); onBack() }}>← Tilbake</button>
 
       <h1 className={styles.title}>Jeopardy!</h1>
       <p className={styles.boardName}>{gameTitle}</p>
@@ -48,7 +51,8 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
               <button
                 key={n}
                 className={`${styles.countBtn} ${teamCount === n ? styles.active : ''}`}
-                onClick={() => setTeamCount(n)}
+                onMouseEnter={playHover}
+                onClick={() => { playClick(); setTeamCount(n) }}
               >
                 {n}
               </button>
@@ -72,7 +76,7 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
           </div>
         </div>
 
-        <button className={styles.startBtn} onClick={handleStart}>
+        <button className={styles.startBtn} onMouseEnter={playHover} onClick={handleStart}>
           Start spill
         </button>
       </div>

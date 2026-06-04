@@ -1,4 +1,5 @@
 import type { Game } from '../types/game'
+import { useSounds } from '../hooks/useSounds'
 import styles from './BoardSelectScreen.module.css'
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
 }
 
 export default function BoardSelectScreen({ boards, onSelect }: Props) {
+  const { playClick, playHover } = useSounds()
+
   return (
     <div className={styles.screen}>
       <h1 className={styles.title}>Jeopardy!</h1>
@@ -16,7 +19,12 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
         {boards.map((board, i) => {
           const colors = board.theme?.categoryColors ?? []
           return (
-            <button key={i} className={styles.card} onClick={() => onSelect(board)}>
+            <button
+              key={i}
+              className={styles.card}
+              onMouseEnter={playHover}
+              onClick={() => { playClick(); onSelect(board) }}
+            >
               <div className={styles.swatches}>
                 {colors.slice(0, 5).map((c, j) => (
                   <div key={j} className={styles.swatch} style={{ background: c.tile }} />

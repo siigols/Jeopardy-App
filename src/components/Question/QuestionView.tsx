@@ -15,7 +15,7 @@ interface Props {
 
 export default function QuestionView({ tile, teams, teamColors, buzzerWinner, onAward }: Props) {
   const [revealed, setReveal] = useState(false)
-  const { playReveal, playAward, playSkip, playBuzz } = useSounds()
+  const { playReveal, playAward, playSkip, playBuzz, playHover } = useSounds()
 
   useEffect(() => {
     if (buzzerWinner) playBuzz()
@@ -64,7 +64,7 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
 
       <div className={styles.actions}>
         {!revealed ? (
-          <button className={styles.revealBtn} onClick={handleReveal}>
+          <button className={styles.revealBtn} onMouseEnter={playHover} onClick={handleReveal}>
             Vis svar
           </button>
         ) : (
@@ -76,6 +76,7 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
                   key={team.id}
                   className={styles.teamBtn}
                   style={{ '--team-color': teamColors[team.id] } as CSSProperties}
+                  onMouseEnter={playHover}
                   onClick={() => handleAward(team.id)}
                 >
                   {team.name}
@@ -83,6 +84,7 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
               ))}
               <button
                 className={styles.skipBtn}
+                onMouseEnter={playHover}
                 onClick={handleSkip}
               >
                 Ingen

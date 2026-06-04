@@ -20,11 +20,10 @@ interface Props {
 
 export default function TiebreakerScreen({ tiedTeams, allTeams, question, onResolved }: Props) {
   const [revealed, setRevealed] = useState(false)
-  const { playReveal, playAward } = useSounds()
+  const { playReveal, playAward, playHover } = useSounds()
 
   const q = question ?? DEFAULT_TIEBREAKER
 
-  // Build color map from original team order
   const teamColorMap = Object.fromEntries(
     allTeams.map((t, i) => [t.id, TEAM_COLORS[i % TEAM_COLORS.length]])
   )
@@ -36,7 +35,6 @@ export default function TiebreakerScreen({ tiedTeams, allTeams, question, onReso
 
   function handleAward(teamId: string) {
     playAward()
-    // Award 1 bonus point to the winner to break the tie
     const updatedTeams = allTeams.map(t =>
       t.id === teamId ? { ...t, score: t.score + 1 } : t
     )
@@ -85,7 +83,7 @@ export default function TiebreakerScreen({ tiedTeams, allTeams, question, onReso
       {/* Actions */}
       <div className={styles.actions}>
         {!revealed ? (
-          <button className={styles.revealBtn} onClick={handleReveal}>
+          <button className={styles.revealBtn} onMouseEnter={playHover} onClick={handleReveal}>
             Vis svar
           </button>
         ) : (
@@ -97,6 +95,7 @@ export default function TiebreakerScreen({ tiedTeams, allTeams, question, onReso
                   key={team.id}
                   className={styles.teamBtn}
                   style={{ '--team-color': teamColorMap[team.id] } as CSSProperties}
+                  onMouseEnter={playHover}
                   onClick={() => handleAward(team.id)}
                 >
                   {team.name}

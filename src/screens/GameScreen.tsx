@@ -35,7 +35,7 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
   const [active, setActive] = useState<ActiveTile | null>(null)
   const [buzzerWinner, setBuzzerWinner] = useState<TeamInfo | null>(null)
   const [showBuzzerPanel, setShowBuzzerPanel] = useState(false)
-  const { playOpen } = useSounds()
+  const { playOpen, playClick, playHover } = useSounds()
   const socket = useSocket()
   const sessionCode = useRef(generateCode()).current
 
@@ -113,6 +113,7 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
   }
 
   function handleAdjust(teamId: string, delta: number) {
+    playClick()
     setTeams(prev =>
       prev.map(t => t.id === teamId ? { ...t, score: t.score + delta } : t)
     )
@@ -140,16 +141,17 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
           <div className={styles.controls}>
             <button
               className={styles.iconBtn}
-              onClick={() => setShowBuzzerPanel(p => !p)}
+              onMouseEnter={playHover}
+              onClick={() => { playClick(); setShowBuzzerPanel(p => !p) }}
               title="Buzzer-panel"
               style={{ fontSize: '1rem' }}
             >
               📡
             </button>
-            <button className={styles.iconBtn} onClick={onThemeToggle} title="Bytt tema">
+            <button className={styles.iconBtn} onMouseEnter={playHover} onClick={() => { playClick(); onThemeToggle() }} title="Bytt tema">
               {theme === 'dark' ? '☀' : '☾'}
             </button>
-            <button className={styles.iconBtn} onClick={onReset} title="Nytt spill">
+            <button className={styles.iconBtn} onMouseEnter={playHover} onClick={() => { playClick(); onReset() }} title="Nytt spill">
               ↩
             </button>
           </div>
@@ -163,9 +165,9 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
               style={{ '--team-color': teamColors[team.id] } as React.CSSProperties}
             >
               <span className={styles.teamName}>{team.name}</span>
-              <button className={styles.adjBtn} onClick={() => handleAdjust(team.id, -100)} aria-label="trekk fra">−</button>
+              <button className={styles.adjBtn} onMouseEnter={playHover} onClick={() => handleAdjust(team.id, -100)} aria-label="trekk fra">−</button>
               <span key={team.score} className={styles.teamScore}>{team.score}</span>
-              <button className={styles.adjBtn} onClick={() => handleAdjust(team.id, 100)} aria-label="legg til">+</button>
+              <button className={styles.adjBtn} onMouseEnter={playHover} onClick={() => handleAdjust(team.id, 100)} aria-label="legg til">+</button>
             </div>
           ))}
         </div>
