@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Team, Game } from './types/game'
 import { ALL_BOARDS } from './data/index'
+import { loadAppState, saveAppState, clearGameState } from './utils/sessionStore'
 import BoardSelectScreen from './screens/BoardSelectScreen'
 import SetupScreen from './screens/SetupScreen'
 import GameScreen from './screens/GameScreen'
@@ -10,14 +11,43 @@ import PodiumScreen from './screens/PodiumScreen'
 type AppState = 'board-select' | 'setup' | 'game' | 'tiebreaker' | 'podium'
 type Theme = 'dark' | 'light'
 
+function restoreInitial() {
+  const saved = loadAppState()
+  if (!saved) return null
+  // Verify the selected game still exists in available boards
+  if (saved.selectedGameTitle && !ALL_BOARDS.find(b => b.title === saved.selectedGameTitle)) {
+    return null
+  }
+  return saved
+}
+
 export default function App() {
-  const [appState, setAppState] = useState<AppState>('board-select')
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null)
-  const [teams, setTeams] = useState<Team[]>([])
-  const [finalTeams, setFinalTeams] = useState<Team[]>([])
-  const [tiedTeams, setTiedTeams] = useState<Team[]>([])
-  const [theme, setTheme] = useState<Theme>('dark')
-  const [gameKey, setGameKey] = useState(0)
+  const [initial] = useState(restoreInitial)
+
+  const [appState, setAppState] = useState<AppState>((initial?.appState as AppState) ?? 'board-select')
+  const [selectedGame, setSelectedGame] = useState<Game | null>(
+    initial?.selectedGameTitle
+      ? ALL_BOARDS.find(b => b.title === initial.selectedGameTitle) ?? null
+      : null
+  )
+  const [teams, setTeams] = useState<Team[]>(initial?.teams ?? [])
+  const [finalTeams, setFinalTeams] = useState<Team[]>(initial?.finalTeams ?? [])
+  const [tiedTeams, setTiedTeams] = useState<Team[]>(initial?.tiedTeams ?? [])
+  const [theme, setTheme] = useState<Theme>((initial?.theme as Theme) ?? 'dark')
+  const [gameKey, setGameKey] = useState(initial?.gameKey ?? 0)
+
+  // Persist app state on every change
+  useEffect(() => {
+    saveAppState({
+      appState,
+      selectedGameTitle: selectedGame?.title ?? null,
+      teams,
+      finalTeams,
+      tiedTeams,
+      theme,
+      gameKey,
+    })
+  }, [appState, selectedGame, teams, finalTeams, tiedTeams, theme, gameKey])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -34,11 +64,14 @@ export default function App() {
   }
 
   function handleReset() {
+    clearGameState()
     setGameKey(k => k + 1)
     setAppState('board-select')
   }
 
   function handleGameComplete(endTeams: Team[]) {
+    clearGameState()
+
     // Check for tie at the top
     const sorted = [...endTeams].sort((a, b) => b.score - a.score)
     const topScore = sorted[0].score
@@ -61,6 +94,7 @@ export default function App() {
   }
 
   function handlePlayAgain() {
+    clearGameState()
     setGameKey(k => k + 1)
     setAppState('game')
   }

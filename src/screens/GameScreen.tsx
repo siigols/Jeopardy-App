@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Team, Tile, Game } from '../types/game'
 import type { TeamInfo } from '../types/socket-events'
+import { loadGameState, saveGameState } from '../utils/sessionStore'
 import GameBoard from '../components/Board/GameBoard'
 import QuestionView from '../components/Question/QuestionView'
 import SessionPanel from '../components/SessionPanel/SessionPanel'
@@ -30,14 +31,21 @@ interface ActiveTile {
 }
 
 export default function GameScreen({ game, teams: initialTeams, theme, onThemeToggle, onReset, onGameComplete }: Props) {
-  const [categories, setCategories] = useState(game.categories)
-  const [teams, setTeams] = useState(initialTeams)
+  const savedGame = useRef(loadGameState()).current
+
+  const [categories, setCategories] = useState(savedGame?.categories ?? game.categories)
+  const [teams, setTeams] = useState(savedGame?.teams ?? initialTeams)
   const [active, setActive] = useState<ActiveTile | null>(null)
   const [buzzerWinner, setBuzzerWinner] = useState<TeamInfo | null>(null)
   const [showBuzzerPanel, setShowBuzzerPanel] = useState(false)
   const { playOpen, playClick, playHover } = useSounds()
   const socket = useSocket()
-  const sessionCode = useRef(generateCode()).current
+  const sessionCode = useRef(savedGame?.sessionCode ?? generateCode()).current
+
+  // Persist in-game state on changes
+  useEffect(() => {
+    saveGameState({ categories, teams, sessionCode })
+  }, [categories, teams, sessionCode])
 
   const teamColors = Object.fromEntries(
     teams.map((team, index) => [team.id, TEAM_COLORS[index % TEAM_COLORS.length]])
@@ -83,9 +91,10 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     socket.emit('question-open', { code: sessionCode })
   }
 
-  function handleAward(teamId: string | null) {
+  function handleAward(teamId: string | null, awardedPoints?: number) {
     if (!active) return
-    const points = categories[active.categoryIndex].tiles[active.tileIndex].points
+    const tilePoints = categories[active.categoryIndex].tiles[active.tileIndex].points
+    const points = awardedPoints ?? tilePoints
 
     const updatedTeams = teamId !== null
       ? teams.map(t => t.id === teamId ? { ...t, score: t.score + points } : t)

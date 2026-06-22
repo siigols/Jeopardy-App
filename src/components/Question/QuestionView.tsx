@@ -2,6 +2,8 @@ import { useState, useEffect, type CSSProperties } from 'react'
 import type { Tile, Team } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
+import OverUnderDisplay from './OverUnderDisplay'
+import YearCountryImageDisplay from './YearCountryImageDisplay'
 import { useSounds } from '../../hooks/useSounds'
 import styles from './QuestionView.module.css'
 
@@ -10,7 +12,7 @@ interface Props {
   teams: Team[]
   teamColors: Record<string, string>
   buzzerWinner: TeamInfo | null
-  onAward: (teamId: string | null) => void
+  onAward: (teamId: string | null, awardedPoints?: number) => void
 }
 
 export default function QuestionView({ tile, teams, teamColors, buzzerWinner, onAward }: Props) {
@@ -28,6 +30,12 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
 
   function handleAward(teamId: string) {
     playAward()
+
+    if (tile.content.type === 'yearCountryImage') {
+      onAward(teamId, 0)
+      return
+    }
+
     onAward(teamId)
   }
 
@@ -40,6 +48,10 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
     switch (tile.content.type) {
       case 'simple':
         return <SimpleQuestionDisplay content={tile.content} revealed={revealed} />
+      case 'overUnder':
+        return <OverUnderDisplay content={tile.content} revealed={revealed} onAllRevealed={handleReveal} />
+      case 'yearCountryImage':
+        return <YearCountryImageDisplay content={tile.content} revealed={revealed} />
       default:
         return <p>Ukjent spørsmålstype</p>
     }
@@ -65,7 +77,7 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
       <div className={styles.actions}>
         {!revealed ? (
           <button className={styles.revealBtn} onMouseEnter={playHover} onClick={handleReveal}>
-            Vis svar
+            {tile.content.type === 'overUnder' ? 'Vis alle svar' : 'Vis svar'}
           </button>
         ) : (
           <div className={styles.awardSection}>

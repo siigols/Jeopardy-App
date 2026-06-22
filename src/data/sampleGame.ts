@@ -56,7 +56,17 @@ const sampleGame: Game = {
         { points: 400, answered: false, content: { type: 'simple', question: 'Dette landet har vunnet flest FIFA-verdensmesterskap.', answer: 'Hva er Brasil?' } },
         { points: 600, answered: false, content: { type: 'simple', question: 'En perfekt score i olympisk turn pleide å være dette tallet.', answer: 'Hva er 10?' } },
         { points: 800, answered: false, content: { type: 'simple', question: 'Tour de France-sykkelrittet foregår i denne måneden.', answer: 'Hva er juli?' } },
-        { points: 1000, answered: false, content: { type: 'simple', question: 'Denne sporten bruker begrepene «love», «deuce» og «advantage».', answer: 'Hva er tennis?' } },
+        { points: 1000, answered: false, content: {
+          type: 'overUnder',
+          statement: 'Over eller under 185 cm?',
+          items: [
+            { image: 'https://placehold.co/300x400/2d2d3a/f0f0f8?text=Messi', label: 'Lionel Messi', answer: 'under', value: '170 cm' },
+            { image: 'https://placehold.co/300x400/2d2d3a/f0f0f8?text=LeBron', label: 'LeBron James', answer: 'over', value: '206 cm' },
+            { image: 'https://placehold.co/300x400/2d2d3a/f0f0f8?text=Haaland', label: 'Erling Haaland', answer: 'over', value: '194 cm' },
+            { image: 'https://placehold.co/300x400/2d2d3a/f0f0f8?text=Simone', label: 'Simone Biles', answer: 'under', value: '142 cm' },
+            { image: 'https://placehold.co/300x400/2d2d3a/f0f0f8?text=Bolt', label: 'Usain Bolt', answer: 'over', value: '195 cm' },
+          ],
+        } },
       ],
     },
   ],

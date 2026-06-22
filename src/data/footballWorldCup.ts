@@ -22,7 +22,7 @@ const footballWorldCup: Game = {
   },
   categories: [
     {
-      name: 'VM-historikk',
+      name: 'Godt og blandet',
       tiles: [
         {
           points: 200,
@@ -72,7 +72,7 @@ const footballWorldCup: Game = {
       ],
     },
         {
-      name: 'VM-historikk',
+      name: 'Over og under',
       tiles: [
         {
           points: 200,
@@ -172,7 +172,7 @@ const footballWorldCup: Game = {
       ],
     },
     {
-      name: 'Frankrike i VM',
+      name: 'Frankrike',
       tiles: [
         {
           points: 200,
@@ -222,7 +222,7 @@ const footballWorldCup: Game = {
       ],
     },
     {
-      name: 'Stjernespillere',
+      name: 'Finn linken',
       tiles: [
         {
           points: 200,
@@ -272,51 +272,61 @@ const footballWorldCup: Game = {
       ],
     },
     {
-      name: 'Regler & fakta',
+      name: 'Plasser bildet',
       tiles: [
         {
-          points: 200,
+          points: 1000,
           answered: false,
           content: {
-            type: 'simple',
-            question: 'Hvor mange spillere er det på hvert lag under en fotballkamp?',
-            answer: '11 spillere',
-          },
-        },
-        {
-          points: 400,
-          answered: false,
-          content: {
-            type: 'simple',
-            question: 'Hva kalles det når en spiller scorer tre mål i én og samme kamp?',
-            answer: 'Hat-trick',
-          },
-        },
-        {
-          points: 600,
-          answered: false,
-          content: {
-            type: 'simple',
-            question: 'Hva er den ordinære spilletiden i en fotballkamp (uten ekstra tid)?',
-            answer: '90 minutter',
-          },
-        },
-        {
-          points: 800,
-          answered: false,
-          content: {
-            type: 'simple',
-            question: 'Hva står forkortelsen VAR for i moderne fotball?',
-            answer: 'Video Assistant Referee',
+            type: 'yearCountryImage',
+            prompt: 'Hvilket år og land?',
+            image: '/question-images/year-country/frankrike_1969.png',
+            year: '1969',
+            country: 'Frankrike',
           },
         },
         {
           points: 1000,
           answered: false,
           content: {
-            type: 'simple',
-            question: 'Nøyaktig hvor bredt er et offisielt fotballmål ifølge reglene?',
-            answer: '7,32 meter',
+            type: 'yearCountryImage',
+            prompt: 'Hvilket år og land?',
+            image: '/question-images/year-country/canada_1942.png',
+            year: '1942',
+            country: 'Canada',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'yearCountryImage',
+            prompt: 'Hvilket år og land?',
+            image: '/question-images/year-country/Australia_1932.png',
+            year: '1932',
+            country: 'Australia',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'yearCountryImage',
+            prompt: 'Hvilket år og land?',
+            image: '/question-images/year-country/hongkong_1996.png',
+            year: '1996',
+            country: 'Hongkong',
+          },
+        },
+        {
+          points: 1000,
+          answered: false,
+          content: {
+            type: 'yearCountryImage',
+            prompt: 'Hvilket år og land?',
+            image: '/question-images/year-country/portugal_1900.png',
+            year: '1900',
+            country: 'Portugal',
           },
         },
       ],

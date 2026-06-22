@@ -1,4 +1,4 @@
-export type QuestionType = 'simple'
+export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage'
 
 export interface SimpleQuestion {
   type: 'simple'
@@ -6,7 +6,29 @@ export interface SimpleQuestion {
   answer: string
 }
 
-export type QuestionContent = SimpleQuestion
+export interface OverUnderItem {
+  image: string
+  label?: string
+  answer: 'over' | 'under'
+  value: string
+}
+
+export interface OverUnderQuestion {
+  type: 'overUnder'
+  statement: string
+  items: OverUnderItem[]
+}
+
+export interface YearCountryImageQuestion {
+  type: 'yearCountryImage'
+  prompt: string
+  image: string
+  imageAlt?: string
+  year: string
+  country: string
+}
+
+export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion
 
 export interface Tile {
   points: number
