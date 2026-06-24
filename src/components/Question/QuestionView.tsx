@@ -3,6 +3,7 @@ import { useSounds } from '../../hooks/useSounds'
 import type { Team, Tile } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
 import MultipleChoiceDisplay from './MultipleChoiceDisplay'
+import HigherLowerDisplay from './HigherLowerDisplay'
 import OverUnderDisplay from './OverUnderDisplay'
 import styles from './QuestionView.module.css'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
@@ -117,6 +118,8 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
         )
       case 'multipleChoice':
         return <MultipleChoiceDisplay content={tile.content} revealed={revealed} />
+      case 'higherLower':
+        return <HigherLowerDisplay content={tile.content} revealed={revealed} onAllRevealed={handleReveal} />
       default:
         return <p>Ukjent spørsmålstype</p>
     }
@@ -151,7 +154,9 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
                 ? tenableAutoRevealActive
                   ? 'Avslører...'
                   : 'Start avsløring'
-                : 'Vis svar'}
+                : tile.content.type === 'higherLower'
+                  ? 'Vis alle svar'
+                  : 'Vis svar'}
           </button>
         ) : (
           <div className={styles.awardSection}>

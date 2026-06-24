@@ -1,4 +1,4 @@
-export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable' | 'multipleChoice'
+export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable' | 'multipleChoice' | 'higherLower'
 
 export interface SimpleQuestion {
   type: 'simple'
@@ -41,7 +41,20 @@ export interface MultipleChoiceQuestion {
   correctIndex: number
 }
 
-export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion | MultipleChoiceQuestion
+export interface HigherLowerItem {
+  image: string
+  label: string
+  value: string
+  numericValue: number
+}
+
+export interface HigherLowerQuestion {
+  type: 'higherLower'
+  metric: string
+  items: HigherLowerItem[]
+}
+
+export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion | MultipleChoiceQuestion | HigherLowerQuestion
 
 export interface Tile {
   points: number

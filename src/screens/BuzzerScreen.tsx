@@ -27,7 +27,7 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
       playHeartbeat()
     }
     prevState.current = state
-  }, [state])
+  }, [state, playHeartbeat])
 
   useEffect(() => {
     function join() {
