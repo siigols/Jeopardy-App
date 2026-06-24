@@ -29,8 +29,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'I hvilket land ble det aller første fotball-VM arrangert i 1930?',
-            answer: 'Uruguay',
+            question: 'Hvilken juice er i drinken Screwdriver?',
+            answer: 'Appelsinjuice',
           },
         },
         {
@@ -38,8 +38,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hvilket land har vunnet flest VM-titler i fotball (5 ganger)?',
-            answer: 'Brasil',
+            question: 'Hvor mange stjerner er det på det kinesiske flagget?',
+            answer: '5',
           },
         },
         {
@@ -47,8 +47,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hvem scoret det beryktede «Hånd til Gud»-målet i VM 1986?',
-            answer: 'Diego Maradona',
+            question: 'Hvilken film med kinopremiere i sommer har sponset Haaland?',
+            answer: 'The Odyssey',
           },
         },
         {
@@ -56,8 +56,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hvilket land vant VM-finalen i 2022 mot Frankrike etter straffesparkkonkurranse?',
-            answer: 'Argentina',
+            question: 'Hva er forskjellen mellom Brandy og Cognac?',
+            answer: 'Cognac må komme fra Cognac i Frankrike',
           },
         },
         {
@@ -65,8 +65,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hvem er VM-historiens toppscorer med 16 mål, og spilte for Tyskland?',
-            answer: 'Miroslav Klose',
+            question: 'Hva heter det hvis du får tre strikes på rad i bowling?',
+            answer: 'Turkey',
           },
         },
       ],
@@ -181,15 +181,6 @@ const footballWorldCup: Game = {
             answer: 'Argentina',
           },
         },
-        {
-          points: 1000,
-          answered: false,
-          content: {
-            type: 'simple',
-            question: 'Hvem er VM-historiens toppscorer med 16 mål, og spilte for Tyskland?',
-            answer: 'Miroslav Klose',
-          },
-        },
       ],
     },
     {
@@ -201,7 +192,7 @@ const footballWorldCup: Game = {
           content: {
             type: 'simple',
             question: 'Toppscorer for Norge i VM gjennom tidene?',
-            answer: 'Haaland og Rekdal, 2',
+            answer: 'Haaland, 4',
           },
         },
         {
@@ -250,35 +241,38 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'I hvilket år vant Frankrike sitt første VM, som vertsnasjon?',
-            answer: '1998',
+            question: 'Hva er det høyeste fjellet i Frankrike?',
+            answer: 'Mont Blanc',
           },
         },
         {
           points: 400,
           answered: false,
           content: {
-            type: 'simple',
-            question: 'Hvem scoret to hoder-mål i VM-finalen 1998 for Frankrike mot Brasil?',
-            answer: 'Zinedine Zidane',
+            type: 'multipleChoice',
+            question: 'Hvor mange tidssoner er det i Frankrike?',
+            options: ['1', '3', '9', '12'],
+            correctIndex: 3,
           },
         },
         {
           points: 600,
           answered: false,
           content: {
-            type: 'simple',
-            question: 'Hvem satte rekorden for flest mål i ett enkelt VM med 13 mål for Frankrike i 1958?',
-            answer: 'Just Fontaine',
+            type: 'multipleChoice',
+            question: 'Hva er TGV i Frankrike?',
+            options: ['En markør for ost av høy kvalitet', 'En type lyntog', 'En LGBTQ lov', 'Et politisk parti'],
+            correctIndex: 1,
           },
         },
         {
           points: 800,
           answered: false,
           content: {
-            type: 'simple',
-            question: 'Hvem vant Gullstøvelen (toppscorer) i VM 2022 med 8 mål for Frankrike?',
-            answer: 'Kylian Mbappé',
+            type: 'multipleChoice',
+            question: 'Hvem av disse er ikke en kjent fransk maler?',
+            options: ['Claude Monet', 'Paul Cezanne', 'Pierre-Auguste Renoir', 'Alexandre Dumas'],
+            correctIndex: 3,
           },
         },
         {
@@ -286,8 +280,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hvilken fransk landslagstrener ledet Frankrike til VM-gullet i 1998?',
-            answer: 'Aimé Jacquet',
+            question: 'Hvilket navn er ulovlig å gi til en gris i Frankrike?',
+            answer: 'Napoleon',
           },
         },
       ],
@@ -401,18 +395,18 @@ const footballWorldCup: Game = {
       name: 'Plasser bildet',
       tiles: [
         {
-          points: 1000,
+          points: 600,
           answered: false,
           content: {
             type: 'yearCountryImage',
             prompt: 'Hvilket år og land?',
-            image: '/question-images/year-country/frankrike_1969.png',
-            year: '1969',
-            country: 'Frankrike',
+            image: '/question-images/year-country/Australia_1932.png',
+            year: '1932',
+            country: 'Australia',
           },
         },
         {
-          points: 1000,
+          points: 600,
           answered: false,
           content: {
             type: 'yearCountryImage',
@@ -423,14 +417,14 @@ const footballWorldCup: Game = {
           },
         },
         {
-          points: 500,
+          points: 1000,
           answered: false,
           content: {
             type: 'yearCountryImage',
             prompt: 'Hvilket år og land?',
-            image: '/question-images/year-country/Australia_1932.png',
-            year: '1932',
-            country: 'Australia',
+            image: '/question-images/year-country/frankrike_1969.png',
+            year: '1969',
+            country: 'Frankrike',
           },
         },
         {

@@ -69,9 +69,8 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
 
     if (socket.connected) {
       register()
-    } else {
-      socket.once('connect', register)
     }
+    socket.on('connect', register)
 
     socket.on('buzzed', (winner) => {
       setBuzzerWinner(winner)

@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { useSounds } from '../../hooks/useSounds'
 import type { Team, Tile } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
+import MultipleChoiceDisplay from './MultipleChoiceDisplay'
 import OverUnderDisplay from './OverUnderDisplay'
 import styles from './QuestionView.module.css'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
@@ -114,6 +115,8 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
             onSelectIndex={(index) => setSelectedTenableData({ tile, points: (index + 1) * 100 })}
           />
         )
+      case 'multipleChoice':
+        return <MultipleChoiceDisplay content={tile.content} revealed={revealed} />
       default:
         return <p>Ukjent spørsmålstype</p>
     }

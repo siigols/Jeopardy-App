@@ -48,9 +48,8 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
 
     if (socket.connected) {
       join()
-    } else {
-      socket.once('connect', join)
     }
+    socket.on('connect', join)
 
     socket.on('question-opened', () => {
       setState('ready')
