@@ -13,6 +13,7 @@ const footballWorldCup: Game = {
       { tile: '#1a2a6c', hover: '#243899', header: '#111c4a' }, // fransk marineblå
       { tile: '#7a6200', hover: '#9a7c00', header: '#524200' }, // gull/trofé
       { tile: '#3d3530', hover: '#524845', header: '#282220' }, // nøytral skifer
+      { tile: '#8b3a00', hover: '#b34d00', header: '#5c2600' }, // mørk oransje
     ],
   },
   tiebreaker: {
@@ -209,8 +210,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hva er kallenavnet til mangeårig norsk landslagstrener Egil Olsen?',
-            answer: 'Drillo',
+            question: 'Hvor mange kamper har Norge spilt i VM-historien?',
+            answer: '10',
           },
         },
         {
@@ -218,8 +219,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'For hvilken engelske klubb spiller den norske superstjernen Erling Haaland?',
-            answer: 'Manchester City',
+            question: 'Hvor mange spillere har foreldre som har spilt i VM?',
+            answer: '3 (Haaland, Sørloth, Thorstvedt)',
           },
         },
         {
@@ -227,8 +228,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hva heter Erling Haalands far, som selv spilte for det norske A-landslaget?',
-            answer: 'Alf-Inge Haaland',
+            question: 'Hva er snitthøyden til den norske VM-troppen, og hvilken plass gir det blant alle lagene?',
+            answer: '186.7, 2. plass',
           },
         },
       ],
@@ -290,7 +291,7 @@ const footballWorldCup: Game = {
       name: 'Top 10',
       tiles: [
         {
-          points: 200,
+          points: 1000,
           answered: false,
           content: {
             type: 'tenable',
@@ -310,7 +311,7 @@ const footballWorldCup: Game = {
           },
         },
         {
-          points: 400,
+          points: 1000,
           answered: false,
           content: {
             type: 'tenable',
@@ -330,7 +331,7 @@ const footballWorldCup: Game = {
           },
         },
         {
-          points: 600,
+          points: 1000,
           answered: false,
           content: {
             type: 'tenable',
@@ -350,7 +351,7 @@ const footballWorldCup: Game = {
           },
         },
         {
-          points: 800,
+          points: 1000,
           answered: false,
           content: {
             type: 'tenable',

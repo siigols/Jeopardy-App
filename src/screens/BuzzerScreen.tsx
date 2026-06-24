@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useSound } from 'react-sounds'
 import { useSocket } from '../hooks/useSocket'
 import type { TeamInfo } from '../types/socket-events'
