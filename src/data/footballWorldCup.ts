@@ -72,15 +72,86 @@ const footballWorldCup: Game = {
       ],
     },
         {
-      name: 'Over og under',
+      name: 'Over/under',
       tiles: [
         {
-          points: 200,
+          points: 500,
           answered: false,
           content: {
-            type: 'simple',
-            question: 'I hvilket land ble det aller første fotball-VM arrangert i 1930?',
-            answer: 'Uruguay',
+            type: 'overUnder',
+            statement: 'Neymar med 8 VM-mål',
+            items: [
+              {
+                image: '/question-images/over_under/david villa.png',
+                label: 'David Villa',
+                value: '9',
+                answer: 'over',
+              },
+              {
+                image: '/question-images/over_under/suarez.png',
+                label: 'Luis Suárez',
+                value: '7',
+                answer: 'under',
+              },
+              {
+                image: '/question-images/over_under/henry.png',
+                label: 'Thierry Henry',
+                value: '6',
+                answer: 'under',
+              },
+              {
+                image: '/question-images/over_under/kane.png',
+                label: 'Kane',
+                value: '10',
+                answer: 'over',
+              },
+              {
+                image: '/question-images/over_under/zidane.png',
+                label: 'Zinedine Zidane',
+                value: '5',
+                answer: 'under',
+              },
+            ],
+          },
+        },
+        {
+          points: 500,
+          answered: false,
+          content: {
+            type: 'overUnder',
+            statement: 'Titanic (1997) hadde et budsjett på ca. 200 millioner dollar',
+            items: [
+              {
+                image: '/question-images/over_under/avatar.png',
+                label: 'Avatar',
+                value: '237 mill',
+                answer: 'over',
+              },
+              {
+                image: '/question-images/over_under/endgame.png',
+                label: 'Avengers: Endgame',
+                value: '356 mill',
+                answer: 'over',
+              },
+              {
+                image: '/question-images/over_under/interstellar.png',
+                label: 'Interstellar',
+                value: '165 mill',
+                answer: 'under',
+              },
+              {
+                image: '/question-images/over_under/dark_knight.png',
+                label: 'The Dark Knight',
+                value: '185 mill',
+                answer: 'under',
+              },
+              {
+                image: '/question-images/over_under/pirates.png',
+                label: 'Pirates of the Caribbean: On Stranger Tides',
+                value: '379 mill',
+                answer: 'over',
+              },
+            ],
           },
         },
         {
@@ -129,8 +200,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'I hvilke tre VM-sluttspill har det norske herrelandslaget deltatt?',
-            answer: '1938, 1994 og 1998',
+            question: 'Toppscorer for Norge i VM gjennom tidene?',
+            answer: 'Haaland og Rekdal, 2',
           },
         },
         {
@@ -138,8 +209,8 @@ const footballWorldCup: Game = {
           answered: false,
           content: {
             type: 'simple',
-            question: 'Hvem scoret det avgjørende straffesparket da Norge slo Brasil 2–1 i VM 1998?',
-            answer: 'Kjetil Rekdal',
+            question: 'Rekdal scorte på straffe, hvem scorte det andre målet mot Brasil?',
+            answer: 'Tore André Flo',
           },
         },
         {
@@ -297,7 +368,7 @@ const footballWorldCup: Game = {
           },
         },
         {
-          points: 1000,
+          points: 500,
           answered: false,
           content: {
             type: 'yearCountryImage',

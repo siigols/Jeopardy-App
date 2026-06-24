@@ -58,7 +58,7 @@ export default function OverUnderDisplay({ content, revealed, onAllRevealed }: P
               )}
 
               {!isRevealed && (
-                <div className={styles.clickHint}>?</div>
+                <div className={styles.clickHint}></div>
               )}
 
               {isRevealed && (
