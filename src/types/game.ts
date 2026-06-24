@@ -1,4 +1,4 @@
-export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage'
+export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable'
 
 export interface SimpleQuestion {
   type: 'simple'
@@ -28,7 +28,13 @@ export interface YearCountryImageQuestion {
   country: string
 }
 
-export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion
+export interface TenableQuestion {
+  type: 'tenable'
+  prompt: string
+  items: string[]
+}
+
+export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion
 
 export interface Tile {
   points: number

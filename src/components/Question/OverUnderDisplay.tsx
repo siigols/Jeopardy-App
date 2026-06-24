@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import type { OverUnderQuestion } from '../../types/game'
+import { useState } from 'react'
 import { useSounds } from '../../hooks/useSounds'
+import type { OverUnderQuestion } from '../../types/game'
 import styles from './OverUnderDisplay.module.css'
 
 interface Props {
@@ -13,14 +13,8 @@ export default function OverUnderDisplay({ content, revealed, onAllRevealed }: P
   const [revealedItems, setRevealedItems] = useState<Set<number>>(new Set())
   const { playClick } = useSounds()
 
-  useEffect(() => {
-    if (revealed) {
-      setRevealedItems(new Set(content.items.map((_, i) => i)))
-    }
-  }, [revealed, content.items])
-
   function handleItemClick(index: number) {
-    if (revealedItems.has(index)) return
+    if (revealed || revealedItems.has(index)) return
 
     playClick()
 
@@ -39,7 +33,7 @@ export default function OverUnderDisplay({ content, revealed, onAllRevealed }: P
 
       <div className={styles.grid}>
         {content.items.map((item, index) => {
-          const isRevealed = revealedItems.has(index)
+          const isRevealed = revealed || revealedItems.has(index)
           return (
             <button
               key={index}
