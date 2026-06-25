@@ -18,7 +18,7 @@ const DEFAULT_COLORS = [
 ]
 
 export default function GameBoard({ categories, onTileClick, theme }: Props) {
-  const rowCount = categories[0]?.tiles.length ?? 5
+  const rowCount = Math.max(...categories.map(c => c.tiles.length))
   const palette = theme?.categoryColors?.length ? theme.categoryColors : DEFAULT_COLORS
 
   return (
@@ -41,8 +41,11 @@ export default function GameBoard({ categories, onTileClick, theme }: Props) {
 
       {Array.from({ length: rowCount }, (_, rowIndex) =>
         categories.map((cat, ci) => {
-          const tile: Tile = cat.tiles[rowIndex]
+          const tile: Tile | undefined = cat.tiles[rowIndex]
           const c = palette[ci % palette.length]
+          if (!tile) {
+            return <div key={`${ci}-${rowIndex}`} className={styles.cell} />
+          }
           return (
             <div key={`${ci}-${rowIndex}`} className={styles.cell}>
               <QuestionTile
