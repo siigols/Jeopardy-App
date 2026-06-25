@@ -19,6 +19,15 @@ export default function HigherLowerDisplay({ content, revealed, onAllRevealed }:
   const rightItem = content.items[currentIndex]
   const isHigher = rightItem.numericValue >= leftItem.numericValue
 
+  // Preload next image so transition is instant
+  useEffect(() => {
+    const nextIndex = currentIndex + 1
+    if (nextIndex < content.items.length) {
+      const img = new Image()
+      img.src = content.items[nextIndex].image
+    }
+  }, [currentIndex, content.items])
+
   function handleRevealCurrent() {
     playClick()
     setShowingAnswer(true)
@@ -50,6 +59,7 @@ export default function HigherLowerDisplay({ content, revealed, onAllRevealed }:
         {/* Left panel — previous item (value always shown) */}
         <div className={styles.panel}>
           <img
+            key={leftItem.image}
             src={leftItem.image}
             alt={leftItem.label}
             className={styles.image}
@@ -67,6 +77,7 @@ export default function HigherLowerDisplay({ content, revealed, onAllRevealed }:
         {/* Right panel — challenger */}
         <div className={styles.panel}>
           <img
+            key={rightItem.image}
             src={rightItem.image}
             alt={rightItem.label}
             className={styles.image}
