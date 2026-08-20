@@ -5,7 +5,7 @@ const GAME_KEY = 'jeopardy:game'
 
 export interface AppSavedState {
   appState: string
-  selectedGameTitle: string | null
+  selectedGameId: number | null
   teams: Team[]
   finalTeams: Team[]
   tiedTeams: Team[]
@@ -22,7 +22,15 @@ export interface GameSavedState {
 export function loadAppState(): AppSavedState | null {
   try {
     const raw = sessionStorage.getItem(APP_KEY)
-    return raw ? JSON.parse(raw) : null
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<AppSavedState>
+    // Older versions persisted `selectedGameTitle` instead of an id — those
+    // entries are unrestorable, so normalise the id away and let the caller
+    // fall back to the board-select screen.
+    return {
+      ...parsed,
+      selectedGameId: typeof parsed.selectedGameId === 'number' ? parsed.selectedGameId : null,
+    } as AppSavedState
   } catch {
     return null
   }
@@ -55,4 +63,8 @@ export function saveGameState(state: GameSavedState): void {
 
 export function clearGameState(): void {
   sessionStorage.removeItem(GAME_KEY)
+}
+
+export function clearAppState(): void {
+  sessionStorage.removeItem(APP_KEY)
 }
