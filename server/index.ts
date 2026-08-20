@@ -6,6 +6,7 @@ import { dirname, resolve } from 'path'
 import { existsSync } from 'fs'
 import type { ServerToClientEvents, ClientToServerEvents } from '../src/types/socket-events.js'
 import { createSession, getSession, openQuestion, closeQuestion, recordBuzz } from './session.js'
+import { getAllBoards, getBoard } from './db.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -13,6 +14,25 @@ const app = express()
 const httpServer = createServer(app)
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: { origin: '*' },
+})
+
+app.use(express.json())
+
+// API routes (must come before the static/catch-all handler)
+app.get('/api/boards', (_req, res) => {
+  res.json(getAllBoards())
+})
+
+app.get('/api/boards/:id', (req, res) => {
+  const id = Number(req.params.id)
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid board id' })
+  }
+  const board = getBoard(id)
+  if (!board) {
+    return res.status(404).json({ error: 'Board not found' })
+  }
+  res.json(board)
 })
 
 // Serve built frontend in production
