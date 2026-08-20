@@ -88,6 +88,18 @@ export interface Game {
   tiebreaker?: SimpleQuestion
 }
 
+/** Lightweight board listing returned by GET /api/boards (no tiles). */
+export interface BoardSummary {
+  id: number
+  title: string
+  description?: string
+  categories: { name: string }[]
+  theme?: GameTheme
+}
+
+/** A full board as returned by GET /api/boards/:id. */
+export type LoadedGame = Game & { id: number }
+
 export interface Team {
   id: string
   name: string

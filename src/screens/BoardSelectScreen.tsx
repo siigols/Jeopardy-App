@@ -1,10 +1,10 @@
-import type { Game } from '../types/game'
+import type { BoardSummary } from '../types/game'
 import { useSounds } from '../hooks/useSounds'
 import styles from './BoardSelectScreen.module.css'
 
 interface Props {
-  boards: Game[]
-  onSelect: (game: Game) => void
+  boards: BoardSummary[]
+  onSelect: (id: number) => void
 }
 
 export default function BoardSelectScreen({ boards, onSelect }: Props) {
@@ -16,14 +16,14 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
       <p className={styles.subtitle}>Velg brett</p>
 
       <div className={styles.grid}>
-        {boards.map((board, i) => {
+        {boards.map(board => {
           const colors = board.theme?.categoryColors ?? []
           return (
             <button
-              key={i}
+              key={board.id}
               className={styles.card}
               onMouseEnter={playHover}
-              onClick={() => { playClick(); onSelect(board) }}
+              onClick={() => { playClick(); onSelect(board.id) }}
             >
               <div className={styles.swatches}>
                 {colors.slice(0, 5).map((c, j) => (
@@ -53,7 +53,7 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
               </div>
 
               <p className={styles.meta}>
-                {board.categories.length} kategorier · {board.categories[0]?.tiles.length ?? 0} spørsmål hver
+                {board.categories.length} kategorier
               </p>
             </button>
           )

@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
-import type { Game, GameTheme } from '../src/types/game.js'
+import type { Game, BoardSummary, LoadedGame } from '../src/types/game.js'
 import sampleGame from '../src/data/sampleGame.js'
 import footballWorldCup from '../src/data/footballWorldCup.js'
 
@@ -33,13 +33,7 @@ if (count === 0) {
   seed([sampleGame, footballWorldCup])
 }
 
-export type BoardSummary = {
-  id: number
-  title: string
-  description?: string
-  categories: { name: string }[]
-  theme?: GameTheme
-}
+export type { BoardSummary }
 
 interface BoardRow {
   id: number
@@ -68,7 +62,7 @@ export function getAllBoards(): BoardSummary[] {
   })
 }
 
-export function getBoard(id: number): (Game & { id: number }) | null {
+export function getBoard(id: number): LoadedGame | null {
   const row = db.prepare('SELECT id, title, data FROM boards WHERE id = ?').get(id) as
     | { id: number; title: string; data: string }
     | undefined

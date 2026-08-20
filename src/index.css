@@ -19,6 +19,7 @@
   --color-tile-answered: #1c1c28;
   --color-header-text: #ffffff;
   --color-text: #f0f0f8;
+  --color-text-muted: #a0a0b4;
   --color-accent: #f5a623;
   --color-accent-hover: #ffc24a;
   --color-chip-bg: rgba(255, 255, 255, 0.06);
@@ -39,6 +40,7 @@
   --color-tile-answered: #ddddd6;
   --color-header-text: #ffffff;
   --color-text: #1a1a2e;
+  --color-text-muted: #55556b;
   --color-accent: #c47a0e;
   --color-accent-hover: #a86200;
   --color-chip-bg: rgba(0, 0, 0, 0.05);
