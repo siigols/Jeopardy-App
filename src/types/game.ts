@@ -42,7 +42,8 @@ export interface MultipleChoiceQuestion {
 }
 
 export interface HigherLowerItem {
-  image: string
+  /** Optional: imageless boards (e.g. those built in the editor) render text-only. */
+  image?: string
   label: string
   value: string
   numericValue: number
@@ -74,6 +75,8 @@ export interface CategoryColor {
 }
 
 export interface GameTheme {
+  /** Id of the preset this theme came from, so the editor can re-select it. */
+  id?: string
   categoryColors: CategoryColor[]
   accent?: string
   bg?: string
@@ -93,14 +96,63 @@ export const BOARD_CATEGORY_COUNT = 5
 export const BOARD_TILE_POINTS = [200, 400, 600, 800, 1000] as const
 export const BOARD_TILE_COUNT = BOARD_TILE_POINTS.length
 
+/** Question types the board editor can create and round-trip. */
+export const EDITABLE_QUESTION_TYPES = [
+  'simple',
+  'tenable',
+  'multipleChoice',
+  'higherLower',
+] as const satisfies readonly BoardTileDraft['type'][]
+export type EditableQuestionType = BoardTileDraft['type']
+
+/** Fixed shape constraints for the rich editable question types. */
+export const TENABLE_ITEM_COUNT = 10
+export const MC_OPTION_COUNT = 4
+export const HL_MIN_ITEMS = 4
+export const HL_MAX_ITEMS = 6
+
+export interface SimpleTileDraft {
+  type: 'simple'
+  question: string
+  answer: string
+}
+
+export interface TenableTileDraft {
+  type: 'tenable'
+  prompt: string
+  items: string[]
+}
+
+export interface MultipleChoiceTileDraft {
+  type: 'multipleChoice'
+  question: string
+  options: [string, string, string, string]
+  correctIndex: number
+}
+
+export interface HigherLowerTileDraftItem {
+  label: string
+  numericValue: number
+}
+
+export interface HigherLowerTileDraft {
+  type: 'higherLower'
+  metric: string
+  items: HigherLowerTileDraftItem[]
+}
+
+/** A single editor tile on the wire. Tagged union, chosen per tile. */
+export type BoardTileDraft = SimpleTileDraft | TenableTileDraft | MultipleChoiceTileDraft | HigherLowerTileDraft
+
 /** The minimal wire shape the board editor POSTs to /api/boards. */
 export interface BoardDraft {
   title: string
   description?: string
+  themeId?: string
   tiebreaker?: SimpleQuestion
   categories: {
     name: string
-    tiles: { question: string; answer: string }[]
+    tiles: BoardTileDraft[]
   }[]
 }
 

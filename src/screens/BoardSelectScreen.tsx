@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import type { BoardSummary } from '../types/game'
+import { DEFAULT_CATEGORY_COLORS } from '../data/boardThemes'
 import { useSounds } from '../hooks/useSounds'
 import styles from './BoardSelectScreen.module.css'
 
@@ -60,15 +61,9 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
                   {colors.slice(0, 5).map((c, j) => (
                     <div key={j} className={styles.swatch} style={{ background: c.tile }} />
                   ))}
-                  {colors.length === 0 && (
-                    <>
-                      <div className={styles.swatch} style={{ background: '#4a1280' }} />
-                      <div className={styles.swatch} style={{ background: '#0d5e56' }} />
-                      <div className={styles.swatch} style={{ background: '#7c1038' }} />
-                      <div className={styles.swatch} style={{ background: '#7a3008' }} />
-                      <div className={styles.swatch} style={{ background: '#1a5c3a' }} />
-                    </>
-                  )}
+                  {colors.length === 0 && DEFAULT_CATEGORY_COLORS.map((c, j) => (
+                    <div key={j} className={styles.swatch} style={{ background: c.tile }} />
+                  ))}
                 </div>
 
                 <h2 className={styles.cardTitle}>{board.title}</h2>

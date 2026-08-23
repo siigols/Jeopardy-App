@@ -22,9 +22,10 @@ export default function HigherLowerDisplay({ content, revealed, onAllRevealed }:
   // Preload next image so transition is instant
   useEffect(() => {
     const nextIndex = currentIndex + 1
-    if (nextIndex < content.items.length) {
+    const nextImage = nextIndex < content.items.length ? content.items[nextIndex].image : undefined
+    if (nextImage) {
       const img = new Image()
-      img.src = content.items[nextIndex].image
+      img.src = nextImage
     }
   }, [currentIndex, content.items])
 

@@ -83,7 +83,7 @@ function toPayload(draft: DraftState): BoardDraft {
     title: draft.title.trim(),
     categories: draft.categories.map(c => ({
       name: c.name.trim(),
-      tiles: c.tiles.map(t => ({ question: t.question.trim(), answer: t.answer.trim() })),
+      tiles: c.tiles.map(t => ({ type: 'simple' as const, question: t.question.trim(), answer: t.answer.trim() })),
     })),
   }
   const description = draft.description.trim()
