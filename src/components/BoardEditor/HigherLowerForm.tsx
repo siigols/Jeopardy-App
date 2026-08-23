@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { useSounds } from '../../hooks/useSounds'
-import { HL_MAX_ITEMS, HL_MIN_ITEMS } from '../../types/game'
+import { HL_MAX_ITEMS, HL_MIN_ITEMS, HL_POINTS_PER_COMPARISON } from '../../types/game'
 import { HL_LABEL_MAX, TEXT_MAX, parseHlNumber } from './types'
 import type { HigherLowerEditorItem, HigherLowerEditorTile } from './types'
 import styles from './TileEditorModal.module.css'
@@ -42,6 +42,10 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
       <p className={styles.note}>
         {HL_MIN_ITEMS}–{HL_MAX_ITEMS} rader. Radene vises i den rekkefølgen de står her, og
         tallet formateres automatisk når spørsmålet spilles.
+      </p>
+      <p className={styles.note}>
+        Ruta gir {HL_POINTS_PER_COMPARISON} poeng per riktig sammenligning ((rader − 1) × {HL_POINTS_PER_COMPARISON}), ikke rutas egne poeng.
+        {HL_MIN_ITEMS}–{HL_MAX_ITEMS} rader gir altså maks {(HL_MIN_ITEMS - 1) * HL_POINTS_PER_COMPARISON}–{(HL_MAX_ITEMS - 1) * HL_POINTS_PER_COMPARISON} poeng.
       </p>
       <div className={styles.field}>
         <label className={styles.label} htmlFor={metricId}>
