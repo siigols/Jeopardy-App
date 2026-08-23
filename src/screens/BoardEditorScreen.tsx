@@ -3,19 +3,40 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSounds } from '../hooks/useSounds'
 import { clearEditCode, loadEditCode, saveEditCode } from '../utils/editCode'
+import TileEditorModal from '../components/BoardEditor/TileEditorModal'
+import {
+  TEXT_MAX,
+  TYPE_LABELS,
+  makeEmptyTile,
+  parseHlNumber,
+  tileIsEmpty,
+  tileIsFilled,
+} from '../components/BoardEditor/types'
+import type { HigherLowerEditorTile, RichTileDraft, TileDraft } from '../components/BoardEditor/types'
+import { BOARD_THEMES, DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../data/boardThemes'
 import {
   BOARD_CATEGORY_COUNT,
   BOARD_TILE_COUNT,
   BOARD_TILE_POINTS,
+  EDITABLE_QUESTION_TYPES,
+  HL_MIN_ITEMS,
+  MC_OPTION_COUNT,
+  TENABLE_ITEM_COUNT,
 } from '../types/game'
-import type { BoardDraft, LoadedGame, QuestionContent, SimpleQuestion } from '../types/game'
+import type {
+  BoardDraft,
+  BoardTileDraft,
+  EditableQuestionType,
+  LoadedGame,
+  QuestionContent,
+} from '../types/game'
 import styles from './BoardEditorScreen.module.css'
 
 interface Props {
   mode: 'create' | 'edit'
 }
 
-interface TileDraft {
+interface SimpleTiebreakerDraft {
   question: string
   answer: string
 }
@@ -28,37 +49,69 @@ interface CategoryDraft {
 interface DraftState {
   title: string
   description: string
-  tiebreaker: TileDraft
+  themeId: string
+  tiebreaker: SimpleTiebreakerDraft
   categories: CategoryDraft[]
 }
 
 const TITLE_MAX = 100
 const DESCRIPTION_MAX = 300
 const CATEGORY_MAX = 60
-const TEXT_MAX = 500
 
 function emptyDraft(): DraftState {
   return {
     title: '',
     description: '',
+    themeId: DEFAULT_BOARD_THEME_ID,
     tiebreaker: { question: '', answer: '' },
     categories: Array.from({ length: BOARD_CATEGORY_COUNT }, () => ({
       name: '',
-      tiles: Array.from({ length: BOARD_TILE_COUNT }, () => ({ question: '', answer: '' })),
+      tiles: Array.from({ length: BOARD_TILE_COUNT }, () => ({ type: null }) as TileDraft),
     })),
   }
 }
 
-function isSimple(content: QuestionContent): content is SimpleQuestion {
-  return content.type === 'simple'
+/** Maps a stored tile back to an editor tile. Blank/unsupported content is untyped. */
+function contentToTile(content: QuestionContent): TileDraft {
+  switch (content.type) {
+    case 'simple':
+      if (!content.question.trim() && !content.answer.trim()) return { type: null }
+      return { type: 'simple', question: content.question, answer: content.answer }
+    case 'tenable': {
+      const items = Array.from({ length: TENABLE_ITEM_COUNT }, (_, i) => content.items[i] ?? '')
+      return { type: 'tenable', prompt: content.prompt, items }
+    }
+    case 'multipleChoice': {
+      const options = Array.from({ length: MC_OPTION_COUNT }, (_, i) => content.options[i] ?? '') as [
+        string,
+        string,
+        string,
+        string,
+      ]
+      return { type: 'multipleChoice', question: content.question, options, correctIndex: content.correctIndex }
+    }
+    case 'higherLower':
+      return {
+        type: 'higherLower',
+        metric: content.metric,
+        items: content.items.map(item => ({ label: item.label, numericValue: String(item.numericValue) })),
+      }
+    default:
+      // Image-based types can't be authored here; the board is blocked anyway.
+      return { type: null }
+  }
 }
 
-/** Flattens a loaded Game into the flat editor draft, padding to the fixed 5x5 grid. */
+/** Flattens a loaded Game into the editor draft, padding to the fixed 5x5 grid. */
 function gameToDraft(game: LoadedGame): DraftState {
   const base = emptyDraft()
+  // An unknown stored theme id would round-trip into a server `unknown themeId` 400.
+  const storedThemeId = game.theme?.id
+  const themeId = storedThemeId && getBoardTheme(storedThemeId) ? storedThemeId : DEFAULT_BOARD_THEME_ID
   return {
     title: game.title,
     description: game.description ?? '',
+    themeId,
     tiebreaker: {
       question: game.tiebreaker?.question ?? '',
       answer: game.tiebreaker?.answer ?? '',
@@ -70,20 +123,56 @@ function gameToDraft(game: LoadedGame): DraftState {
         name: category.name,
         tiles: blank.tiles.map((blankTile, ti) => {
           const tile = category.tiles[ti]
-          if (!tile || !isSimple(tile.content)) return blankTile
-          return { question: tile.content.question, answer: tile.content.answer }
+          if (!tile) return blankTile
+          return contentToTile(tile.content)
         }),
       }
     }),
   }
 }
 
+/**
+ * Converts an editor tile into its wire shape. Untyped *and* content-free tiles
+ * become blank simple tiles, which the server coerces to blanks rather than
+ * validating strictly — so picking a type and typing nothing is never an error.
+ */
+function tileToPayload(tile: TileDraft): BoardTileDraft {
+  if (tileIsEmpty(tile)) return { type: 'simple', question: '', answer: '' }
+
+  switch (tile.type) {
+    case null:
+      return { type: 'simple', question: '', answer: '' }
+    case 'simple':
+      return { type: 'simple', question: tile.question.trim(), answer: tile.answer.trim() }
+    case 'tenable':
+      return { type: 'tenable', prompt: tile.prompt.trim(), items: tile.items.map(i => i.trim()) }
+    case 'multipleChoice':
+      return {
+        type: 'multipleChoice',
+        question: tile.question.trim(),
+        options: tile.options.map(o => o.trim()) as [string, string, string, string],
+        correctIndex: tile.correctIndex,
+      }
+    case 'higherLower':
+      return {
+        type: 'higherLower',
+        metric: tile.metric.trim(),
+        items: tile.items.map(i => ({
+          label: i.label.trim(),
+          // Non-numeric text is blocked by validateDraft before we ever get here.
+          numericValue: parseHlNumber(i.numericValue) ?? Number.NaN,
+        })),
+      }
+  }
+}
+
 function toPayload(draft: DraftState): BoardDraft {
   const payload: BoardDraft = {
     title: draft.title.trim(),
+    themeId: draft.themeId,
     categories: draft.categories.map(c => ({
       name: c.name.trim(),
-      tiles: c.tiles.map(t => ({ type: 'simple' as const, question: t.question.trim(), answer: t.answer.trim() })),
+      tiles: c.tiles.map(tileToPayload),
     })),
   }
   const description = draft.description.trim()
@@ -96,6 +185,67 @@ function toPayload(draft: DraftState): BoardDraft {
     payload.tiebreaker = { type: 'simple', question: tbQuestion, answer: tbAnswer }
   }
   return payload
+}
+
+/** Returns a problem description for the Høyere/Lavere rows, or null. */
+function validateHlRows(tile: HigherLowerEditorTile): string | null {
+  if (tile.items.length < HL_MIN_ITEMS) {
+    return `Høyere/Lavere må ha minst ${HL_MIN_ITEMS} rader.`
+  }
+  for (let i = 0; i < tile.items.length; i++) {
+    const item = tile.items[i]
+    const missingLabel = !item.label.trim()
+    const rawNumber = item.numericValue.trim()
+    const badNumber = parseHlNumber(item.numericValue) === null
+    if (missingLabel && badNumber && !rawNumber) return `Høyere/Lavere rad ${i + 1} mangler navn og tall.`
+    if (missingLabel) return `Høyere/Lavere rad ${i + 1} mangler navn.`
+    if (!badNumber) continue
+    // Distinguish "nothing typed" from "typed something that isn't a number",
+    // so a stray letter doesn't read as an empty field.
+    return rawNumber
+      ? `Høyere/Lavere rad ${i + 1} har et ugyldig tall: «${rawNumber}».`
+      : `Høyere/Lavere rad ${i + 1} mangler tall.`
+  }
+  return null
+}
+
+/** Returns a Norwegian problem description for a partially-filled tile, or null. */
+function validateTile(tile: TileDraft): string | null {
+  if (tile.type === null) return null
+  if (tileIsEmpty(tile)) return null
+
+  switch (tile.type) {
+    case 'simple':
+      if (!tile.answer.trim()) return 'Ruta mangler svar.'
+      if (!tile.question.trim()) return 'Ruta mangler spørsmål.'
+      return null
+    case 'tenable': {
+      if (!tile.prompt.trim()) return 'Topp 10 mangler spørsmål.'
+      const missing = tile.items.filter(i => !i.trim()).length
+      if (missing > 0) return `Topp 10 mangler ${missing} svar.`
+      return null
+    }
+    case 'multipleChoice': {
+      if (!tile.question.trim()) return 'Flervalg mangler spørsmål.'
+      const missing = tile.options.filter(o => !o.trim()).length
+      if (missing > 0) return `Flervalg mangler ${missing} alternativ.`
+      return null
+    }
+    case 'higherLower': {
+      // With a blank metric the rows are reported first: the author's only input
+      // may well have been a row, and "mangler måleenhet" would then point at a
+      // field they never touched.
+      if (!tile.metric.trim()) {
+        const rowsHaveContent = tile.items.some(i => i.label.trim() || i.numericValue.trim())
+        if (rowsHaveContent) {
+          const rowProblem = validateHlRows(tile)
+          if (rowProblem) return rowProblem
+        }
+        return 'Høyere/Lavere mangler måleenhet.'
+      }
+      return validateHlRows(tile)
+    }
+  }
 }
 
 /**
@@ -116,7 +266,27 @@ function validateDraft(draft: DraftState): string | null {
     return 'Tiebreaker må ha både spørsmål og svar (eller ingen av delene).'
   }
 
+  for (let ci = 0; ci < draft.categories.length; ci++) {
+    const tiles = draft.categories[ci].tiles
+    for (let ti = 0; ti < tiles.length; ti++) {
+      const problem = validateTile(tiles[ti])
+      if (problem) return `Kategori ${ci + 1}, ${BOARD_TILE_POINTS[ti]} poeng: ${problem}`
+    }
+  }
+
   return null
+}
+
+/** Short one-line status shown on the grid cell for the modal-edited types. */
+function tileSummary(tile: RichTileDraft): string {
+  switch (tile.type) {
+    case 'tenable':
+      return `Topp 10 · ${tile.items.filter(i => i.trim()).length}/${TENABLE_ITEM_COUNT}`
+    case 'multipleChoice':
+      return `Flervalg · ${tile.options.filter(o => o.trim()).length}/${MC_OPTION_COUNT}`
+    case 'higherLower':
+      return `Høyere/Lavere · ${tile.items.length} rader`
+  }
 }
 
 export default function BoardEditorScreen({ mode }: Props) {
@@ -131,6 +301,7 @@ export default function BoardEditorScreen({ mode }: Props) {
   const [blocked, setBlocked] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [editing, setEditing] = useState<{ ci: number; ti: number } | null>(null)
   // When a save 401s we drop the stale code and render an inline unlock form
   // instead of reloading — a 25-tile draft is far too much to throw away.
   const [needsCode, setNeedsCode] = useState(false)
@@ -186,6 +357,29 @@ export default function BoardEditorScreen({ mode }: Props) {
 
   const dirty = useMemo(() => JSON.stringify(draft) !== initialSnapshot, [draft, initialSnapshot])
 
+  const filledCount = useMemo(
+    () => draft.categories.reduce((sum, c) => sum + c.tiles.filter(tileIsFilled).length, 0),
+    [draft],
+  )
+
+  const previewTheme = useMemo(
+    () => getBoardTheme(draft.themeId) ?? getBoardTheme(DEFAULT_BOARD_THEME_ID),
+    [draft.themeId],
+  )
+
+  const closeEditor = useCallback(() => setEditing(null), [])
+
+  /** The tile the modal is editing, or null when it isn't a modal-edited type. */
+  const modalTile = useMemo<RichTileDraft | null>(() => {
+    if (!editing) return null
+    const tile = draft.categories[editing.ci].tiles[editing.ti]
+    return tile.type !== null && tile.type !== 'simple' ? tile : null
+  }, [draft, editing])
+
+  // `editing` is only ever cleared through `closeEditor` (the modal's `onClose`)
+  // or by `chooseType` retyping the very tile on screen, so the modal can never
+  // vanish while `editing` stays set.
+
   // Unsaved-changes guard. This only covers full page unloads (reload, tab close,
   // external navigation) and our own in-app "Tilbake" button. Browser back/forward
   // is deliberately NOT blocked: React Router v7 only exposes `useBlocker` on a
@@ -209,14 +403,37 @@ export default function BoardEditorScreen({ mode }: Props) {
     }))
   }, [])
 
-  const updateTile = useCallback((ci: number, ti: number, patch: Partial<TileDraft>) => {
+  const updateTile = useCallback((ci: number, ti: number, tile: TileDraft) => {
     setDraft(prev => ({
       ...prev,
       categories: prev.categories.map((c, i) =>
-        i === ci ? { ...c, tiles: c.tiles.map((t, j) => (j === ti ? { ...t, ...patch } : t)) } : c,
+        i === ci ? { ...c, tiles: c.tiles.map((t, j) => (j === ti ? tile : t)) } : c,
       ),
     }))
   }, [])
+
+  /**
+   * Switching type discards the tile's content, so confirm when there is any.
+   * `current` is passed in from the render that owns the button rather than read
+   * from state, which keeps this callback free of a `draft` dependency (it would
+   * otherwise rebuild all 100 type-button handlers on every keystroke). The
+   * confirm has to happen here, before `updateTile` — a setState updater must be
+   * pure and cannot prompt.
+   */
+  const chooseType = useCallback(
+    (ci: number, ti: number, type: EditableQuestionType, current: TileDraft) => {
+      if (current.type === type) return
+      if (!tileIsEmpty(current) && !window.confirm('Dette sletter innholdet i ruta. Fortsette?')) return
+      playClick()
+      // Changing the type can make an open modal's tile no longer modal-editable,
+      // so close it here rather than letting it disappear behind a stale `editing`.
+      // Only when the modal is showing *this* tile: another tile's type button
+      // must not dismiss an unrelated open editor.
+      setEditing(prev => (prev && prev.ci === ci && prev.ti === ti ? null : prev))
+      updateTile(ci, ti, makeEmptyTile(type))
+    },
+    [playClick, updateTile],
+  )
 
   function handleBack() {
     playClick()
@@ -226,11 +443,19 @@ export default function BoardEditorScreen({ mode }: Props) {
 
   /**
    * Performs the actual save with an explicit code, so the inline re-unlock flow
-   * can retry the very same request without unmounting the editor.
+   * can retry the very same request without unmounting the editor. Validation
+   * lives here rather than in the callers because the draft can be edited
+   * between the 401 and the unlock submit — this is the single gate every save
+   * path goes through.
    */
   const performSave = useCallback(
     async (code: string | null) => {
       if (!mountedRef.current) return
+      const problem = validateDraft(draft)
+      if (problem) {
+        setSaveError(problem)
+        return
+      }
       setSaving(true)
       setSaveError(null)
       try {
@@ -277,11 +502,6 @@ export default function BoardEditorScreen({ mode }: Props) {
   async function handleSave() {
     if (saving) return
     playClick()
-    const problem = validateDraft(draft)
-    if (problem) {
-      setSaveError(problem)
-      return
-    }
     await performSave(loadEditCode())
   }
 
@@ -326,7 +546,8 @@ export default function BoardEditorScreen({ mode }: Props) {
     return (
       <div className={styles.centered}>
         <p className={styles.message}>
-          Denne tavla bruker avanserte spørsmålstyper og kan ikke redigeres her.
+          Denne tavla bruker bildebaserte spørsmålstyper, og de kan ikke lages eller endres i
+          redigeringsverktøyet.
         </p>
         <Link to="/" className={styles.backLink} onMouseEnter={playHover} onClick={playClick}>
           ← Tilbake
@@ -392,6 +613,58 @@ export default function BoardEditorScreen({ mode }: Props) {
           </div>
         </section>
 
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Fargetema</h2>
+          <div className={styles.themeRow} role="group" aria-label="Fargetema">
+            {BOARD_THEMES.map(preset => {
+              const selected = preset.id === draft.themeId
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  aria-pressed={selected}
+                  className={`${styles.themeCard} ${selected ? styles.themeCardActive : ''}`}
+                  onMouseEnter={playHover}
+                  onClick={() => {
+                    playClick()
+                    setDraft(prev => ({ ...prev, themeId: preset.id }))
+                  }}
+                >
+                  <span className={styles.themeSwatches}>
+                    {preset.theme.categoryColors.map((color, i) => (
+                      <span key={i} className={styles.themeSwatch} style={{ background: color.tile }} />
+                    ))}
+                  </span>
+                  <span className={styles.themeName}>{preset.name}</span>
+                </button>
+              )
+            })}
+          </div>
+          {previewTheme && (
+            <div
+              className={styles.themePreview}
+              style={{ background: previewTheme.bg }}
+              aria-hidden="true"
+            >
+              <span
+                className={styles.previewHeader}
+                style={{ background: previewTheme.categoryColors[0].header }}
+              >
+                Kategori
+              </span>
+              <span
+                className={styles.previewTile}
+                style={{
+                  background: previewTheme.categoryColors[0].tile,
+                  color: previewTheme.accent,
+                }}
+              >
+                600
+              </span>
+            </div>
+          )}
+        </section>
+
         <div className={styles.grid}>
           {draft.categories.map((category, ci) => (
             <div className={styles.column} key={ci}>
@@ -403,27 +676,74 @@ export default function BoardEditorScreen({ mode }: Props) {
                 aria-label={`Kategori ${ci + 1} navn`}
                 onChange={e => updateCategory(ci, e.target.value)}
               />
-              {category.tiles.map((tile, ti) => (
-                <div className={styles.tileCard} key={ti}>
-                  <span className={styles.points}>{BOARD_TILE_POINTS[ti]}</span>
-                  <textarea
-                    className={styles.textarea}
-                    value={tile.question}
-                    maxLength={TEXT_MAX}
-                    placeholder="Spørsmål"
-                    aria-label={`Kategori ${ci + 1}, ${BOARD_TILE_POINTS[ti]} poeng – spørsmål`}
-                    onChange={e => updateTile(ci, ti, { question: e.target.value })}
-                  />
-                  <input
-                    className={styles.input}
-                    value={tile.answer}
-                    maxLength={TEXT_MAX}
-                    placeholder="Svar"
-                    aria-label={`Kategori ${ci + 1}, ${BOARD_TILE_POINTS[ti]} poeng – svar`}
-                    onChange={e => updateTile(ci, ti, { answer: e.target.value })}
-                  />
-                </div>
-              ))}
+              {category.tiles.map((tile, ti) => {
+                const tileName = `Kategori ${ci + 1}, ${BOARD_TILE_POINTS[ti]} poeng`
+                return (
+                  <div className={styles.tileCard} key={ti}>
+                    <span className={styles.points}>{BOARD_TILE_POINTS[ti]}</span>
+
+                    <div
+                      className={styles.typeSelector}
+                      role="group"
+                      aria-label={`${tileName} – spørsmålstype`}
+                    >
+                      {EDITABLE_QUESTION_TYPES.map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          aria-pressed={tile.type === type}
+                          className={`${styles.typeBtn} ${tile.type === type ? styles.typeBtnActive : ''}`}
+                          onMouseEnter={playHover}
+                          onClick={() => chooseType(ci, ti, type, tile)}
+                        >
+                          {TYPE_LABELS[type]}
+                        </button>
+                      ))}
+                    </div>
+
+                    {tile.type === null && <span className={styles.typePrompt}>Velg type</span>}
+
+                    {tile.type === 'simple' && (
+                      <>
+                        <textarea
+                          className={styles.textarea}
+                          value={tile.question}
+                          maxLength={TEXT_MAX}
+                          placeholder="Spørsmål"
+                          aria-label={`${tileName} – spørsmål`}
+                          onChange={e => updateTile(ci, ti, { ...tile, question: e.target.value })}
+                        />
+                        <input
+                          className={styles.input}
+                          value={tile.answer}
+                          maxLength={TEXT_MAX}
+                          placeholder="Svar"
+                          aria-label={`${tileName} – svar`}
+                          onChange={e => updateTile(ci, ti, { ...tile, answer: e.target.value })}
+                        />
+                      </>
+                    )}
+
+                    {tile.type !== null && tile.type !== 'simple' && (
+                      <div className={styles.tileSummary}>
+                        <span className={styles.tileBadge}>{tileSummary(tile)}</span>
+                        <button
+                          type="button"
+                          className={styles.editBtn}
+                          aria-label={`${tileName} – rediger`}
+                          onMouseEnter={playHover}
+                          onClick={() => {
+                            playClick()
+                            setEditing({ ci, ti })
+                          }}
+                        >
+                          Rediger
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           ))}
         </div>
@@ -467,6 +787,9 @@ export default function BoardEditorScreen({ mode }: Props) {
         </section>
 
         <div className={styles.footer}>
+          <span className={styles.fillCount}>
+            {filledCount} av {BOARD_CATEGORY_COUNT * BOARD_TILE_COUNT} ruter er fylt ut.
+          </span>
           {saveError && <span className={styles.error}>{saveError}</span>}
           {needsCode && (
             <form className={styles.unlockForm} onSubmit={handleInlineUnlock}>
@@ -502,6 +825,16 @@ export default function BoardEditorScreen({ mode }: Props) {
           </button>
         </div>
       </div>
+
+      {editing && modalTile && (
+        <TileEditorModal
+          categoryIndex={editing.ci}
+          tileIndex={editing.ti}
+          tile={modalTile}
+          onChange={next => updateTile(editing.ci, editing.ti, next)}
+          onClose={closeEditor}
+        />
+      )}
     </div>
   )
 }

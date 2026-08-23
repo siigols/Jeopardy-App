@@ -4,6 +4,9 @@ import {
   BOARD_TILE_COUNT,
   HL_MAX_ITEMS,
   HL_MIN_ITEMS,
+  MAX_LABEL_TEXT,
+  MAX_OPTION_TEXT,
+  MAX_TILE_TEXT,
   MC_OPTION_COUNT,
   TENABLE_ITEM_COUNT,
 } from '../src/types/game.js'
@@ -12,9 +15,6 @@ import { getBoardTheme } from '../src/data/boardThemes.js'
 const MAX_TITLE = 100
 const MAX_DESCRIPTION = 300
 const MAX_CATEGORY_NAME = 60
-const MAX_TILE_TEXT = 500
-const MAX_OPTION_TEXT = 200
-const MAX_LABEL_TEXT = 120
 
 const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower'] as const
 

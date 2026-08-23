@@ -111,6 +111,11 @@ export const MC_OPTION_COUNT = 4
 export const HL_MIN_ITEMS = 4
 export const HL_MAX_ITEMS = 6
 
+/** Field length caps for editable board text. Shared by client + server so they can't drift. */
+export const MAX_TILE_TEXT = 500
+export const MAX_OPTION_TEXT = 200
+export const MAX_LABEL_TEXT = 120
+
 export interface SimpleTileDraft {
   type: 'simple'
   question: string

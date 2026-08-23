@@ -1,0 +1,239 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.dialog {
+  background: var(--color-bg, #0b0b1a);
+  border: 1px solid var(--color-chip-border);
+  border-radius: 16px;
+  width: min(680px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.headerTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-accent);
+}
+
+.headerType {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+.closeBtn {
+  background: transparent;
+  border: 1px solid var(--color-chip-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  opacity: 0.55;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 8px 12px;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.closeBtn:hover {
+  opacity: 1;
+  border-color: var(--color-accent);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.note {
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text);
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.input,
+.textarea {
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  color: var(--color-text);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--color-accent);
+}
+
+.textarea {
+  font-family: inherit;
+  resize: vertical;
+  min-height: 68px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rowLabel {
+  flex: 0 0 96px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-accent);
+}
+
+.rowLabelNarrow {
+  flex: 0 0 28px;
+}
+
+.rowPreview {
+  flex: 0 0 110px;
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.55;
+  text-align: right;
+}
+
+.hlValue {
+  flex: 0 0 130px;
+}
+
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+/* A <fieldset> is only used to group the radios semantically; strip its chrome. */
+.bareFieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.smallBtn {
+  background: transparent;
+  border: 1px solid var(--color-chip-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  opacity: 0.7;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 6px 12px;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.smallBtn:hover:not(:disabled) {
+  opacity: 1;
+  border-color: var(--color-accent);
+}
+
+.smallBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.doneBtn {
+  background: var(--color-accent);
+  color: var(--color-btn-primary-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+
+.doneBtn:hover {
+  background: var(--color-accent-hover);
+}
