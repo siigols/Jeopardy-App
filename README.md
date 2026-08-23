@@ -51,10 +51,6 @@ The shared secret that gates board creation and editing. The client sends it in 
 EDIT_CODE=some-code
 ```
 
-If `EDIT_CODE` is unset the server falls back to `jeopardy` and prints a warning on
-startup. That default is for local development only — set a real value before
-deploying.
-
 Failed attempts are rate limited to 10 per IP per 15 minutes, after which the server
 answers `429` until the window rolls over.
 
