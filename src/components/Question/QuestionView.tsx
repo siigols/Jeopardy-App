@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useSounds } from '../../hooks/useSounds'
-import type { Team, Tile } from '../../types/game'
+import { HL_POINTS_PER_COMPARISON, higherLowerComparisons, type Team, type Tile } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
 import MultipleChoiceDisplay from './MultipleChoiceDisplay'
 import HigherLowerDisplay from './HigherLowerDisplay'
@@ -23,10 +23,15 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
   const [tenableRevealedCount, setTenableRevealedCount] = useState(0)
   const [tenableAutoRevealActive, setTenableAutoRevealActive] = useState(false)
   const [selectedTenableData, setSelectedTenableData] = useState<{ tile: Tile | null; points: number | null }>({ tile: null, points: null })
-  const { playReveal, playAward, playSkip, playBuzz, playHover } = useSounds()
+  const [selectedHigherLowerData, setSelectedHigherLowerData] = useState<{ tile: Tile | null; correct: number | null }>({ tile: null, correct: null })
+  const { playReveal, playAward, playSkip, playBuzz, playHover, playClick } = useSounds()
 
   // Auto-reset selected points when tile changes
   const selectedTenablePoints = selectedTenableData.tile === tile ? selectedTenableData.points : null
+  const selectedCorrectCount = selectedHigherLowerData.tile === tile ? selectedHigherLowerData.correct : null
+
+  /** Number of comparisons in the active higherLower tile (N items → N-1). 0 for other types. */
+  const comparisonCount = higherLowerComparisons(tile.content)
 
   useEffect(() => {
     if (tile.content.type !== 'tenable') return
@@ -87,6 +92,13 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
     if (tile.content.type === 'tenable') {
       if (selectedTenablePoints == null) return
       onAward(teamId, selectedTenablePoints)
+      return
+    }
+
+    if (tile.content.type === 'higherLower' && comparisonCount > 0) {
+      if (selectedCorrectCount == null) return
+      // 100 poeng per riktig sammenligning. 0 is a valid award, so always pass a number.
+      onAward(teamId, selectedCorrectCount * HL_POINTS_PER_COMPARISON)
       return
     }
 
@@ -160,6 +172,24 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
           </button>
         ) : (
           <div className={styles.awardSection}>
+            {tile.content.type === 'higherLower' && comparisonCount > 0 && (
+              <>
+                <p className={styles.awardLabel}>Hvor mange riktige?</p>
+                <div className={styles.countButtons}>
+                  {Array.from({ length: comparisonCount + 1 }, (_, count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      className={`${styles.countBtn} ${selectedCorrectCount === count ? styles.countBtnSelected : ''}`}
+                      onMouseEnter={playHover}
+                      onClick={() => { playClick(); setSelectedHigherLowerData({ tile, correct: count }) }}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <p className={styles.awardLabel}>Gi poeng til:</p>
             <div className={styles.awardButtons}>
               {teams.map(team => (
@@ -168,7 +198,10 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
                   className={styles.teamBtn}
                   style={{ '--team-color': teamColors[team.id] } as CSSProperties}
                   onMouseEnter={playHover}
-                  disabled={tile.content.type === 'tenable' && selectedTenablePoints == null}
+                  disabled={
+                    (tile.content.type === 'tenable' && selectedTenablePoints == null) ||
+                    (tile.content.type === 'higherLower' && comparisonCount > 0 && selectedCorrectCount == null)
+                  }
                   onClick={() => handleAward(team.id)}
                 >
                   {team.name}
