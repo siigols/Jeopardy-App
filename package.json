@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite --host\" \"tsx watch server/index.ts\"",
+    "dev": "concurrently \"vite --host\" \"tsx watch --env-file-if-exists=.env server/index.ts\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "tsx server/index.ts"
+    "start": "tsx --env-file-if-exists=.env server/index.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
