@@ -88,6 +88,22 @@ export interface Game {
   tiebreaker?: SimpleQuestion
 }
 
+/** User-created boards are a fixed 5x5 grid. Shared by client + server so they can't drift. */
+export const BOARD_CATEGORY_COUNT = 5
+export const BOARD_TILE_POINTS = [200, 400, 600, 800, 1000] as const
+export const BOARD_TILE_COUNT = BOARD_TILE_POINTS.length
+
+/** The minimal wire shape the board editor POSTs to /api/boards. */
+export interface BoardDraft {
+  title: string
+  description?: string
+  tiebreaker?: SimpleQuestion
+  categories: {
+    name: string
+    tiles: { question: string; answer: string }[]
+  }[]
+}
+
 /** Lightweight board listing returned by GET /api/boards (no tiles). */
 export interface BoardSummary {
   id: number
@@ -95,10 +111,12 @@ export interface BoardSummary {
   description?: string
   categories: { name: string }[]
   theme?: GameTheme
+  /** False for boards using rich question types, which the editor can't round-trip. */
+  editable: boolean
 }
 
 /** A full board as returned by GET /api/boards/:id. */
-export type LoadedGame = Game & { id: number }
+export type LoadedGame = Game & { id: number; editable: boolean }
 
 export interface Team {
   id: string
