@@ -39,6 +39,16 @@
   object-fit: cover;
 }
 
+.textPanel {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 60%),
+    linear-gradient(160deg, var(--color-accent) 0%, #2a2338 35%, #14141f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+}
+
 .overlay {
   position: absolute;
   inset: 0;
@@ -51,12 +61,33 @@
   gap: 6px;
 }
 
+/* Imageless panels supply their own background, so replace the bottom-up
+   darkening gradient with an even scrim and centre the label in the card.
+   The scrim keeps white text readable over the bright accent stop at the
+   top of the gradient, even when a long label wraps to three lines. */
+.overlayText {
+  justify-content: center;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.4) 55%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  gap: 18px;
+}
+
 .label {
   font-size: clamp(1.2rem, 3vw, 2rem);
   font-weight: 800;
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   text-align: center;
+}
+
+.labelLarge {
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  line-height: 1.15;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
 }
 
 .value {
