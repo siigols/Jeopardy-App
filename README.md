@@ -74,18 +74,34 @@ limiter.
 
 - **"Ny tavle"** on the board-select screen opens a blank editor at `/boards/new`.
 - Editable boards show a **pencil icon** on their card, linking to `/boards/:id/edit`.
-- The editor covers 5 categories × 5 simple question/answer tiles, plus title,
-  description and an optional tiebreaker.
+- The editor covers 5 categories × 5 tiles, plus title, description and an optional
+  tiebreaker.
+- The board's colour theme is picked from a set of presets — no custom colour pickers.
 
 Both routes sit behind a code gate: you enter the edit code once, it is verified via
 `POST /api/verify-code` and kept in `sessionStorage` for the rest of the tab session.
 
-Boards that use rich question types cannot be represented in the simple editor, so
-they show no pencil icon and the server rejects writes against them with `409`. Note
-that **both** seeded boards (`Jeopardy!` and the football board) use rich question
-types and report `editable: false` — so on a fresh database no board shows a pencil
-icon. That is expected, not a broken editor: the pencil only appears on boards you
-create yourself through **"Ny tavle"**.
+### Question types
+
+Each of the 25 tiles gets its own question type, chosen independently. Mixed columns
+and mixed boards are the normal case.
+
+| Type                | What it is                                                        |
+| ------------------- | ----------------------------------------------------------------- |
+| **Vanlig**          | One question, one answer                                           |
+| **Topp 10**         | 10 answers, points awarded by placement                            |
+| **Flervalg**        | 4 options, one correct                                             |
+| **Høyere/Lavere**   | 4–6 rows of name + number, no images                               |
+
+Vanlig tiles are edited inline in the grid; the other three open in a modal.
+
+Boards that use question types the editor can't author — `overUnder`,
+`yearCountryImage`, or `higherLower` rows with images — still cannot be represented in
+the editor, so they show no pencil icon and the server rejects writes against them with
+`409`. Note that **both** seeded boards report `editable: false`: `Jeopardy!` has an
+image-backed `higherLower` tile, and the football board has `yearCountryImage` tiles.
+So on a fresh database no board shows a pencil icon. That is expected, not a broken
+editor: the pencil only appears on boards you create yourself through **"Ny tavle"**.
 
 ## API
 

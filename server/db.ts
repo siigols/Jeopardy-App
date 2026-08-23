@@ -1,8 +1,16 @@
 import Database from 'better-sqlite3'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
-import type { Game, BoardSummary, LoadedGame, BoardDraft, GameTheme } from '../src/types/game.js'
-import { BOARD_TILE_POINTS } from '../src/types/game.js'
+import type { Game, BoardSummary, LoadedGame, BoardDraft, GameTheme, QuestionContent } from '../src/types/game.js'
+import {
+  BOARD_TILE_POINTS,
+  EDITABLE_QUESTION_TYPES,
+  HL_MAX_ITEMS,
+  HL_MIN_ITEMS,
+  MC_OPTION_COUNT,
+  TENABLE_ITEM_COUNT,
+} from '../src/types/game.js'
+import { DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../src/data/boardThemes.js'
 import sampleGame from '../src/data/sampleGame.js'
 import footballWorldCup from '../src/data/footballWorldCup.js'
 
@@ -43,8 +51,12 @@ if (count === 0) {
 export type { BoardSummary }
 
 /**
- * Boards are only editable in the board editor if every tile is a plain Q&A tile —
- * the editor can only emit `simple` content and would silently destroy rich types.
+ * Boards are only editable in the board editor if every tile uses one of the
+ * question types the editor can author and round-trip. Image-backed content (the
+ * football board) would be silently destroyed, so those boards stay locked.
+ *
+ * Arity is checked here too: a board the validator would reject must not be
+ * offered for editing, or saving it back would fail with a confusing 400.
  */
 export function boardIsEditable(game: Game): boolean {
   // Defensive: rows can hold valid JSON that isn't a Game. `every` on a missing or
@@ -52,7 +64,27 @@ export function boardIsEditable(game: Game): boolean {
   if (!Array.isArray(game?.categories) || game.categories.length === 0) return false
   return game.categories.every(category => {
     if (!Array.isArray(category?.tiles) || category.tiles.length === 0) return false
-    return category.tiles.every(tile => tile?.content?.type === 'simple')
+    return category.tiles.every(tile => {
+      const content = tile?.content
+      if (!content) return false
+      if (!(EDITABLE_QUESTION_TYPES as readonly string[]).includes(content.type)) return false
+      if (content.type === 'tenable') {
+        return Array.isArray(content.items) && content.items.length === TENABLE_ITEM_COUNT
+      }
+      if (content.type === 'multipleChoice') {
+        if (!Array.isArray(content.options) || content.options.length !== MC_OPTION_COUNT) return false
+        const index: unknown = content.correctIndex
+        return typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < MC_OPTION_COUNT
+      }
+      // Image-backed higher/lower tiles can't be round-tripped: the editor has no
+      // way to author or preserve images.
+      if (content.type === 'higherLower') {
+        if (!Array.isArray(content.items)) return false
+        if (content.items.length < HL_MIN_ITEMS || content.items.length > HL_MAX_ITEMS) return false
+        return content.items.every(item => !item?.image)
+      }
+      return true
+    })
   })
 }
 
@@ -73,8 +105,58 @@ function isValidGame(game: unknown): game is Game {
   )
 }
 
-/** Shared draft -> Game mapping used by both createBoard and updateBoard. */
-function draftToGame(draft: BoardDraft, theme?: GameTheme): Game {
+/** Display strings for higher/lower values are derived, never authored. */
+const numberFormat = new Intl.NumberFormat('nb-NO')
+
+function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): QuestionContent {
+  switch (tile.type) {
+    case 'tenable':
+      return { type: 'tenable', prompt: tile.prompt, items: tile.items }
+    case 'multipleChoice':
+      return {
+        type: 'multipleChoice',
+        question: tile.question,
+        options: tile.options,
+        correctIndex: tile.correctIndex,
+      }
+    case 'higherLower':
+      return {
+        type: 'higherLower',
+        metric: tile.metric,
+        items: tile.items.map(item => ({
+          label: item.label,
+          value: numberFormat.format(item.numericValue),
+          numericValue: item.numericValue,
+        })),
+      }
+    case 'simple':
+      return { type: 'simple', question: tile.question, answer: tile.answer }
+  }
+
+  // Exhaustiveness guard: adding a draft tile type without a branch above is a
+  // compile error here rather than a silent fallthrough into `simple`.
+  const unreachable: never = tile
+  throw new Error(`Unsupported tile type: ${JSON.stringify(unreachable)}`)
+}
+
+/**
+ * Shared draft -> Game mapping used by both createBoard and updateBoard.
+ * `existingTheme` is the theme already stored on the board, used when the draft
+ * names no preset. `fallbackTheme` applies only when neither is present.
+ */
+function draftToGame(draft: BoardDraft, existingTheme?: GameTheme, fallbackTheme?: GameTheme): Game {
+  const preset = draft.themeId !== undefined ? getBoardTheme(draft.themeId) : undefined
+  const base = preset ?? existingTheme ?? fallbackTheme
+  // Always a shallow copy: BOARD_THEMES presets are shared module-level objects
+  // and must never be handed out where a consumer could mutate them.
+  // Decorations aren't authorable, so carry any existing ones across a theme swap.
+  const theme: GameTheme | undefined =
+    base === undefined
+      ? undefined
+      : existingTheme?.decorations !== undefined
+        ? { ...base, decorations: existingTheme.decorations }
+        : { ...base }
+
   return {
     title: draft.title,
     ...(draft.description !== undefined ? { description: draft.description } : {}),
@@ -84,7 +166,7 @@ function draftToGame(draft: BoardDraft, theme?: GameTheme): Game {
       name: category.name,
       tiles: category.tiles.map((tile, index) => ({
         points: BOARD_TILE_POINTS[index],
-        content: { type: 'simple', question: tile.question, answer: tile.answer },
+        content: tileContent(tile),
         answered: false,
       })),
     })),
@@ -140,7 +222,8 @@ export function getBoard(id: number): LoadedGame | null {
 }
 
 export function createBoard(draft: BoardDraft): LoadedGame {
-  const game = draftToGame(draft)
+  // New boards always carry a theme, so the board list never renders an unstyled card.
+  const game = draftToGame(draft, undefined, getBoardTheme(DEFAULT_BOARD_THEME_ID))
   const now = new Date().toISOString()
 
   const info = db
@@ -153,8 +236,9 @@ export function createBoard(draft: BoardDraft): LoadedGame {
 }
 
 /**
- * Replaces a board's content from an editor draft. Preserves the existing theme so
- * board colours survive an edit. Returns null if the board no longer exists.
+ * Replaces a board's content from an editor draft. A `draft.themeId` wins; the
+ * existing stored theme is only the fallback, so board colours survive an edit
+ * that names no preset. Returns null if the board no longer exists.
  */
 export function updateBoard(id: number, draft: BoardDraft): LoadedGame | null {
   const row = db.prepare('SELECT id, title, data FROM boards WHERE id = ?').get(id) as
