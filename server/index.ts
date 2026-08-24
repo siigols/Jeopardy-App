@@ -7,7 +7,7 @@ import { existsSync } from 'fs'
 import type { LoadedGame } from '../src/types/game.js'
 import type { ServerToClientEvents, ClientToServerEvents } from '../src/types/socket-events.js'
 import { createSession, getSession, openQuestion, closeQuestion, recordBuzz } from './session.js'
-import { getAllBoards, getBoard, createBoard, updateBoard } from './db.js'
+import { getAllBoards, getBoard, createBoard, updateBoard, initDb } from './db.js'
 import { validateBoardDraft } from './validation.js'
 import { requireEditCode } from './auth.js'
 
@@ -41,8 +41,15 @@ if (rawTrustProxy) {
 }
 
 // API routes (must come before the static/catch-all handler)
-app.get('/api/boards', (_req, res) => {
-  res.json(getAllBoards())
+// Every handler that touches the database is async and must catch its own
+// rejections: an unhandled rejection in an Express 4 handler never reaches the
+// error middleware, so the request would hang until the client times out.
+app.get('/api/boards', async (_req, res, next) => {
+  try {
+    res.json(await getAllBoards())
+  } catch (err) {
+    next(err)
+  }
 })
 
 /** Parses a positive-integer board id from a route param, or null if invalid. */
@@ -54,14 +61,14 @@ function parseBoardId(raw: string | string[]): number | null {
   return Number.isInteger(id) && id > 0 ? id : null
 }
 
-app.get('/api/boards/:id', (req, res, next) => {
+app.get('/api/boards/:id', async (req, res, next) => {
   const id = parseBoardId(req.params.id)
   if (id === null) {
     return res.status(400).json({ error: 'Invalid board id' })
   }
   let board: LoadedGame | null
   try {
-    board = getBoard(id)
+    board = await getBoard(id)
   } catch (err) {
     return next(err)
   }
@@ -75,19 +82,19 @@ app.post('/api/verify-code', requireEditCode, (_req, res) => {
   res.json({ ok: true })
 })
 
-app.post('/api/boards', requireEditCode, (req, res, next) => {
+app.post('/api/boards', requireEditCode, async (req, res, next) => {
   const result = validateBoardDraft(req.body)
   if (!result.ok) {
     return res.status(400).json({ error: result.error })
   }
   try {
-    res.status(201).json(createBoard(result.draft))
+    res.status(201).json(await createBoard(result.draft))
   } catch (err) {
     next(err)
   }
 })
 
-app.put('/api/boards/:id', requireEditCode, (req, res, next) => {
+app.put('/api/boards/:id', requireEditCode, async (req, res, next) => {
   const id = parseBoardId(req.params.id)
   if (id === null) {
     return res.status(400).json({ error: 'Invalid board id' })
@@ -95,7 +102,7 @@ app.put('/api/boards/:id', requireEditCode, (req, res, next) => {
 
   let existing: LoadedGame | null
   try {
-    existing = getBoard(id)
+    existing = await getBoard(id)
   } catch (err) {
     return next(err)
   }
@@ -115,7 +122,7 @@ app.put('/api/boards/:id', requireEditCode, (req, res, next) => {
 
   let updated: LoadedGame | null
   try {
-    updated = updateBoard(id, result.draft)
+    updated = await updateBoard(id, result.draft)
   } catch (err) {
     return next(err)
   }
@@ -200,6 +207,17 @@ io.on('connection', socket => {
 })
 
 const PORT = process.env.PORT ?? 3001
-httpServer.listen(PORT, () => {
-  console.log(`Socket server running on port ${PORT}`)
-})
+
+// The database is remote now, so schema setup and seeding are network calls that
+// have to finish before the first request arrives. Failing hard on a bad URL or
+// token beats booting a server that answers 500 to every board request.
+initDb()
+  .then(() => {
+    httpServer.listen(PORT, () => {
+      console.log(`Socket server running on port ${PORT}`)
+    })
+  })
+  .catch((err: unknown) => {
+    console.error('Database initialisation failed — not starting server.', err)
+    process.exit(1)
+  })

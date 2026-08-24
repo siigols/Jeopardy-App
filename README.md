@@ -1,7 +1,10 @@
 # Jeopardy App
 
 A Jeopardy game board with a host screen and phone buzzers, built with React +
-TypeScript + Vite on the front end and Express + Socket.IO + SQLite on the back end.
+TypeScript + Vite on the front end and Express + Socket.IO + libSQL on the back end.
+
+Boards are stored in a libSQL database: a local file in development, a hosted
+[Turso](https://turso.tech) database in production. See [Database](#database).
 
 ## Getting started
 
@@ -18,15 +21,90 @@ development you must edit `vite.config.ts` to match, otherwise the proxy silentl
 keeps pointing at 3001. In production this does not apply: the server serves the
 built assets itself, so `PORT` can be set freely.
 
+## Database
+
+Storage lives entirely in `server/db.ts`, behind `getAllBoards`, `getBoard`,
+`createBoard` and `updateBoard`. A board is one row: the whole `Game` object is
+serialised into a `data` JSON column, with `title` and `description` denormalised
+alongside it for the board list.
+
+The driver is `@libsql/client`, which speaks to both a local SQLite file and a
+hosted Turso database with the same API, so there is a single code path.
+
+### Why not a local file in production
+
+The app is deployed to a host with an ephemeral filesystem (Render's free plan).
+The container is recycled on every deploy and after periods of inactivity, and the
+filesystem goes with it — so a `server/jeopardy.db` file would take every board
+anyone created down with it. That is why production points at a database that lives
+outside the container. The server enforces this: with `NODE_ENV=production` and no
+`TURSO_DATABASE_URL`, it refuses to start rather than quietly losing data later.
+
+### Setting up Turso
+
+Install the CLI with the official script. Avoid Homebrew here: the formula lives in
+`tursodatabase/tap` (the older `libsql/sqld` tap is deprecated and will fail), and
+recent Homebrew versions additionally require an explicit `brew trust` step per tap.
+The script sidesteps both.
+
+```sh
+curl -sSfL https://get.tur.so/install.sh | bash
+exec $SHELL -l          # pick up the new PATH entry
+turso --version
+```
+
+```sh
+turso auth signup
+
+turso db create jeopardy
+turso db show jeopardy --url           # -> TURSO_DATABASE_URL
+turso db tokens create jeopardy        # -> TURSO_AUTH_TOKEN
+```
+
+Everything above can also be done without the CLI at
+[app.turso.tech](https://app.turso.tech) — create a database, then read the URL and
+generate a token from its dashboard.
+
+Schema creation, the `updated_at` migration and the initial seed all run at startup
+via `initDb()`, so there is no separate provisioning step — an empty database is set
+up on first boot.
+
+### Migrating existing local boards
+
+If you already have boards in `server/jeopardy.db` and want to keep them:
+
+```sh
+TURSO_DATABASE_URL='libsql://...' TURSO_AUTH_TOKEN='...' npm run migrate:turso
+```
+
+The local file is opened read-only and never modified. Board ids are reassigned by
+the target database rather than preserved — nothing outside the database holds onto
+a board id permanently. The script refuses to run against a target that already
+holds real boards (pass `--force` to override), and clears the two auto-seeded
+sample boards first so migrating them from the local file does not duplicate them.
+
+## Deployment (Render)
+
+`render.yaml` is a Render Blueprint: connect the repo as a Blueprint and Render
+reads the build/start commands from it. `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` and
+`EDIT_CODE` are marked `sync: false`, so Render prompts for them in the dashboard and
+they are never committed.
+
+Note that on the free plan the server still sleeps after inactivity — the first
+request after a sleep is slow, and any in-progress buzzer session is lost, since
+sessions are deliberately kept in memory (`server/session.ts`). Boards now survive
+this; live game state does not, and is not meant to.
+
 ## Scripts
 
-| Script            | What it does                                                       |
-| ----------------- | ------------------------------------------------------------------ |
-| `npm run dev`     | Vite dev server + `tsx watch` on `server/index.ts`                  |
-| `npm run build`   | `tsc -b` then `vite build` into `dist/`                             |
-| `npm run lint`    | ESLint over the repo                                                |
-| `npm run preview` | Serves the built front end with Vite                                |
-| `npm start`       | Runs the server; serves `dist/` too when it exists                  |
+| Script                 | What it does                                                  |
+| ---------------------- | ------------------------------------------------------------- |
+| `npm run dev`          | Vite dev server + `tsx watch` on `server/index.ts`             |
+| `npm run build`        | `tsc -b` then `vite build` into `dist/`                        |
+| `npm run lint`         | ESLint over the repo                                           |
+| `npm run preview`      | Serves the built front end with Vite                           |
+| `npm start`            | Runs the server; serves `dist/` too when it exists             |
+| `npm run migrate:turso`| One-off copy of local boards into a hosted Turso database      |
 
 ## Environment variables
 
@@ -41,6 +119,23 @@ missing).
 
 When no `.env` is present, Node's `.env not found. Continuing without it.` notice is
 printed twice — `tsx` re-execs node with the same flags. That is expected and harmless.
+
+### `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`
+
+Where boards are stored. Optional in development — the server falls back to
+`server/jeopardy.db` and warns. **Required in production**: with `NODE_ENV=production`
+and no URL set, the server exits rather than start on a filesystem that will be wiped.
+
+```
+# dev
+TURSO_DATABASE_URL=file:./server/jeopardy.db
+
+# prod
+TURSO_DATABASE_URL=libsql://your-db-your-org.turso.io
+TURSO_AUTH_TOKEN=...
+```
+
+`TURSO_AUTH_TOKEN` is only needed for a `libsql://` URL.
 
 ### `EDIT_CODE`
 

@@ -1,0 +1,33 @@
+# Render deployment config (Blueprint).
+#
+# Secrets are declared with `sync: false`, which means Render prompts for them in
+# the dashboard and never stores them in this file. Do not put real values here —
+# it is committed to the repo.
+services:
+  - type: web
+    name: jeopardy-app
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/boards
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Render terminates TLS and proxies to the app, so every request arrives from
+      # the proxy's address. Without this the edit-code rate limiter buckets all
+      # visitors together and ten bad guesses lock out everyone.
+      - key: TRUST_PROXY
+        value: "1"
+
+      # Set these in the Render dashboard.
+      #   TURSO_DATABASE_URL  libsql://<db>-<org>.turso.io   (turso db show <db> --url)
+      #   TURSO_AUTH_TOKEN                                   (turso db tokens create <db>)
+      #   EDIT_CODE           shared secret for the board editor
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: EDIT_CODE
+        sync: false
