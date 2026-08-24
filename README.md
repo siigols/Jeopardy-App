@@ -90,10 +90,47 @@ reads the build/start commands from it. `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
 `EDIT_CODE` are marked `sync: false`, so Render prompts for them in the dashboard and
 they are never committed.
 
-Note that on the free plan the server still sleeps after inactivity — the first
-request after a sleep is slow, and any in-progress buzzer session is lost, since
-sessions are deliberately kept in memory (`server/session.ts`). Boards now survive
-this; live game state does not, and is not meant to.
+If the service was created by hand rather than from the Blueprint, Render will not
+read `render.yaml` at all — set the build command, start command and every variable
+in the dashboard yourself.
+
+### `npm ci --include=dev` is not optional
+
+The build command is `npm ci --include=dev && npm run build`, not plain `npm ci`.
+`NODE_ENV=production` makes npm skip `devDependencies`, and the entire build
+toolchain — `vite`, `typescript`, `@vitejs/plugin-react` — lives there. Without the
+flag nothing the build needs is installed and `tsc -b` fails with:
+
+```
+error TS2688: Cannot find type definition file for 'vite/client'.
+vite.config.ts(1,30): error TS2307: Cannot find module 'vite'
+```
+
+The flag only affects installation. The running server still sees
+`NODE_ENV=production`.
+
+`tsx` is a runtime dependency, not a dev one, because `npm start` executes the
+server through it — moving it to `devDependencies` would break the deploy.
+
+### Free plan caveat
+
+The server still sleeps after inactivity — the first request after a sleep is slow,
+and any in-progress buzzer session is lost, since sessions are deliberately kept in
+memory (`server/session.ts`). Boards now survive this; live game state does not, and
+is not meant to.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`. It
+deliberately mirrors the Render build exactly — same Node version, same
+`NODE_ENV=production`, same install and build commands — so a deploy-breaking change
+fails in CI first. It then boots the server against a throwaway local database and
+checks that `/api/boards` responds, since the server runs straight from TypeScript
+and is otherwise never exercised by the build.
+
+`npm run lint` is not in CI yet: the React sources currently have pre-existing
+`react-hooks/purity` errors that would keep the pipeline permanently red. `server/`
+and `scripts/` are lint-clean.
 
 ## Scripts
 

@@ -1,0 +1,54 @@
+# Catches build failures here rather than on Render.
+#
+# The `build` job deliberately mirrors render.yaml's buildCommand exactly,
+# including NODE_ENV=production — that variable is what makes `npm ci` skip
+# devDependencies, so a CI run without it would pass while the deploy failed.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build (mirrors Render)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Keep in sync with NODE_VERSION in render.yaml.
+          node-version: "22"
+          cache: npm
+
+      # Same command and same environment as the deploy. If this passes and
+      # Render still fails, the difference is configuration, not code.
+      - name: Install
+        run: npm ci --include=dev
+        env:
+          NODE_ENV: production
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # The server is not bundled — it runs straight from TypeScript via tsx, so
+      # nothing above would notice if server/ failed to even start. Boot it against
+      # a throwaway local database and check it answers.
+      - name: Smoke test the server
+        run: |
+          TURSO_DATABASE_URL="file:$RUNNER_TEMP/ci.db" EDIT_CODE=ci-test \
+            npx tsx server/index.ts &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/api/boards >/dev/null; then
+              echo "Server responded after ${i}s"
+              curl -s http://localhost:3001/api/boards | head -c 200
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not respond within 30s"
+          exit 1
