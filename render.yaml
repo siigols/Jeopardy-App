@@ -8,10 +8,21 @@ services:
     name: jeopardy-app
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
+    # --include=dev is required. NODE_ENV=production (below) makes `npm ci` skip
+    # devDependencies, but the build tooling — vite, typescript, the react plugin —
+    # lives there, so a plain `npm ci` installs nothing the build needs and
+    # `tsc -b` fails with "Cannot find module 'vite'". The flag only affects
+    # installation; the running server still sees NODE_ENV=production.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/boards
     envVars:
+      # Pinned so Render and CI build on the same runtime. The npm scripts use
+      # --env-file-if-exists, which needs Node 20.18+ / 22.9+.
+      # Keep in sync with .github/workflows/ci.yml.
+      - key: NODE_VERSION
+        value: "22"
+
       - key: NODE_ENV
         value: production
 
