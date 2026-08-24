@@ -8,10 +8,11 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "tsx --env-file-if-exists=.env server/index.ts"
+    "start": "tsx --env-file-if-exists=.env server/index.ts",
+    "migrate:turso": "tsx --env-file-if-exists=.env scripts/migrate-to-turso.ts"
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
+    "@libsql/client": "^0.17.4",
     "express": "^4.21.2",
     "howler": "^2.2.4",
     "react": "^19.2.6",
@@ -29,6 +30,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "better-sqlite3": "^13.0.3",
     "concurrently": "^9.1.2",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",

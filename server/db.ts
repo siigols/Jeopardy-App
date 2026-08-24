@@ -1,4 +1,5 @@
-import Database from 'better-sqlite3'
+import { createClient } from '@libsql/client'
+import type { Client, Row } from '@libsql/client'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 import type { Game, BoardSummary, LoadedGame, BoardDraft, GameTheme, QuestionContent } from '../src/types/game.js'
@@ -16,36 +17,86 @@ import footballWorldCup from '../src/data/footballWorldCup.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const db = new Database(resolve(__dirname, 'jeopardy.db'))
+/**
+ * Boards live in a libSQL database. In production that is a hosted Turso database
+ * reached over `libsql://`, which is the whole point: the app is deployed on a host
+ * with an ephemeral filesystem, so a local file would be wiped on every restart and
+ * every board anyone created would vanish with it.
+ *
+ * In development the same driver reads a plain local file, so there is one code path
+ * and no network dependency while working offline.
+ */
+function databaseUrl(): string {
+  const configured = process.env.TURSO_DATABASE_URL
+  if (configured) return configured
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS boards (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    data TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  )
-`)
+  // Falling back to a local file in production would "work" — right up until the
+  // host recycles the container and silently deletes every board. Fail loudly instead.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'TURSO_DATABASE_URL is not set. Refusing to start in production with a local ' +
+        'file database, because it would be deleted on the next restart.',
+    )
+  }
 
-// Idempotent migration: SQLite has no ADD COLUMN IF NOT EXISTS.
-const boardColumns = db.prepare('PRAGMA table_info(boards)').all() as { name: string }[]
-if (!boardColumns.some(column => column.name === 'updated_at')) {
-  db.exec('ALTER TABLE boards ADD COLUMN updated_at TEXT')
+  const localFile = `file:${resolve(__dirname, 'jeopardy.db')}`
+  console.warn(`TURSO_DATABASE_URL is not set — using local file database at ${localFile}`)
+  return localFile
 }
 
-const { count } = db.prepare('SELECT COUNT(*) as count FROM boards').get() as { count: number }
+let client: Client | undefined
 
-if (count === 0) {
-  const insert = db.prepare(
-    'INSERT INTO boards (title, description, data, created_at) VALUES (?, ?, ?, ?)'
-  )
-  const seed = db.transaction((games: Game[]) => {
-    for (const game of games) {
-      insert.run(game.title, game.description ?? null, JSON.stringify(game), new Date().toISOString())
-    }
-  })
-  seed([sampleGame, footballWorldCup])
+/**
+ * The client is created lazily rather than at import time so that a misconfigured
+ * environment surfaces as a normal rejected promise through the caller's error
+ * handling, instead of a bare stack trace thrown during module evaluation.
+ */
+function db(): Client {
+  if (!client) {
+    client = createClient({
+      url: databaseUrl(),
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    })
+  }
+  return client
+}
+
+/**
+ * Creates the schema, applies pending migrations and seeds an empty database.
+ * Must be awaited before the server starts accepting requests — the previous
+ * better-sqlite3 version could do this synchronously at import time, but every
+ * hosted database is async, so it now has to be an explicit startup step.
+ */
+export async function initDb(): Promise<void> {
+  await db().execute(`
+    CREATE TABLE IF NOT EXISTS boards (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      data TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `)
+
+  // Idempotent migration: SQLite has no ADD COLUMN IF NOT EXISTS.
+  const boardColumns = await db().execute('PRAGMA table_info(boards)')
+  if (!boardColumns.rows.some(column => column.name === 'updated_at')) {
+    await db().execute('ALTER TABLE boards ADD COLUMN updated_at TEXT')
+  }
+
+  const countResult = await db().execute('SELECT COUNT(*) as count FROM boards')
+  const count = Number(countResult.rows[0]?.count ?? 0)
+
+  if (count === 0) {
+    const now = new Date().toISOString()
+    await db().batch(
+      [sampleGame, footballWorldCup].map(game => ({
+        sql: 'INSERT INTO boards (title, description, data, created_at) VALUES (?, ?, ?, ?)',
+        args: [game.title, game.description ?? null, JSON.stringify(game), now],
+      })),
+      'write',
+    )
+  }
 }
 
 export type { BoardSummary }
@@ -180,9 +231,35 @@ interface BoardRow {
   data: string
 }
 
-export function getAllBoards(): BoardSummary[] {
-  const rows = db.prepare('SELECT id, title, description, data FROM boards').all() as BoardRow[]
-  return rows.flatMap(row => {
+/**
+ * libSQL hands back loosely-typed rows, so a column can be null or a number where
+ * a string is expected. Narrowing here means a junk row is reported as a skippable
+ * bad board rather than exploding inside JSON.parse with an opaque message.
+ */
+function toBoardRow(row: Row): BoardRow | null {
+  const id = row.id
+  const title = row.title
+  const description = row.description
+  const data = row.data
+  if (typeof id !== 'number' && typeof id !== 'bigint') return null
+  if (typeof title !== 'string') return null
+  if (typeof data !== 'string') return null
+  return {
+    id: Number(id),
+    title,
+    description: typeof description === 'string' ? description : null,
+    data,
+  }
+}
+
+export async function getAllBoards(): Promise<BoardSummary[]> {
+  const result = await db().execute('SELECT id, title, description, data FROM boards')
+  return result.rows.flatMap(rawRow => {
+    const row = toBoardRow(rawRow)
+    if (!row) {
+      console.error('Skipping board: row is missing required columns')
+      return []
+    }
     try {
       const game = JSON.parse(row.data) as Game
       if (!isValidGame(game)) {
@@ -204,10 +281,16 @@ export function getAllBoards(): BoardSummary[] {
   })
 }
 
-export function getBoard(id: number): LoadedGame | null {
-  const row = db.prepare('SELECT id, title, data FROM boards WHERE id = ?').get(id) as
-    | { id: number; title: string; data: string }
-    | undefined
+export async function getBoard(id: number): Promise<LoadedGame | null> {
+  const result = await db().execute({
+    sql: 'SELECT id, title, description, data FROM boards WHERE id = ?',
+    args: [id],
+  })
+  const rawRow = result.rows[0]
+  if (!rawRow) return null
+  const row = toBoardRow(rawRow)
+  // A row missing required columns can't be repaired here; treat it as missing so
+  // callers get a 404 rather than a 500 on every read.
   if (!row) return null
   let game: Game
   try {
@@ -221,18 +304,23 @@ export function getBoard(id: number): LoadedGame | null {
   return { ...game, id: row.id, editable: boardIsEditable(game) }
 }
 
-export function createBoard(draft: BoardDraft): LoadedGame {
+export async function createBoard(draft: BoardDraft): Promise<LoadedGame> {
   // New boards always carry a theme, so the board list never renders an unstyled card.
   const game = draftToGame(draft, undefined, getBoardTheme(DEFAULT_BOARD_THEME_ID))
   const now = new Date().toISOString()
 
-  const info = db
-    .prepare(
-      'INSERT INTO boards (title, description, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
-    )
-    .run(game.title, game.description ?? null, JSON.stringify(game), now, now)
+  const result = await db().execute({
+    sql: 'INSERT INTO boards (title, description, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+    args: [game.title, game.description ?? null, JSON.stringify(game), now, now],
+  })
 
-  return { ...game, id: Number(info.lastInsertRowid), editable: boardIsEditable(game) }
+  // Unlike better-sqlite3, libSQL types lastInsertRowid as possibly undefined.
+  // Number(undefined) is NaN, which would hand back a board with an unusable id.
+  if (result.lastInsertRowid === undefined) {
+    throw new Error('Board insert returned no id')
+  }
+
+  return { ...game, id: Number(result.lastInsertRowid), editable: boardIsEditable(game) }
 }
 
 /**
@@ -240,10 +328,14 @@ export function createBoard(draft: BoardDraft): LoadedGame {
  * existing stored theme is only the fallback, so board colours survive an edit
  * that names no preset. Returns null if the board no longer exists.
  */
-export function updateBoard(id: number, draft: BoardDraft): LoadedGame | null {
-  const row = db.prepare('SELECT id, title, data FROM boards WHERE id = ?').get(id) as
-    | { id: number; title: string; data: string }
-    | undefined
+export async function updateBoard(id: number, draft: BoardDraft): Promise<LoadedGame | null> {
+  const result = await db().execute({
+    sql: 'SELECT id, title, description, data FROM boards WHERE id = ?',
+    args: [id],
+  })
+  const rawRow = result.rows[0]
+  if (!rawRow) return null
+  const row = toBoardRow(rawRow)
   if (!row) return null
 
   let existing: Game
@@ -255,10 +347,10 @@ export function updateBoard(id: number, draft: BoardDraft): LoadedGame | null {
 
   const game = draftToGame(draft, existing.theme)
 
-  db.prepare('UPDATE boards SET title = ?, description = ?, data = ?, updated_at = ? WHERE id = ?')
-    .run(game.title, game.description ?? null, JSON.stringify(game), new Date().toISOString(), id)
+  await db().execute({
+    sql: 'UPDATE boards SET title = ?, description = ?, data = ?, updated_at = ? WHERE id = ?',
+    args: [game.title, game.description ?? null, JSON.stringify(game), new Date().toISOString(), id],
+  })
 
   return { ...game, id, editable: boardIsEditable(game) }
 }
-
-export default db
