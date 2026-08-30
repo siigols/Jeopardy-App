@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import type { Team, Game } from '../types/game'
-import FootballDecorations from '../components/FootballDecorations'
+import BoardBackground from '../components/Backgrounds/BoardBackground'
 import { useSounds } from '../hooks/useSounds'
 import styles from './PodiumScreen.module.css'
 
@@ -93,7 +93,7 @@ export default function PodiumScreen({ teams, game, onPlayAgain, onNewBoard }: P
 
   return (
     <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''}`}>
-      {isFootball && <FootballDecorations />}
+      <BoardBackground id={game.theme?.decorations} />
 
       {/* Spotlight glows */}
       <div className={styles.spotlight} />

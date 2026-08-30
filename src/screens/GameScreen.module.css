@@ -92,6 +92,19 @@
   white-space: nowrap;
 }
 
+/* Team has spent its one buzz for this round. */
+.teamChipSpent {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+/* Filled = buzz available, hollow = spent. */
+.buzzDot {
+  font-size: 0.55rem;
+  line-height: 1;
+  color: var(--team-color, var(--color-chip-border));
+}
+
 .teamName {
   font-size: 0.7rem;
   font-weight: 600;

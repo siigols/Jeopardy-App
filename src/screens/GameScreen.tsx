@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import GameBoard from '../components/Board/GameBoard'
-import FootballDecorations from '../components/FootballDecorations'
+import BoardBackground from '../components/Backgrounds/BoardBackground'
 import QuestionView from '../components/Question/QuestionView'
 import SessionPanel from '../components/SessionPanel/SessionPanel'
 import { useSocket } from '../hooks/useSocket'
@@ -37,6 +37,8 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
   const [teams, setTeams] = useState(savedGame?.teams ?? initialTeams)
   const [active, setActive] = useState<ActiveTile | null>(null)
   const [buzzerWinner, setBuzzerWinner] = useState<TeamInfo | null>(null)
+  /** Team indices that have spent their one buzz this round, mirrored from the server. */
+  const [usedBuzzes, setUsedBuzzes] = useState<number[]>([])
   const [showBuzzerPanel, setShowBuzzerPanel] = useState(false)
   const { playOpen, playClick, playHover } = useSounds()
   const socket = useSocket()
@@ -64,7 +66,9 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     }))
 
     function register() {
-      socket.emit('create-session', { code: sessionCode, teams: teamInfos }, () => {})
+      socket.emit('create-session', { code: sessionCode, teams: teamInfos }, (res) => {
+        setUsedBuzzes(res.used)
+      })
     }
 
     if (socket.connected) {
@@ -76,8 +80,13 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
       setBuzzerWinner(winner)
     })
 
+    socket.on('buzz-state', ({ used }) => {
+      setUsedBuzzes(used)
+    })
+
     return () => {
       socket.off('buzzed')
+      socket.off('buzz-state')
       socket.off('connect', register)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,6 +141,7 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     ...(game.theme.accent ? { '--color-accent': game.theme.accent, '--color-btn-primary': game.theme.accent } : {}),
   } as React.CSSProperties : undefined
 
+  // The football class only compensates for the trophy image's height.
   const isFootball = game.theme?.decorations === 'football'
 
   const sessionTeams = teams.map((team, index) => ({
@@ -142,7 +152,7 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
 
   return (
     <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''}`} style={themeStyle}>
-      {isFootball && <FootballDecorations />}
+      <BoardBackground id={game.theme?.decorations} />
       <header className={styles.topBar}>
         <div className={styles.titleRow}>
           <h1 className={styles.title}>{game.title}</h1>
@@ -166,12 +176,14 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
         </div>
 
         <div className={styles.scoresRow}>
-          {teams.map((team) => (
+          {teams.map((team, index) => (
             <div
               key={team.id}
-              className={styles.teamChip}
+              className={`${styles.teamChip} ${usedBuzzes.includes(index) ? styles.teamChipSpent : ''}`}
               style={{ '--team-color': teamColors[team.id] } as React.CSSProperties}
+              title={usedBuzzes.includes(index) ? 'Buzzeren er brukt' : 'Har buzzer igjen'}
             >
+              <span className={styles.buzzDot} aria-hidden>{usedBuzzes.includes(index) ? '○' : '●'}</span>
               <span className={styles.teamName}>{team.name}</span>
               <button className={styles.adjBtn} onMouseEnter={playHover} onClick={() => handleAdjust(team.id, -100)} aria-label="trekk fra">−</button>
               <span key={team.score} className={styles.teamScore}>{team.score}</span>
@@ -181,7 +193,12 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
         </div>
 
         {showBuzzerPanel && (
-          <SessionPanel sessionCode={sessionCode} teams={sessionTeams} />
+          <SessionPanel
+            sessionCode={sessionCode}
+            teams={sessionTeams}
+            usedBuzzes={usedBuzzes}
+            onResetBuzzes={() => socket.emit('buzz-reset', { code: sessionCode })}
+          />
         )}
       </header>
 

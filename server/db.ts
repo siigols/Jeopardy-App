@@ -198,15 +198,18 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
 function draftToGame(draft: BoardDraft, existingTheme?: GameTheme, fallbackTheme?: GameTheme): Game {
   const preset = draft.themeId !== undefined ? getBoardTheme(draft.themeId) : undefined
   const base = preset ?? existingTheme ?? fallbackTheme
+  // Fall back to the stored scene when the draft names none, so an older client
+  // that doesn't send backgroundId can't wipe a board's background.
+  const decorations = draft.backgroundId ?? existingTheme?.decorations
   // Always a shallow copy: BOARD_THEMES presets are shared module-level objects
   // and must never be handed out where a consumer could mutate them.
-  // Decorations aren't authorable, so carry any existing ones across a theme swap.
-  const theme: GameTheme | undefined =
-    base === undefined
-      ? undefined
-      : existingTheme?.decorations !== undefined
-        ? { ...base, decorations: existingTheme.decorations }
-        : { ...base }
+  const theme: GameTheme | undefined = base === undefined ? undefined : { ...base }
+  if (theme !== undefined) {
+    // 'none' is stored as an absent key rather than a value, so it also has to
+    // clear a scene the base theme carried over.
+    if (decorations !== undefined && decorations !== 'none') theme.decorations = decorations
+    else delete theme.decorations
+  }
 
   return {
     title: draft.title,

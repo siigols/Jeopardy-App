@@ -112,6 +112,86 @@ export const BOARD_THEMES: BoardThemePreset[] = [
       ],
     },
   },
+  {
+    id: 'lava',
+    name: 'Lava',
+    theme: {
+      id: 'lava',
+      accent: '#ffb347',
+      bg: '#170707',
+      categoryColors: [
+        { tile: '#7a1005', hover: '#9c1507', header: '#520a03' },
+        { tile: '#8f2c06', hover: '#b53908', header: '#5f1d04' },
+        { tile: '#6b0f2a', hover: '#8a1436', header: '#4a0a1d' },
+        { tile: '#93430a', hover: '#ba550d', header: '#622c06' },
+        { tile: '#5a1450', hover: '#761a69', header: '#3c0d35' },
+      ],
+    },
+  },
+  {
+    id: 'is',
+    name: 'Is',
+    theme: {
+      id: 'is',
+      accent: '#a8e6ff',
+      bg: '#060f16',
+      categoryColors: [
+        { tile: '#14456b', hover: '#1a5a8b', header: '#0d2e47' },
+        { tile: '#10566b', hover: '#156f8b', header: '#0b3947' },
+        { tile: '#1d3f6e', hover: '#26538f', header: '#132a49' },
+        { tile: '#0f5a5f', hover: '#14767c', header: '#0a3c40' },
+        { tile: '#2b3f66', hover: '#385286', header: '#1c2a44' },
+      ],
+    },
+  },
+  {
+    id: 'juvel',
+    name: 'Juvel',
+    theme: {
+      id: 'juvel',
+      accent: '#f3c1ff',
+      bg: '#120616',
+      categoryColors: [
+        { tile: '#4b0f52', hover: '#63146d', header: '#320a37' },
+        { tile: '#10474a', hover: '#155e62', header: '#0b2f31' },
+        { tile: '#6d1030', hover: '#8d1540', header: '#490a20' },
+        { tile: '#2a2a72', hover: '#383896', header: '#1c1c4c' },
+        { tile: '#6b4a05', hover: '#8c6107', header: '#473106' },
+      ],
+    },
+  },
+  {
+    id: 'retro',
+    name: 'Retro',
+    theme: {
+      id: 'retro',
+      accent: '#ffd166',
+      bg: '#141019',
+      categoryColors: [
+        { tile: '#7a3b2e', hover: '#9c4c3b', header: '#52281f' },
+        { tile: '#2f5d50', hover: '#3d7968', header: '#1f3e35' },
+        { tile: '#6b4a1f', hover: '#8a6029', header: '#472f14' },
+        { tile: '#4a3566', hover: '#604485', header: '#312344' },
+        { tile: '#7a2f4a', hover: '#9c3d5f', header: '#521f32' },
+      ],
+    },
+  },
+  {
+    id: 'sitrus',
+    name: 'Sitrus',
+    theme: {
+      id: 'sitrus',
+      accent: '#f7f36f',
+      bg: '#101403',
+      categoryColors: [
+        { tile: '#4f5c08', hover: '#68790b', header: '#353d05' },
+        { tile: '#2c5c1a', hover: '#3a7a23', header: '#1d3d11' },
+        { tile: '#6b5a05', hover: '#8b7507', header: '#473c04' },
+        { tile: '#1f5c47', hover: '#297a5e', header: '#143d2f' },
+        { tile: '#6b3d05', hover: '#8b5007', header: '#472906' },
+      ],
+    },
+  },
 ]
 
 export const DEFAULT_BOARD_THEME_ID = 'classic'

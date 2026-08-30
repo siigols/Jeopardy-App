@@ -1,4 +1,4 @@
-import type { BoardDraft, BoardTileDraft, SimpleQuestion } from '../src/types/game.js'
+import type { BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion } from '../src/types/game.js'
 import {
   BOARD_CATEGORY_COUNT,
   BOARD_TILE_COUNT,
@@ -11,6 +11,7 @@ import {
   TENABLE_ITEM_COUNT,
 } from '../src/types/game.js'
 import { getBoardTheme } from '../src/data/boardThemes.js'
+import { isBoardBackgroundId } from '../src/data/boardBackgrounds.js'
 
 const MAX_TITLE = 100
 const MAX_DESCRIPTION = 300
@@ -302,6 +303,17 @@ export function validateBoardDraft(input: unknown): ValidationResult {
     themeId = input.themeId
   }
 
+  let backgroundId: BoardBackgroundId | undefined
+  if (input.backgroundId !== undefined && input.backgroundId !== null) {
+    if (typeof input.backgroundId !== 'string') {
+      return fail('backgroundId must be a string')
+    }
+    if (!isBoardBackgroundId(input.backgroundId)) {
+      return fail('unknown backgroundId')
+    }
+    backgroundId = input.backgroundId
+  }
+
   if (!Array.isArray(input.categories)) {
     return fail('categories must be an array')
   }
@@ -377,5 +389,5 @@ export function validateBoardDraft(input: unknown): ValidationResult {
     tiebreaker = { type: 'simple', question, answer }
   }
 
-  return { ok: true, draft: { title, description, themeId, tiebreaker, categories } }
+  return { ok: true, draft: { title, description, themeId, backgroundId, tiebreaker, categories } }
 }

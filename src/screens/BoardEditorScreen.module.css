@@ -283,6 +283,16 @@
   border-radius: 4px;
 }
 
+.bgPreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 24px;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
 .themeName {
   font-size: 0.7rem;
   font-weight: 700;

@@ -13,6 +13,7 @@ import {
   tileIsFilled,
 } from '../components/BoardEditor/types'
 import type { HigherLowerEditorTile, RichTileDraft, TileDraft } from '../components/BoardEditor/types'
+import { BOARD_BACKGROUNDS, DEFAULT_BOARD_BACKGROUND_ID, isBoardBackgroundId } from '../data/boardBackgrounds'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../data/boardThemes'
 import {
   BOARD_CATEGORY_COUNT,
@@ -24,6 +25,7 @@ import {
   TENABLE_ITEM_COUNT,
 } from '../types/game'
 import type {
+  BoardBackgroundId,
   BoardDraft,
   BoardTileDraft,
   EditableQuestionType,
@@ -50,6 +52,7 @@ interface DraftState {
   title: string
   description: string
   themeId: string
+  backgroundId: BoardBackgroundId
   tiebreaker: SimpleTiebreakerDraft
   categories: CategoryDraft[]
 }
@@ -63,6 +66,7 @@ function emptyDraft(): DraftState {
     title: '',
     description: '',
     themeId: DEFAULT_BOARD_THEME_ID,
+    backgroundId: DEFAULT_BOARD_BACKGROUND_ID,
     tiebreaker: { question: '', answer: '' },
     categories: Array.from({ length: BOARD_CATEGORY_COUNT }, () => ({
       name: '',
@@ -108,10 +112,14 @@ function gameToDraft(game: LoadedGame): DraftState {
   // An unknown stored theme id would round-trip into a server `unknown themeId` 400.
   const storedThemeId = game.theme?.id
   const themeId = storedThemeId && getBoardTheme(storedThemeId) ? storedThemeId : DEFAULT_BOARD_THEME_ID
+  // Same guard for the scene: an unknown stored id would round-trip into a 400.
+  const storedBackgroundId = game.theme?.decorations
+  const backgroundId = isBoardBackgroundId(storedBackgroundId) ? storedBackgroundId : DEFAULT_BOARD_BACKGROUND_ID
   return {
     title: game.title,
     description: game.description ?? '',
     themeId,
+    backgroundId,
     tiebreaker: {
       question: game.tiebreaker?.question ?? '',
       answer: game.tiebreaker?.answer ?? '',
@@ -170,6 +178,7 @@ function toPayload(draft: DraftState): BoardDraft {
   const payload: BoardDraft = {
     title: draft.title.trim(),
     themeId: draft.themeId,
+    backgroundId: draft.backgroundId,
     categories: draft.categories.map(c => ({
       name: c.name.trim(),
       tiles: c.tiles.map(tileToPayload),
@@ -663,6 +672,31 @@ export default function BoardEditorScreen({ mode }: Props) {
               </span>
             </div>
           )}
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Bakgrunn</h2>
+          <div className={styles.themeRow} role="group" aria-label="Bakgrunn">
+            {BOARD_BACKGROUNDS.map(preset => {
+              const selected = preset.id === draft.backgroundId
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  aria-pressed={selected}
+                  className={`${styles.themeCard} ${selected ? styles.themeCardActive : ''}`}
+                  onMouseEnter={playHover}
+                  onClick={() => {
+                    playClick()
+                    setDraft(prev => ({ ...prev, backgroundId: preset.id }))
+                  }}
+                >
+                  <span className={styles.bgPreview} aria-hidden="true">{preset.preview}</span>
+                  <span className={styles.themeName}>{preset.name}</span>
+                </button>
+              )
+            })}
+          </div>
         </section>
 
         <div className={styles.grid}>

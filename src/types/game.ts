@@ -74,13 +74,21 @@ export interface CategoryColor {
   header: string
 }
 
+/**
+ * Decorative scene rendered behind the board. The registry (names, order) lives
+ * in src/data/boardBackgrounds.ts; the union is here so that module can import
+ * it without a cycle.
+ */
+export type BoardBackgroundId = 'none' | 'football' | 'stjerner' | 'konfetti' | 'sno' | 'bobler'
+
 export interface GameTheme {
   /** Id of the preset this theme came from, so the editor can re-select it. */
   id?: string
   categoryColors: CategoryColor[]
   accent?: string
   bg?: string
-  decorations?: 'football'
+  /** Absent means no scene. 'none' is never stored. */
+  decorations?: BoardBackgroundId
 }
 
 export interface Game {
@@ -154,6 +162,7 @@ export interface BoardDraft {
   title: string
   description?: string
   themeId?: string
+  backgroundId?: BoardBackgroundId
   tiebreaker?: SimpleQuestion
   categories: {
     name: string

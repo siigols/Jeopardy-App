@@ -4,7 +4,7 @@ import { useSocket } from '../hooks/useSocket'
 import type { TeamInfo } from '../types/socket-events'
 import styles from './BuzzerScreen.module.css'
 
-type BuzzerState = 'connecting' | 'waiting' | 'ready' | 'won' | 'lost'
+type BuzzerState = 'connecting' | 'waiting' | 'ready' | 'won' | 'lost' | 'spent'
 
 interface Props {
   sessionCode: string
@@ -18,6 +18,10 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
   const [teamColor, setTeamColor] = useState('#888')
   const [winner, setWinner] = useState<TeamInfo | null>(null)
   const prevState = useRef<BuzzerState>('connecting')
+  // Mirror the server's view. Refs because the socket listeners are registered
+  // once and must read the current values, not the ones in their closure.
+  const spent = useRef(false)
+  const questionOpen = useRef(false)
 
   const { play: playHeartbeat } = useSound('ambient/heartbeat')
   const { play: playBuzzPress } = useSound('ui/button_hard')
@@ -30,18 +34,23 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
   }, [state, playHeartbeat])
 
   useEffect(() => {
+    /** The state to show when this team isn't the subject of a live buzz. */
+    function idleState(): BuzzerState {
+      if (spent.current) return 'spent'
+      return questionOpen.current ? 'ready' : 'waiting'
+    }
+
     function join() {
       socket.emit('join-buzzer', { code: sessionCode, teamIndex }, (res) => {
         setTeamName(res.teamName)
         setTeamColor(res.teamColor)
+        spent.current = res.used.includes(teamIndex)
+        questionOpen.current = res.questionOpen
         if (res.buzzer) {
-          if (res.buzzer.index === teamIndex) setState('won')
-          else setState('lost')
           setWinner(res.buzzer)
-        } else if (res.questionOpen) {
-          setState('ready')
+          setState(res.buzzer.index === teamIndex ? 'won' : 'lost')
         } else {
-          setState('waiting')
+          setState(idleState())
         }
       })
     }
@@ -52,13 +61,15 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
     socket.on('connect', join)
 
     socket.on('question-opened', () => {
-      setState('ready')
+      questionOpen.current = true
       setWinner(null)
+      setState(idleState())
     })
 
     socket.on('question-closed', () => {
-      setState('waiting')
+      questionOpen.current = false
       setWinner(null)
+      setState(idleState())
     })
 
     socket.on('buzzed', (w) => {
@@ -66,10 +77,20 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
       setState(w.index === teamIndex ? 'won' : 'lost')
     })
 
+    socket.on('buzz-state', ({ used }) => {
+      spent.current = used.includes(teamIndex)
+      // The won/lost result of the current question stays on screen until the
+      // host opens or closes it; only the idle states re-derive here. This is
+      // also what lets the host's reset button hand a spent phone its buzz back
+      // mid-question.
+      setState(prev => (prev === 'won' || prev === 'lost' || prev === 'connecting' ? prev : idleState()))
+    })
+
     return () => {
       socket.off('question-opened')
       socket.off('question-closed')
       socket.off('buzzed')
+      socket.off('buzz-state')
       socket.off('connect', join)
     }
   }, [socket, sessionCode, teamIndex])
@@ -121,6 +142,15 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
             ✓
           </button>
           <p className={styles.statusText}>Du bezzerwizzet!</p>
+        </>
+      )}
+
+      {state === 'spent' && (
+        <>
+          <button className={`${styles.buzzBtn} ${styles.btnSpent}`} disabled>
+            ⏳
+          </button>
+          <p className={styles.statusText}>Buzzeren er brukt — venter på ny runde</p>
         </>
       )}
 

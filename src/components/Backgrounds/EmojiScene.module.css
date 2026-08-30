@@ -1,0 +1,86 @@
+.root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Washes are translucent so the board's own --color-bg still shows through. */
+.wash {
+  position: absolute;
+  inset: 0;
+}
+
+.washStars {
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(120, 140, 255, 0.18), transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(180, 120, 255, 0.15), transparent 55%);
+}
+
+.washConfetti {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 200, 80, 0.14), transparent 60%),
+    radial-gradient(ellipse at 15% 90%, rgba(255, 90, 160, 0.12), transparent 55%);
+}
+
+.washSnow {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(150, 210, 255, 0.16), transparent 60%),
+    linear-gradient(180deg, transparent 60%, rgba(200, 235, 255, 0.1));
+}
+
+.washBubbles {
+  background:
+    radial-gradient(ellipse at 30% 100%, rgba(60, 180, 220, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(10, 40, 70, 0.25), transparent 70%);
+}
+
+.piece {
+  position: absolute;
+  line-height: 1;
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+.twinkle {
+  animation: twinkle var(--dur) ease-in-out var(--delay) infinite;
+}
+
+.fall {
+  top: -12vh;
+  animation: fall var(--dur) linear var(--delay) infinite;
+}
+
+.rise {
+  top: 108vh;
+  animation: rise var(--dur) linear var(--delay) infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { transform: scale(0.8); opacity: 0.25; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes fall {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to   { transform: translate(var(--drift), 122vh) rotate(var(--spin)); }
+}
+
+@keyframes rise {
+  from { transform: translate(0, 0) scale(0.85); }
+  to   { transform: translate(var(--drift), -122vh) scale(1.15); }
+}
+
+/* Falling and rising pieces park off-screen without their animation, so hide
+   them entirely and leave just the color wash. */
+@media (prefers-reduced-motion: reduce) {
+  .fall,
+  .rise {
+    display: none;
+  }
+
+  .twinkle {
+    animation: none;
+  }
+}

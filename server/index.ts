@@ -6,7 +6,7 @@ import { dirname, resolve } from 'path'
 import { existsSync } from 'fs'
 import type { LoadedGame } from '../src/types/game.js'
 import type { ServerToClientEvents, ClientToServerEvents } from '../src/types/socket-events.js'
-import { createSession, getSession, openQuestion, closeQuestion, recordBuzz } from './session.js'
+import { createSession, getSession, openQuestion, closeQuestion, recordBuzz, resetBuzzes } from './session.js'
 import { getAllBoards, getBoard, createBoard, updateBoard, initDb } from './db.js'
 import { validateBoardDraft } from './validation.js'
 import { requireEditCode } from './auth.js'
@@ -167,15 +167,16 @@ app.use(jsonErrorHandler)
 
 io.on('connection', socket => {
   socket.on('create-session', ({ code, teams }, ack) => {
-    createSession(code, teams)
+    const session = createSession(code, teams)
     socket.join(code)
-    ack({ ok: true })
+    // The round survives a host reload, so hand the spent buzzes back too.
+    ack({ ok: true, used: [...session.usedBuzzes] })
   })
 
   socket.on('join-buzzer', ({ code, teamIndex }, ack) => {
     const session = getSession(code)
     if (!session) {
-      ack({ teamName: '?', teamColor: '#888', questionOpen: false, buzzer: null })
+      ack({ teamName: '?', teamColor: '#888', questionOpen: false, buzzer: null, used: [] })
       return
     }
     socket.join(code)
@@ -185,6 +186,7 @@ io.on('connection', socket => {
       teamColor: team?.color ?? '#888',
       questionOpen: session.questionOpen,
       buzzer: session.buzzer,
+      used: [...session.usedBuzzes],
     })
   })
 
@@ -199,10 +201,17 @@ io.on('connection', socket => {
   })
 
   socket.on('buzz', ({ code, teamIndex }) => {
-    const winner = recordBuzz(code, teamIndex)
-    if (winner) {
-      io.to(code).emit('buzzed', winner)
+    const result = recordBuzz(code, teamIndex)
+    if (result) {
+      // 'buzzed' first: it must land the winner on `won` before 'buzz-state'
+      // tells that phone its buzz is now spent.
+      io.to(code).emit('buzzed', result.winner)
+      io.to(code).emit('buzz-state', { used: result.used })
     }
+  })
+
+  socket.on('buzz-reset', ({ code }) => {
+    io.to(code).emit('buzz-state', { used: resetBuzzes(code) })
   })
 })
 
