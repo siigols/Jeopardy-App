@@ -1,4 +1,5 @@
 import type { MultipleChoiceQuestion } from '../../types/game'
+import QuestionImage from './QuestionImage'
 import styles from './MultipleChoiceDisplay.module.css'
 
 interface Props {
@@ -10,6 +11,7 @@ export default function MultipleChoiceDisplay({ content, revealed }: Props) {
   return (
     <div className={styles.container}>
       <p className={styles.question}>{content.question}</p>
+      {content.questionImage && <QuestionImage src={content.questionImage} />}
       <div className={styles.options}>
         {content.options.map((option, i) => (
           <div
@@ -21,6 +23,7 @@ export default function MultipleChoiceDisplay({ content, revealed }: Props) {
           </div>
         ))}
       </div>
+      {revealed && content.answerImage && <QuestionImage src={content.answerImage} reveal />}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSounds } from '../hooks/useSounds'
 import { clearEditCode, loadEditCode, saveEditCode } from '../utils/editCode'
+import ImageField from '../components/BoardEditor/ImageField'
 import TileEditorModal from '../components/BoardEditor/TileEditorModal'
 import {
   TEXT_MAX,
@@ -11,6 +12,7 @@ import {
   parseHlNumber,
   tileIsEmpty,
   tileIsFilled,
+  withOptionalField,
 } from '../components/BoardEditor/types'
 import type { HigherLowerEditorTile, RichTileDraft, TileDraft } from '../components/BoardEditor/types'
 import { BOARD_BACKGROUNDS, DEFAULT_BOARD_BACKGROUND_ID, isBoardBackgroundId } from '../data/boardBackgrounds'
@@ -53,6 +55,8 @@ interface DraftState {
   description: string
   themeId: string
   backgroundId: BoardBackgroundId
+  /** Optional photo behind the board. Independent of the scene above. */
+  backgroundImage?: string
   tiebreaker: SimpleTiebreakerDraft
   categories: CategoryDraft[]
 }
@@ -75,12 +79,31 @@ function emptyDraft(): DraftState {
   }
 }
 
+/**
+ * Carries the optional images from stored content into the draft. Dropping them
+ * here would silently delete an author's pictures the first time the board is
+ * re-saved, which is exactly what used to lock imaged boards out of the editor.
+ */
+function pickImages(content: { questionImage?: string; answerImage?: string }) {
+  return {
+    ...(content.questionImage !== undefined ? { questionImage: content.questionImage } : {}),
+    ...(content.answerImage !== undefined ? { answerImage: content.answerImage } : {}),
+  }
+}
+
 /** Maps a stored tile back to an editor tile. Blank/unsupported content is untyped. */
 function contentToTile(content: QuestionContent): TileDraft {
   switch (content.type) {
     case 'simple':
-      if (!content.question.trim() && !content.answer.trim()) return { type: null }
-      return { type: 'simple', question: content.question, answer: content.answer }
+      if (!content.question.trim() && !content.answer.trim() && !content.questionImage && !content.answerImage) {
+        return { type: null }
+      }
+      return {
+        type: 'simple',
+        question: content.question,
+        answer: content.answer,
+        ...pickImages(content),
+      }
     case 'tenable': {
       const items = Array.from({ length: TENABLE_ITEM_COUNT }, (_, i) => content.items[i] ?? '')
       return { type: 'tenable', prompt: content.prompt, items }
@@ -92,13 +115,23 @@ function contentToTile(content: QuestionContent): TileDraft {
         string,
         string,
       ]
-      return { type: 'multipleChoice', question: content.question, options, correctIndex: content.correctIndex }
+      return {
+        type: 'multipleChoice',
+        question: content.question,
+        options,
+        correctIndex: content.correctIndex,
+        ...pickImages(content),
+      }
     }
     case 'higherLower':
       return {
         type: 'higherLower',
         metric: content.metric,
-        items: content.items.map(item => ({ label: item.label, numericValue: String(item.numericValue) })),
+        items: content.items.map(item => ({
+          label: item.label,
+          numericValue: String(item.numericValue),
+          ...(item.image !== undefined ? { image: item.image } : {}),
+        })),
       }
     default:
       // Image-based types can't be authored here; the board is blocked anyway.
@@ -120,6 +153,7 @@ function gameToDraft(game: LoadedGame): DraftState {
     description: game.description ?? '',
     themeId,
     backgroundId,
+    ...(game.theme?.backgroundImage !== undefined ? { backgroundImage: game.theme.backgroundImage } : {}),
     tiebreaker: {
       question: game.tiebreaker?.question ?? '',
       answer: game.tiebreaker?.answer ?? '',
@@ -151,7 +185,12 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
     case null:
       return { type: 'simple', question: '', answer: '' }
     case 'simple':
-      return { type: 'simple', question: tile.question.trim(), answer: tile.answer.trim() }
+      return {
+        type: 'simple',
+        question: tile.question.trim(),
+        answer: tile.answer.trim(),
+        ...pickImages(tile),
+      }
     case 'tenable':
       return { type: 'tenable', prompt: tile.prompt.trim(), items: tile.items.map(i => i.trim()) }
     case 'multipleChoice':
@@ -160,6 +199,7 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
         question: tile.question.trim(),
         options: tile.options.map(o => o.trim()) as [string, string, string, string],
         correctIndex: tile.correctIndex,
+        ...pickImages(tile),
       }
     case 'higherLower':
       return {
@@ -169,6 +209,7 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
           label: i.label.trim(),
           // Non-numeric text is blocked by validateDraft before we ever get here.
           numericValue: parseHlNumber(i.numericValue) ?? Number.NaN,
+          ...(i.image !== undefined ? { image: i.image } : {}),
         })),
       }
   }
@@ -179,6 +220,9 @@ function toPayload(draft: DraftState): BoardDraft {
     title: draft.title.trim(),
     themeId: draft.themeId,
     backgroundId: draft.backgroundId,
+    // Always sent, and explicitly null when there is none: the server keeps a
+    // stored photo when the key is absent, so omitting it could never clear one.
+    backgroundImage: draft.backgroundImage ?? null,
     categories: draft.categories.map(c => ({
       name: c.name.trim(),
       tiles: c.tiles.map(tileToPayload),
@@ -293,8 +337,10 @@ function tileSummary(tile: RichTileDraft): string {
       return `Topp 10 · ${tile.items.filter(i => i.trim()).length}/${TENABLE_ITEM_COUNT}`
     case 'multipleChoice':
       return `Flervalg · ${tile.options.filter(o => o.trim()).length}/${MC_OPTION_COUNT}`
-    case 'higherLower':
-      return `Høyere/Lavere · ${tile.items.length} rader`
+    case 'higherLower': {
+      const withImage = tile.items.filter(i => i.image).length
+      return `Høyere/Lavere · ${tile.items.length} rader${withImage > 0 ? ` · ${withImage} bilder` : ''}`
+    }
   }
 }
 
@@ -555,7 +601,7 @@ export default function BoardEditorScreen({ mode }: Props) {
     return (
       <div className={styles.centered}>
         <p className={styles.message}>
-          Denne tavla bruker bildebaserte spørsmålstyper, og de kan ikke lages eller endres i
+          Denne tavla bruker spørsmålstyper som ikke kan lages eller endres i
           redigeringsverktøyet.
         </p>
         <Link to="/" className={styles.backLink} onMouseEnter={playHover} onClick={playClick}>
@@ -697,6 +743,17 @@ export default function BoardEditorScreen({ mode }: Props) {
               )
             })}
           </div>
+          <p className={styles.bgNote}>
+            Du kan i tillegg legge inn et eget bilde bak tavla. Bildet ligger under scenen
+            over, så de to kan kombineres.
+          </p>
+          <ImageField
+            label="Bakgrunnsbilde (valgfritt)"
+            value={draft.backgroundImage}
+            onChange={value =>
+              setDraft(prev => withOptionalField(prev, 'backgroundImage', value))
+            }
+          />
         </section>
 
         <div className={styles.grid}>
@@ -754,6 +811,18 @@ export default function BoardEditorScreen({ mode }: Props) {
                           placeholder="Svar"
                           aria-label={`${tileName} – svar`}
                           onChange={e => updateTile(ci, ti, { ...tile, answer: e.target.value })}
+                        />
+                        <ImageField
+                          compact
+                          label={`${tileName} – bilde i spørsmålet`}
+                          value={tile.questionImage}
+                          onChange={value => updateTile(ci, ti, withOptionalField(tile, 'questionImage', value))}
+                        />
+                        <ImageField
+                          compact
+                          label={`${tileName} – bilde i svaret`}
+                          value={tile.answerImage}
+                          onChange={value => updateTile(ci, ti, withOptionalField(tile, 'answerImage', value))}
                         />
                       </>
                     )}

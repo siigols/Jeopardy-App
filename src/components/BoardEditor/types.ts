@@ -20,6 +20,8 @@ import type {
 export interface HigherLowerEditorItem {
   label: string
   numericValue: string
+  /** Optional picture shown on the panel when the question is played. */
+  image?: string
 }
 
 export interface HigherLowerEditorTile {
@@ -92,19 +94,51 @@ export function makeEmptyTile(type: EditableQuestionType): TileDraft {
   }
 }
 
+/**
+ * Returns a copy of `source` with an optional field set, or with the key removed
+ * entirely when `value` is undefined.
+ *
+ * Deleting rather than storing an explicit `undefined` matters because the
+ * editor's unsaved-changes guard compares `JSON.stringify(draft)` snapshots: a
+ * key holding `undefined` disappears from the JSON anyway, but leaving it in the
+ * object makes every other shape comparison subtly inconsistent.
+ */
+export function withOptionalField<T extends object, K extends keyof T>(
+  source: T,
+  field: K,
+  value: T[K] | undefined,
+): T {
+  const next: T = { ...source }
+  if (value === undefined) delete (next as Record<K, unknown>)[field]
+  else next[field] = value
+  return next
+}
+
+/**
+ * True when either optional picture is set. An uploaded image counts as author
+ * content: without this a tile holding only a photo would read as empty and be
+ * saved as a blank tile, throwing the upload away.
+ */
+function hasTileImage(tile: { questionImage?: string; answerImage?: string }): boolean {
+  return Boolean(tile.questionImage) || Boolean(tile.answerImage)
+}
+
 /** True when the tile carries no author-entered content at all. */
 export function tileIsEmpty(tile: TileDraft): boolean {
   switch (tile.type) {
     case null:
       return true
     case 'simple':
-      return !tile.question.trim() && !tile.answer.trim()
+      return !tile.question.trim() && !tile.answer.trim() && !hasTileImage(tile)
     case 'tenable':
       return !tile.prompt.trim() && tile.items.every(i => !i.trim())
     case 'multipleChoice':
-      return !tile.question.trim() && tile.options.every(o => !o.trim())
+      return !tile.question.trim() && tile.options.every(o => !o.trim()) && !hasTileImage(tile)
     case 'higherLower':
-      return !tile.metric.trim() && tile.items.every(i => !i.label.trim() && !i.numericValue.trim())
+      return (
+        !tile.metric.trim() &&
+        tile.items.every(i => !i.label.trim() && !i.numericValue.trim() && !i.image)
+      )
   }
 }
 

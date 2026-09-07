@@ -426,3 +426,10 @@
 .backLink:hover {
   border-color: var(--color-accent);
 }
+
+.bgNote {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-text);
+  opacity: 0.6;
+}

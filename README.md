@@ -209,6 +209,8 @@ limiter.
 - The editor covers 5 categories × 5 tiles, plus title, description and an optional
   tiebreaker.
 - The board's colour theme is picked from a set of presets — no custom colour pickers.
+- The background is a preset scene (stjerner, konfetti, …) plus, optionally, a photo you
+  upload. The two are independent layers, so a board can have either or both.
 
 Both routes sit behind a code gate: you enter the edit code once, it is verified via
 `POST /api/verify-code` and kept in `sessionStorage` for the rest of the tab session.
@@ -220,20 +222,40 @@ and mixed boards are the normal case.
 
 | Type                | What it is                                                        |
 | ------------------- | ----------------------------------------------------------------- |
-| **Vanlig**          | One question, one answer                                           |
+| **Vanlig**          | One question, one answer, each with an optional image             |
 | **Topp 10**         | 10 answers, points awarded by placement                            |
-| **Flervalg**        | 4 options, one correct                                             |
-| **Høyere/Lavere**   | 4–6 rows of name + number, no images                               |
+| **Flervalg**        | 4 options, one correct; optional question and answer images        |
+| **Høyere/Lavere**   | 4–6 rows of name + number, each row with an optional image         |
 
 Vanlig tiles are edited inline in the grid; the other three open in a modal.
 
-Boards that use question types the editor can't author — `overUnder`,
-`yearCountryImage`, or `higherLower` rows with images — still cannot be represented in
-the editor, so they show no pencil icon and the server rejects writes against them with
-`409`. Note that **both** seeded boards report `editable: false`: `Jeopardy!` has an
-image-backed `higherLower` tile, and the football board has `yearCountryImage` tiles.
-So on a fresh database no board shows a pencil icon. That is expected, not a broken
-editor: the pencil only appears on boards you create yourself through **"Ny tavle"**.
+Every image slot is optional and independent — a Høyere/Lavere question can mix rows
+with and without pictures, and rows without one render as text cards.
+
+Boards that use question types the editor can't author — `overUnder` and
+`yearCountryImage` — cannot be represented in the editor, so they show no pencil icon
+and the server rejects writes against them with `409`. Of the seeded boards, only the
+football board is locked that way; `Jeopardy!` is editable despite its image-backed
+`higherLower` tile.
+
+### Images
+
+Images are uploaded through the editor, not committed to the repo. The browser scales
+each one down (max 1600 px on the longest edge) and re-encodes it before uploading, so a
+phone photo arrives as a file of a few hundred kilobytes.
+
+The bytes are stored in the `images` table of the same libSQL database as the boards —
+the host's filesystem is wiped on restart, so a file written into `public/` would not
+survive a deploy. A board stores only the short `/api/images/<sha256>` path. The id being
+the hash of the bytes makes uploads content-addressed: the same photo is only ever stored
+once, and responses are cached immutably.
+
+Only paths this app serves are accepted in a board's image fields — an uploaded
+`/api/images/…` path, or one of the static `/question-images/…` files the seeded boards
+use. External URLs and `data:` values are rejected with a `400`.
+
+The static files under `public/question-images/` remain for the seeded boards; new
+images do not go there.
 
 ## API
 
@@ -244,8 +266,11 @@ editor: the pencil only appears on boards you create yourself through **"Ny tavl
 | `POST` | `/api/verify-code`| `x-edit-code`  | `{ ok: true }` on success, `401` on a wrong code  |
 | `POST` | `/api/boards`     | `x-edit-code`  | `201` with the created board                      |
 | `PUT`  | `/api/boards/:id` | `x-edit-code`  | `200` with the updated board; `400` on an invalid id or a draft that fails validation; `404` if the board does not exist; `409` if it is not editable |
+| `POST` | `/api/images`     | `x-edit-code`  | Raw JPEG/PNG/WebP body, max 600 KB; `201` with `{ url }`; `415` if the bytes are not one of those formats |
+| `GET`  | `/api/images/:id` | –              | The stored image, cached immutably; `404` for an unknown or malformed id |
 
-There is no `DELETE`.
+There is no `DELETE`. Images a board stops referencing stay in the `images` table;
+there is no garbage collection yet.
 
 ### Migration note
 

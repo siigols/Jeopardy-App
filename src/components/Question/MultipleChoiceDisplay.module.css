@@ -2,7 +2,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 48px;
+  /* Shrinks on short screens so an optional image can't push the answer or the
+     award buttons out of view. */
+  gap: clamp(20px, 4vh, 48px);
   width: 100%;
   max-width: 900px;
 }

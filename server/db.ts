@@ -1,5 +1,6 @@
 import { createClient } from '@libsql/client'
 import type { Client, Row } from '@libsql/client'
+import { createHash } from 'crypto'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 import type { Game, BoardSummary, LoadedGame, BoardDraft, GameTheme, QuestionContent } from '../src/types/game.js'
@@ -78,6 +79,24 @@ export async function initDb(): Promise<void> {
     )
   `)
 
+  // Uploaded images live in the same database as the boards, for the same reason
+  // the boards moved here: the host's filesystem is wiped on every restart, so a
+  // file written into public/ would be gone by the next deploy. Boards store only
+  // the short `/api/images/<id>` path, so the board JSON stays small.
+  //
+  // The id is the sha256 of the bytes, which makes uploads content-addressed:
+  // re-uploading the same photo is a no-op, and the served response can be
+  // cached immutably because the bytes behind an id can never change.
+  await db().execute(`
+    CREATE TABLE IF NOT EXISTS images (
+      id         TEXT PRIMARY KEY,
+      mime       TEXT NOT NULL,
+      bytes      BLOB NOT NULL,
+      size       INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `)
+
   // Idempotent migration: SQLite has no ADD COLUMN IF NOT EXISTS.
   const boardColumns = await db().execute('PRAGMA table_info(boards)')
   if (!boardColumns.rows.some(column => column.name === 'updated_at')) {
@@ -103,8 +122,8 @@ export type { BoardSummary }
 
 /**
  * Boards are only editable in the board editor if every tile uses one of the
- * question types the editor can author and round-trip. Image-backed content (the
- * football board) would be silently destroyed, so those boards stay locked.
+ * question types the editor can author and round-trip. `overUnder` and
+ * `yearCountryImage` have no editor form at all, so boards using them stay locked.
  *
  * Arity is checked here too: a board the validator would reject must not be
  * offered for editing, or saving it back would fail with a confusing 400.
@@ -127,12 +146,9 @@ export function boardIsEditable(game: Game): boolean {
         const index: unknown = content.correctIndex
         return typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < MC_OPTION_COUNT
       }
-      // Image-backed higher/lower tiles can't be round-tripped: the editor has no
-      // way to author or preserve images.
       if (content.type === 'higherLower') {
         if (!Array.isArray(content.items)) return false
-        if (content.items.length < HL_MIN_ITEMS || content.items.length > HL_MAX_ITEMS) return false
-        return content.items.every(item => !item?.image)
+        return content.items.length >= HL_MIN_ITEMS && content.items.length <= HL_MAX_ITEMS
       }
       return true
     })
@@ -159,6 +175,17 @@ function isValidGame(game: unknown): game is Game {
 /** Display strings for higher/lower values are derived, never authored. */
 const numberFormat = new Intl.NumberFormat('nb-NO')
 
+/**
+ * The optional question/answer images, omitted entirely when absent so a tile
+ * without pictures serialises to exactly the JSON it did before this feature.
+ */
+function imageFields(tile: { questionImage?: string; answerImage?: string }) {
+  return {
+    ...(tile.questionImage !== undefined ? { questionImage: tile.questionImage } : {}),
+    ...(tile.answerImage !== undefined ? { answerImage: tile.answerImage } : {}),
+  }
+}
+
 function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): QuestionContent {
   switch (tile.type) {
     case 'tenable':
@@ -169,19 +196,21 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
         question: tile.question,
         options: tile.options,
         correctIndex: tile.correctIndex,
+        ...imageFields(tile),
       }
     case 'higherLower':
       return {
         type: 'higherLower',
         metric: tile.metric,
         items: tile.items.map(item => ({
+          ...(item.image !== undefined ? { image: item.image } : {}),
           label: item.label,
           value: numberFormat.format(item.numericValue),
           numericValue: item.numericValue,
         })),
       }
     case 'simple':
-      return { type: 'simple', question: tile.question, answer: tile.answer }
+      return { type: 'simple', question: tile.question, answer: tile.answer, ...imageFields(tile) }
   }
 
   // Exhaustiveness guard: adding a draft tile type without a branch above is a
@@ -197,7 +226,10 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
  */
 function draftToGame(draft: BoardDraft, existingTheme?: GameTheme, fallbackTheme?: GameTheme): Game {
   const preset = draft.themeId !== undefined ? getBoardTheme(draft.themeId) : undefined
-  const base = preset ?? existingTheme ?? fallbackTheme
+  // A background photo is stored on the theme, so a board that has one but no
+  // colour preset still needs a theme object to hang it on.
+  const needsTheme = draft.backgroundImage !== undefined && draft.backgroundImage !== null
+  const base = preset ?? existingTheme ?? fallbackTheme ?? (needsTheme ? getBoardTheme(DEFAULT_BOARD_THEME_ID) : undefined)
   // Fall back to the stored scene when the draft names none, so an older client
   // that doesn't send backgroundId can't wipe a board's background.
   const decorations = draft.backgroundId ?? existingTheme?.decorations
@@ -209,6 +241,11 @@ function draftToGame(draft: BoardDraft, existingTheme?: GameTheme, fallbackTheme
     // clear a scene the base theme carried over.
     if (decorations !== undefined && decorations !== 'none') theme.decorations = decorations
     else delete theme.decorations
+
+    // Explicit null clears the photo; an absent key leaves whatever is stored,
+    // so an older client that doesn't send the field can't wipe a background.
+    if (draft.backgroundImage === null) delete theme.backgroundImage
+    else if (draft.backgroundImage !== undefined) theme.backgroundImage = draft.backgroundImage
   }
 
   return {
@@ -356,4 +393,40 @@ export async function updateBoard(id: number, draft: BoardDraft): Promise<Loaded
   })
 
   return { ...game, id, editable: boardIsEditable(game) }
+}
+
+/**
+ * Stores an uploaded image and returns its id (the sha256 of the bytes).
+ *
+ * Content-addressing makes this idempotent: uploading the same photo twice, or
+ * re-uploading one that another board already uses, reuses the existing row
+ * instead of storing a second copy. `INSERT OR IGNORE` keeps that race-free —
+ * two concurrent uploads of identical bytes cannot conflict, because they agree
+ * on both the id and the contents.
+ */
+export async function putImage(bytes: Uint8Array, mime: string): Promise<string> {
+  const id = createHash('sha256').update(bytes).digest('hex')
+  await db().execute({
+    sql: 'INSERT OR IGNORE INTO images (id, mime, bytes, size, created_at) VALUES (?, ?, ?, ?, ?)',
+    args: [id, mime, bytes, bytes.byteLength, new Date().toISOString()],
+  })
+  return id
+}
+
+/** Loads an image by id, or null when it isn't stored. */
+export async function getImage(id: string): Promise<{ mime: string; bytes: Buffer } | null> {
+  const result = await db().execute({
+    sql: 'SELECT mime, bytes FROM images WHERE id = ?',
+    args: [id],
+  })
+  const row = result.rows[0]
+  if (!row) return null
+  const mime = row.mime
+  const bytes: unknown = row.bytes
+  if (typeof mime !== 'string') return null
+  // libSQL hands blobs back as an ArrayBuffer over the network and as a Buffer
+  // (a Uint8Array) from a local file, so both shapes have to be accepted.
+  if (bytes instanceof ArrayBuffer) return { mime, bytes: Buffer.from(bytes) }
+  if (ArrayBuffer.isView(bytes)) return { mime, bytes: Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength) }
+  return null
 }

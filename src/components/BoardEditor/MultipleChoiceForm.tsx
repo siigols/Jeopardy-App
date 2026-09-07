@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import type { MultipleChoiceTileDraft } from '../../types/game'
-import { MC_OPTION_MAX, TEXT_MAX } from './types'
+import ImageField from './ImageField'
+import { MC_OPTION_MAX, TEXT_MAX, withOptionalField } from './types'
 import styles from './TileEditorModal.module.css'
 
 interface Props {
@@ -20,10 +21,16 @@ export default function MultipleChoiceForm({ tile, onChange }: Props) {
     onChange({ ...tile, options })
   }
 
+  function setImage(field: 'questionImage' | 'answerImage', value: string | undefined) {
+    onChange(withOptionalField(tile, field, value))
+  }
+
   return (
     <div className={styles.body}>
       <p className={styles.note}>
         Fire alternativer (A–D). Marker hvilket som er riktig – rekkefølgen vises som den står her.
+        Begge bildene er valgfrie: spørsmålsbildet vises med én gang, svarbildet først når du
+        avslører fasiten.
       </p>
       <div className={styles.field}>
         <label className={styles.label} htmlFor={questionId}>
@@ -37,6 +44,11 @@ export default function MultipleChoiceForm({ tile, onChange }: Props) {
           onChange={e => onChange({ ...tile, question: e.target.value })}
         />
       </div>
+      <ImageField
+        label="Bilde i spørsmålet (valgfritt)"
+        value={tile.questionImage}
+        onChange={value => setImage('questionImage', value)}
+      />
       <fieldset className={styles.bareFieldset}>
         <legend className={styles.visuallyHidden}>Riktig alternativ</legend>
         <div className={styles.rows}>
@@ -65,6 +77,11 @@ export default function MultipleChoiceForm({ tile, onChange }: Props) {
           ))}
         </div>
       </fieldset>
+      <ImageField
+        label="Bilde i svaret (valgfritt)"
+        value={tile.answerImage}
+        onChange={value => setImage('answerImage', value)}
+      />
     </div>
   )
 }

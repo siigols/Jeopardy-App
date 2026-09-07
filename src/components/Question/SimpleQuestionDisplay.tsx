@@ -1,4 +1,5 @@
 import type { SimpleQuestion } from '../../types/game'
+import QuestionImage from './QuestionImage'
 import styles from './SimpleQuestionDisplay.module.css'
 
 interface Props {
@@ -10,8 +11,12 @@ export default function SimpleQuestionDisplay({ content, revealed }: Props) {
   return (
     <div className={styles.container}>
       <p className={styles.question}>{content.question}</p>
+      {content.questionImage && <QuestionImage src={content.questionImage} />}
       {revealed && (
-        <p className={styles.answer}>{content.answer}</p>
+        <div className={styles.answerBlock}>
+          <p className={styles.answer}>{content.answer}</p>
+          {content.answerImage && <QuestionImage src={content.answerImage} reveal />}
+        </div>
       )}
     </div>
   )

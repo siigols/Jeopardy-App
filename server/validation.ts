@@ -9,6 +9,7 @@ import {
   MAX_TILE_TEXT,
   MC_OPTION_COUNT,
   TENABLE_ITEM_COUNT,
+  isUploadedImagePath,
 } from '../src/types/game.js'
 import { getBoardTheme } from '../src/data/boardThemes.js'
 import { isBoardBackgroundId } from '../src/data/boardBackgrounds.js'
@@ -58,6 +59,28 @@ function asText(value: unknown): string {
 }
 
 /**
+ * Parses an optional image reference. Returns the path, `undefined` when the
+ * field is absent or blank, or an error message.
+ *
+ * Only paths this app itself serves are accepted — see `isUploadedImagePath`.
+ * Anything else is refused rather than sanitised: a board is rendered on other
+ * people's screens, so an arbitrary URL here is somebody else's request to make.
+ */
+function optionalImage(raw: unknown, label: string): string | undefined | { error: string } {
+  if (raw === undefined || raw === null) return undefined
+  if (typeof raw !== 'string') return { error: `${label} must be a string` }
+  const value = raw.trim()
+  if (value.length === 0) return undefined
+  if (!isUploadedImagePath(value)) return { error: `${label} must be an uploaded image path` }
+  return value
+}
+
+/** Narrows the `optionalImage` result to its failure case. */
+function isImageError(value: string | undefined | { error: string }): value is { error: string } {
+  return typeof value === 'object' && value !== null
+}
+
+/**
  * True when a rich tile carries no author content at all. Such tiles come from
  * the editor when a type was picked but nothing was filled in, and are stored as
  * blank `simple` tiles rather than rejected.
@@ -65,6 +88,9 @@ function asText(value: unknown): string {
 function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boolean {
   const texts = [tile.prompt, tile.question, tile.metric, tile.answer]
   if (texts.some(value => asText(value).length > 0)) return false
+  // An image is author content too. Without this a tile whose only content is a
+  // picture would be silently replaced by a blank simple tile on save.
+  if (asText(tile.questionImage).length > 0 || asText(tile.answerImage).length > 0) return false
   // Bail out before scanning: an over-long array can never be a valid blank tile,
   // so treat it as non-blank. The tile then falls through to strict validation,
   // which reports whichever field fails first.
@@ -85,7 +111,11 @@ function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boo
 function itemHasContent(item: unknown): boolean {
   if (typeof item === 'string') return item.trim().length > 0
   if (!isPlainObject(item)) return item !== undefined && item !== null
-  return asText(item.label).length > 0 || (item.numericValue !== undefined && item.numericValue !== null)
+  return (
+    asText(item.label).length > 0 ||
+    asText(item.image).length > 0 ||
+    (item.numericValue !== undefined && item.numericValue !== null)
+  )
 }
 
 /**
@@ -129,6 +159,24 @@ function validateStringArray(
   return result
 }
 
+/**
+ * The optional question/answer images shared by the `simple` and `multipleChoice`
+ * tiles. Returns the fields to spread onto the tile, or an error message string.
+ */
+function tileImages(
+  rawTile: Record<string, unknown>,
+  tileLabel: string,
+): { questionImage?: string; answerImage?: string } | string {
+  const questionImage = optionalImage(rawTile.questionImage, `${tileLabel} questionImage`)
+  if (isImageError(questionImage)) return questionImage.error
+  const answerImage = optionalImage(rawTile.answerImage, `${tileLabel} answerImage`)
+  if (isImageError(answerImage)) return answerImage.error
+  return {
+    ...(questionImage !== undefined ? { questionImage } : {}),
+    ...(answerImage !== undefined ? { answerImage } : {}),
+  }
+}
+
 /** Validates one tile. Returns the parsed tile, or an error message string. */
 function validateTile(rawTile: Record<string, unknown>, tileLabel: string): BoardTileDraft | string {
   const rawType: unknown = rawTile.type
@@ -158,7 +206,9 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
     if (answer.length > MAX_TILE_TEXT) {
       return `${tileLabel} answer must be at most ${MAX_TILE_TEXT} characters`
     }
-    return { type: 'simple', question, answer }
+    const images = tileImages(rawTile, tileLabel)
+    if (typeof images === 'string') return images
+    return { type: 'simple', question, answer, ...images }
   }
 
   if (tileType === 'tenable') {
@@ -209,11 +259,14 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
     ) {
       return `${tileLabel} correctIndex must be an integer between 0 and ${MC_OPTION_COUNT - 1}`
     }
+    const images = tileImages(rawTile, tileLabel)
+    if (typeof images === 'string') return images
     return {
       type: 'multipleChoice',
       question,
       options: options as [string, string, string, string],
       correctIndex,
+      ...images,
     }
   }
 
@@ -248,7 +301,9 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
       if (typeof numericValue !== 'number' || !Number.isFinite(numericValue)) {
         return `${tileLabel} item ${i + 1} numericValue must be a finite number`
       }
-      hlItems.push({ label, numericValue })
+      const image = optionalImage(raw.image, `${tileLabel} item ${i + 1} image`)
+      if (isImageError(image)) return image.error
+      hlItems.push({ label, numericValue, ...(image !== undefined ? { image } : {}) })
     }
     return { type: 'higherLower', metric, items: hlItems }
   }
@@ -312,6 +367,17 @@ export function validateBoardDraft(input: unknown): ValidationResult {
       return fail('unknown backgroundId')
     }
     backgroundId = input.backgroundId
+  }
+
+  // `null` is meaningful here and must survive: it is how the editor clears a
+  // photo the board already had, which an `undefined` could not express.
+  let backgroundImage: string | null | undefined
+  if (input.backgroundImage === null) {
+    backgroundImage = null
+  } else {
+    const parsed = optionalImage(input.backgroundImage, 'backgroundImage')
+    if (isImageError(parsed)) return fail(parsed.error)
+    backgroundImage = parsed
   }
 
   if (!Array.isArray(input.categories)) {
@@ -389,5 +455,5 @@ export function validateBoardDraft(input: unknown): ValidationResult {
     tiebreaker = { type: 'simple', question, answer }
   }
 
-  return { ok: true, draft: { title, description, themeId, backgroundId, tiebreaker, categories } }
+  return { ok: true, draft: { title, description, themeId, backgroundId, backgroundImage, tiebreaker, categories } }
 }

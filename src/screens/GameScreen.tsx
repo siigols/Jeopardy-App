@@ -152,7 +152,7 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
 
   return (
     <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''}`} style={themeStyle}>
-      <BoardBackground id={game.theme?.decorations} />
+      <BoardBackground id={game.theme?.decorations} image={game.theme?.backgroundImage} />
       <header className={styles.topBar}>
         <div className={styles.titleRow}>
           <h1 className={styles.title}>{game.title}</h1>
