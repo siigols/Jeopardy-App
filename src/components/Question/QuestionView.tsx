@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useSounds } from '../../hooks/useSounds'
-import { HL_POINTS_PER_COMPARISON, higherLowerComparisons, type Team, type Tile } from '../../types/game'
+import { HL_POINTS_PER_COMPARISON, higherLowerComparisons, type QuestionType, type Team, type Tile } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
+import BeatForBeatDisplay from './BeatForBeatDisplay'
 import MultipleChoiceDisplay from './MultipleChoiceDisplay'
 import HigherLowerDisplay from './HigherLowerDisplay'
 import OverUnderDisplay from './OverUnderDisplay'
@@ -9,6 +10,16 @@ import styles from './QuestionView.module.css'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
 import TenableDisplay from './TenableDisplay'
 import YearCountryImageDisplay from './YearCountryImageDisplay'
+
+/**
+ * Per-type wording for the host's reveal button. Types not listed here reveal a
+ * single answer and use the default below.
+ */
+const REVEAL_LABELS: Partial<Record<QuestionType, string>> = {
+  overUnder: 'Vis alle svar',
+  higherLower: 'Vis alle svar',
+  beatForBeat: 'Vis hele linja',
+}
 
 interface Props {
   tile: Tile
@@ -40,7 +51,7 @@ export default function QuestionView({
   const [tenableAutoRevealActive, setTenableAutoRevealActive] = useState(false)
   const [selectedTenableData, setSelectedTenableData] = useState<{ tile: Tile | null; points: number | null }>({ tile: null, points: null })
   const [selectedHigherLowerData, setSelectedHigherLowerData] = useState<{ tile: Tile | null; correct: number | null }>({ tile: null, correct: null })
-  const { playReveal, playAward, playSkip, playBuzz, playHover, playClick } = useSounds()
+  const { playAward, playSkip, playBuzz, playHover } = useSounds()
 
   // Auto-reset selected points when tile changes
   const selectedTenablePoints = selectedTenableData.tile === tile ? selectedTenableData.points : null
@@ -80,7 +91,6 @@ export default function QuestionView({
 
       if (tenableAutoRevealActive) return
 
-      playReveal()
       setTenableRevealedCount(1)
 
       if (tile.content.items.length === 1) {
@@ -93,7 +103,6 @@ export default function QuestionView({
       return
     }
 
-    playReveal()
     setReveal(true)
   }
 
@@ -150,6 +159,8 @@ export default function QuestionView({
         return <MultipleChoiceDisplay content={tile.content} revealed={revealed} />
       case 'higherLower':
         return <HigherLowerDisplay content={tile.content} revealed={revealed} onAllRevealed={handleReveal} />
+      case 'beatForBeat':
+        return <BeatForBeatDisplay content={tile.content} revealed={revealed} />
       default:
         return <p>Ukjent spørsmålstype</p>
     }
@@ -162,21 +173,17 @@ export default function QuestionView({
       onClick={handleReveal}
       disabled={tile.content.type === 'tenable' && tenableAutoRevealActive}
     >
-      {tile.content.type === 'overUnder'
-        ? 'Vis alle svar'
-        : tile.content.type === 'tenable'
-          ? tenableAutoRevealActive
-            ? 'Avslører...'
-            : 'Start avsløring'
-          : tile.content.type === 'higherLower'
-            ? 'Vis alle svar'
-            : 'Vis svar'}
+      {tile.content.type === 'tenable'
+        ? tenableAutoRevealActive
+          ? 'Avslører...'
+          : 'Start avsløring'
+        : REVEAL_LABELS[tile.content.type] ?? 'Vis svar'}
     </button>
   )
 
   /** Preview-only escape hatch: closes the question without awarding anything. */
   const closeButton = (
-    <button className={styles.closeBtn} onMouseEnter={playHover} onClick={() => { playClick(); onClose?.() }}>
+    <button className={styles.closeBtn} onMouseEnter={playHover} onClick={() => onClose?.()}>
       Lukk
     </button>
   )
@@ -218,7 +225,7 @@ export default function QuestionView({
                       type="button"
                       className={`${styles.countBtn} ${selectedCorrectCount === count ? styles.countBtnSelected : ''}`}
                       onMouseEnter={playHover}
-                      onClick={() => { playClick(); setSelectedHigherLowerData({ tile, correct: count }) }}
+                      onClick={() => setSelectedHigherLowerData({ tile, correct: count })}
                     >
                       {count}
                     </button>

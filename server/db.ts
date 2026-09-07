@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 import type { Game, BoardSummary, LoadedGame, BoardDraft } from '../src/types/game.js'
 import {
+  BFB_MAX_WORDS,
   EDITABLE_QUESTION_TYPES,
   HL_MAX_ITEMS,
   HL_MIN_ITEMS,
@@ -149,6 +150,11 @@ export function boardIsEditable(game: Game): boolean {
       if (content.type === 'higherLower') {
         if (!Array.isArray(content.items)) return false
         return content.items.length >= HL_MIN_ITEMS && content.items.length <= HL_MAX_ITEMS
+      }
+      if (content.type === 'beatForBeat') {
+        const words: unknown = content.words
+        if (!Array.isArray(words) || words.length === 0 || words.length > BFB_MAX_WORDS) return false
+        return Array.isArray(content.colors) && content.colors.length === words.length
       }
       return true
     })

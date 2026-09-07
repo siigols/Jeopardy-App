@@ -23,7 +23,7 @@ export default function CodeGate({ children }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [recheck, setRecheck] = useState(0)
   const mountedRef = useRef(true)
-  const { playHover, playClick } = useSounds()
+  const { playHover } = useSounds()
 
   useEffect(() => {
     mountedRef.current = true
@@ -76,14 +76,12 @@ export default function CodeGate({ children }: Props) {
   }, [recheck])
 
   function handleRetry() {
-    playClick()
     setError(null)
     setStatus('checking')
     setRecheck(n => n + 1)
   }
 
   function handleUseAnotherCode() {
-    playClick()
     clearEditCode()
     setError(null)
     setCode('')
@@ -93,7 +91,6 @@ export default function CodeGate({ children }: Props) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (submitting) return
-    playClick()
     setSubmitting(true)
     setError(null)
     try {
@@ -120,7 +117,7 @@ export default function CodeGate({ children }: Props) {
 
   return (
     <div className={styles.screen}>
-      <Link to="/" className={styles.backLink} onMouseEnter={playHover} onClick={playClick}>
+      <Link to="/" className={styles.backLink} onMouseEnter={playHover}>
         ← Tilbake
       </Link>
       {status === 'checking' ? (

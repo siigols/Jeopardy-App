@@ -11,7 +11,7 @@ document.documentElement.setAttribute('data-theme', 'dark')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SoundProvider preload={['ui/pop_open', 'arcade/level_up', 'arcade/coin_bling', 'game/miss', 'ambient/heartbeat', 'ui/button_soft', 'ui/button_medium', 'arcade/power_up']}>
+    <SoundProvider preload={['ui/pop_open', 'arcade/coin_bling', 'game/miss', 'ambient/heartbeat', 'ui/button_soft', 'arcade/power_up']}>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />} />

@@ -20,7 +20,7 @@ interface Props {
 
 export default function TiebreakerScreen({ tiedTeams, allTeams, question, onResolved }: Props) {
   const [revealed, setRevealed] = useState(false)
-  const { playReveal, playAward, playHover } = useSounds()
+  const { playAward, playHover } = useSounds()
 
   const q = question ?? DEFAULT_TIEBREAKER
 
@@ -29,7 +29,6 @@ export default function TiebreakerScreen({ tiedTeams, allTeams, question, onReso
   )
 
   function handleReveal() {
-    playReveal()
     setRevealed(true)
   }
 

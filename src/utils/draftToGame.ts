@@ -51,6 +51,16 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
           numericValue: item.numericValue,
         })),
       }
+    case 'beatForBeat':
+      return {
+        type: 'beatForBeat',
+        words: tile.words,
+        colors: tile.colors,
+        ...(tile.songTitle !== undefined ? { songTitle: tile.songTitle } : {}),
+        ...(tile.artist !== undefined ? { artist: tile.artist } : {}),
+        ...(tile.youtubeId !== undefined ? { youtubeId: tile.youtubeId } : {}),
+        ...(tile.youtubeStart !== undefined ? { youtubeStart: tile.youtubeStart } : {}),
+      }
     case 'simple':
       return { type: 'simple', question: tile.question, answer: tile.answer, ...imageFields(tile) }
   }

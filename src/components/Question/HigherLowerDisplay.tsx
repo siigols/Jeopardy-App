@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useSounds } from '../../hooks/useSounds'
 import type { HigherLowerItem, HigherLowerQuestion } from '../../types/game'
 import styles from './HigherLowerDisplay.module.css'
 
@@ -54,8 +53,7 @@ export default function HigherLowerDisplay({ content, revealed, onAllRevealed }:
   // currentIndex points to the "right" challenger; left is currentIndex - 1
   const [currentIndex, setCurrentIndex] = useState(1)
   const [showingAnswer, setShowingAnswer] = useState(false)
-  const { playClick } = useSounds()
-
+  
   const leftItem = content.items[currentIndex - 1]
   const rightItem = content.items[currentIndex]
   const isHigher = rightItem.numericValue >= leftItem.numericValue
@@ -71,7 +69,6 @@ export default function HigherLowerDisplay({ content, revealed, onAllRevealed }:
   }, [currentIndex, content.items])
 
   function handleRevealCurrent() {
-    playClick()
     setShowingAnswer(true)
   }
 

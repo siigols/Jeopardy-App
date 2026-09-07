@@ -32,7 +32,7 @@ export default function BoardPreview({ game, filledCount, totalCount, onClose }:
   const [active, setActive] = useState<ActiveTile | null>(null)
   const [seen, setSeen] = useState<Set<string>>(() => new Set())
   const [showImages, setShowImages] = useState(false)
-  const { playOpen, playClick, playHover } = useSounds()
+  const { playOpen, playHover } = useSounds()
 
   const activeTile: Tile | null = active
     ? game.categories[active.categoryIndex]?.tiles[active.tileIndex] ?? null
@@ -91,7 +91,7 @@ export default function BoardPreview({ game, filledCount, totalCount, onClose }:
           <button
             className={`${styles.btn} ${showImages ? styles.btnActive : ''}`}
             onMouseEnter={playHover}
-            onClick={() => { playClick(); setShowImages(v => !v) }}
+            onClick={() => setShowImages(v => !v)}
             aria-pressed={showImages}
           >
             Bildesjekk
@@ -99,12 +99,12 @@ export default function BoardPreview({ game, filledCount, totalCount, onClose }:
           <button
             className={styles.btn}
             onMouseEnter={playHover}
-            onClick={() => { playClick(); setSeen(new Set()) }}
+            onClick={() => setSeen(new Set())}
             disabled={seen.size === 0}
           >
             Nullstill merking
           </button>
-          <button className={styles.btn} onMouseEnter={playHover} onClick={() => { playClick(); onClose() }}>
+          <button className={styles.btn} onMouseEnter={playHover} onClick={() => onClose()}>
             Lukk forhåndsvisning
           </button>
         </div>

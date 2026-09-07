@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef } from 'react'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { useSounds } from '../../hooks/useSounds'
 import { BOARD_TILE_POINTS } from '../../types/game'
+import BeatForBeatForm from './BeatForBeatForm'
 import HigherLowerForm from './HigherLowerForm'
 import MultipleChoiceForm from './MultipleChoiceForm'
 import TenableForm from './TenableForm'
@@ -21,7 +22,7 @@ interface Props {
 }
 
 /**
- * Focus-trapped editor for the three rich tile types. Esc and backdrop clicks
+ * Focus-trapped editor for the rich tile types. Esc and backdrop clicks
  * close it, and focus is restored to whatever opened it.
  */
 export default function TileEditorModal({ categoryIndex, tileIndex, tile, onChange, onClose }: Props) {
@@ -103,6 +104,7 @@ export default function TileEditorModal({ categoryIndex, tileIndex, tile, onChan
         {tile.type === 'tenable' && <TenableForm tile={tile} onChange={onChange} />}
         {tile.type === 'multipleChoice' && <MultipleChoiceForm tile={tile} onChange={onChange} />}
         {tile.type === 'higherLower' && <HigherLowerForm tile={tile} onChange={onChange} />}
+        {tile.type === 'beatForBeat' && <BeatForBeatForm tile={tile} onChange={onChange} />}
 
         <div className={styles.footer}>
           <button type="button" className={styles.doneBtn} onMouseEnter={playHover} onClick={onClose}>
