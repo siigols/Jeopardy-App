@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSounds } from '../hooks/useSounds'
 import { clearEditCode, loadEditCode, saveEditCode } from '../utils/editCode'
+import BoardPreview from '../components/BoardEditor/BoardPreview'
 import ImageField from '../components/BoardEditor/ImageField'
 import TileEditorModal from '../components/BoardEditor/TileEditorModal'
 import {
@@ -17,6 +18,7 @@ import {
 import type { HigherLowerEditorTile, RichTileDraft, TileDraft } from '../components/BoardEditor/types'
 import { BOARD_BACKGROUNDS, DEFAULT_BOARD_BACKGROUND_ID, isBoardBackgroundId } from '../data/boardBackgrounds'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../data/boardThemes'
+import { draftToGame } from '../utils/draftToGame'
 import {
   BOARD_CATEGORY_COUNT,
   BOARD_TILE_COUNT,
@@ -29,6 +31,7 @@ import {
 import type {
   BoardBackgroundId,
   BoardDraft,
+  GameTheme,
   BoardTileDraft,
   EditableQuestionType,
   LoadedGame,
@@ -357,6 +360,13 @@ export default function BoardEditorScreen({ mode }: Props) {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [editing, setEditing] = useState<{ ci: number; ti: number } | null>(null)
+  const [previewing, setPreviewing] = useState(false)
+  /**
+   * The theme the board was stored with. `updateBoard` falls back to it when the
+   * draft names no preset, so the preview has to know it to show the same colours
+   * the save would keep.
+   */
+  const [storedTheme, setStoredTheme] = useState<GameTheme | undefined>(undefined)
   // When a save 401s we drop the stale code and render an inline unlock form
   // instead of reloading — a 25-tile draft is far too much to throw away.
   const [needsCode, setNeedsCode] = useState(false)
@@ -397,6 +407,7 @@ export default function BoardEditorScreen({ mode }: Props) {
           return
         }
         const loaded = gameToDraft(game)
+        setStoredTheme(game.theme)
         setDraft(loaded)
         setInitialSnapshot(JSON.stringify(loaded))
       } catch (err) {
@@ -415,6 +426,19 @@ export default function BoardEditorScreen({ mode }: Props) {
   const filledCount = useMemo(
     () => draft.categories.reduce((sum, c) => sum + c.tiles.filter(tileIsFilled).length, 0),
     [draft],
+  )
+
+  /**
+   * The draft as the server would store it. Built through the same `draftToGame`
+   * the API uses, so the preview cannot drift from what a save produces. Only
+   * derived while the preview is open — it walks all 25 ruter.
+   */
+  const previewGame = useMemo(
+    () =>
+      previewing
+        ? draftToGame(toPayload(draft), storedTheme, getBoardTheme(DEFAULT_BOARD_THEME_ID))
+        : null,
+    [previewing, draft, storedTheme],
   )
 
   const previewTheme = useMemo(
@@ -489,6 +513,11 @@ export default function BoardEditorScreen({ mode }: Props) {
     },
     [playClick, updateTile],
   )
+
+  function openPreview() {
+    playClick()
+    setPreviewing(true)
+  }
 
   function handleBack() {
     playClick()
@@ -638,6 +667,9 @@ export default function BoardEditorScreen({ mode }: Props) {
             ← Tilbake
           </button>
           <h1 className={styles.title}>{mode === 'create' ? 'Ny tavle' : 'Rediger tavle'}</h1>
+          <button className={styles.previewBtn} onClick={openPreview} onMouseEnter={playHover}>
+            Forhåndsvis
+          </button>
         </div>
 
         <section className={styles.section}>
@@ -918,6 +950,9 @@ export default function BoardEditorScreen({ mode }: Props) {
               {inlineError && <span className={styles.error}>{inlineError}</span>}
             </form>
           )}
+          <button className={styles.previewBtn} onClick={openPreview} onMouseEnter={playHover}>
+            Forhåndsvis
+          </button>
           <button
             className={styles.saveBtn}
             onClick={handleSave}
@@ -928,6 +963,15 @@ export default function BoardEditorScreen({ mode }: Props) {
           </button>
         </div>
       </div>
+
+      {previewing && previewGame && (
+        <BoardPreview
+          game={previewGame}
+          filledCount={filledCount}
+          totalCount={BOARD_CATEGORY_COUNT * BOARD_TILE_COUNT}
+          onClose={() => setPreviewing(false)}
+        />
+      )}
 
       {editing && modalTile && (
         <TileEditorModal

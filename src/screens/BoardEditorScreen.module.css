@@ -433,3 +433,30 @@
   color: var(--color-text);
   opacity: 0.6;
 }
+
+/* Opens the draft as a playable-looking board. Deliberately quieter than
+   .saveBtn — it sits next to it in the footer and must not read as the
+   primary action. */
+.previewBtn {
+  background: var(--color-chip-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-chip-border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 13px 26px;
+  border-radius: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.previewBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* In the top bar it is a compact link-ish control, not a chunky button. */
+.topBar .previewBtn {
+  padding: 7px 14px;
+  font-size: 0.75rem;
+}
