@@ -1,5 +1,6 @@
-import type { BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion } from '../src/types/game.js'
+import type { BeatColor, BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion } from '../src/types/game.js'
 import {
+  BFB_MAX_WORDS,
   BOARD_CATEGORY_COUNT,
   BOARD_TILE_COUNT,
   HL_MAX_ITEMS,
@@ -7,9 +8,11 @@ import {
   MAX_LABEL_TEXT,
   MAX_OPTION_TEXT,
   MAX_TILE_TEXT,
+  MAX_WORD_TEXT,
   MC_OPTION_COUNT,
   TENABLE_ITEM_COUNT,
   isUploadedImagePath,
+  isYouTubeVideoId,
 } from '../src/types/game.js'
 import { getBoardTheme } from '../src/data/boardThemes.js'
 import { isBoardBackgroundId } from '../src/data/boardBackgrounds.js'
@@ -18,7 +21,9 @@ const MAX_TITLE = 100
 const MAX_DESCRIPTION = 300
 const MAX_CATEGORY_NAME = 60
 
-const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower'] as const
+const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower', 'beatForBeat'] as const
+
+const BEAT_COLORS: readonly BeatColor[] = ['blue', 'red']
 
 type TileType = (typeof TILE_TYPES)[number]
 type RichTileType = Exclude<TileType, 'simple'>
@@ -32,6 +37,8 @@ const MAX_ITEMS_BY_TYPE: Record<RichTileType, number> = {
   tenable: TENABLE_ITEM_COUNT,
   multipleChoice: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
   higherLower: HL_MAX_ITEMS,
+  // beatForBeat ignores `items`; its own array is `words`, capped separately below.
+  beatForBeat: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
 }
 
 /** Same idea for `options`, which only `multipleChoice` actually uses. */
@@ -39,6 +46,7 @@ const MAX_OPTIONS_BY_TYPE: Record<RichTileType, number> = {
   tenable: TENABLE_ITEM_COUNT,
   multipleChoice: MC_OPTION_COUNT,
   higherLower: TENABLE_ITEM_COUNT,
+  beatForBeat: TENABLE_ITEM_COUNT,
 }
 
 export type ValidationResult =
@@ -86,7 +94,7 @@ function isImageError(value: string | undefined | { error: string }): value is {
  * blank `simple` tiles rather than rejected.
  */
 function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boolean {
-  const texts = [tile.prompt, tile.question, tile.metric, tile.answer]
+  const texts = [tile.prompt, tile.question, tile.metric, tile.answer, tile.songTitle, tile.artist, tile.youtubeId]
   if (texts.some(value => asText(value).length > 0)) return false
   // An image is author content too. Without this a tile whose only content is a
   // picture would be silently replaced by a blank simple tile on save.
@@ -104,6 +112,13 @@ function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boo
   if (Array.isArray(options)) {
     if (options.length > MAX_OPTIONS_BY_TYPE[type]) return false
     if (options.some(option => asText(option).length > 0)) return false
+  }
+  // Same bail-out as `items` above: an over-long array is never a blank tile, so
+  // it falls through to strict validation rather than being walked here.
+  const words: unknown = tile.words
+  if (Array.isArray(words)) {
+    if (words.length > BFB_MAX_WORDS) return false
+    if (words.some(word => asText(word).length > 0)) return false
   }
   return true
 }
@@ -127,19 +142,38 @@ function blankSimpleTile(): BoardTileDraft {
 }
 
 /**
- * Validates a fixed-length array of non-empty, length-capped strings.
- * Shared by the tenable-items and multiple-choice-options checks.
+ * Validates an array of non-empty, length-capped strings.
+ *
+ * Pass `count` for the fixed-shape types (tenable items, multiple-choice
+ * options), or `minCount`/`maxCount` for a variable-length one (a Beat for Beat
+ * line, whose length is whatever the author wrote).
  */
 function validateStringArray(
   raw: unknown,
-  options: { tileLabel: string; field: string; entryLabel: string; count: number; maxLength: number },
+  options: {
+    tileLabel: string
+    field: string
+    entryLabel: string
+    maxLength: number
+    count?: number
+    minCount?: number
+    maxCount?: number
+  },
 ): string[] | string {
-  const { tileLabel, field, entryLabel, count, maxLength } = options
+  const { tileLabel, field, entryLabel, count, minCount, maxCount, maxLength } = options
   if (!Array.isArray(raw)) {
     return `${tileLabel} ${field} must be an array`
   }
-  if (raw.length !== count) {
-    return `${tileLabel} must contain exactly ${count} ${field}`
+  if (count !== undefined) {
+    if (raw.length !== count) {
+      return `${tileLabel} must contain exactly ${count} ${field}`
+    }
+  } else {
+    const min = minCount ?? 1
+    const max = maxCount ?? Number.POSITIVE_INFINITY
+    if (raw.length < min || raw.length > max) {
+      return `${tileLabel} must contain between ${min} and ${max} ${field}`
+    }
   }
   const result: string[] = []
   for (let i = 0; i < raw.length; i++) {
@@ -306,6 +340,80 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
       hlItems.push({ label, numericValue, ...(image !== undefined ? { image } : {}) })
     }
     return { type: 'higherLower', metric, items: hlItems }
+  }
+
+  if (tileType === 'beatForBeat') {
+    const words = validateStringArray(rawTile.words, {
+      tileLabel,
+      field: 'words',
+      entryLabel: 'word',
+      maxLength: MAX_WORD_TEXT,
+      minCount: 1,
+      maxCount: BFB_MAX_WORDS,
+    })
+    if (typeof words === 'string') {
+      return words
+    }
+    // One colour per box, checked by length rather than padded: a mismatch means
+    // the client and this validator disagree about the line, and guessing the
+    // missing colours would hide that.
+    if (!Array.isArray(rawTile.colors) || rawTile.colors.length !== words.length) {
+      return `${tileLabel} colors must be an array of ${words.length} entries`
+    }
+    const colors: BeatColor[] = []
+    for (let i = 0; i < rawTile.colors.length; i++) {
+      const color: unknown = rawTile.colors[i]
+      if (typeof color !== 'string' || !(BEAT_COLORS as readonly string[]).includes(color)) {
+        return `${tileLabel} color ${i + 1} must be one of ${BEAT_COLORS.join(', ')}`
+      }
+      colors.push(color as BeatColor)
+    }
+
+    const songTitle = asText(rawTile.songTitle)
+    if (songTitle.length > MAX_LABEL_TEXT) {
+      return `${tileLabel} songTitle must be at most ${MAX_LABEL_TEXT} characters`
+    }
+    const artist = asText(rawTile.artist)
+    if (artist.length > MAX_LABEL_TEXT) {
+      return `${tileLabel} artist must be at most ${MAX_LABEL_TEXT} characters`
+    }
+
+    // Only a bare video id is ever accepted. A URL here would let a board author
+    // embed an arbitrary third-party page in every player's browser, which is the
+    // same reason `optionalImage` refuses anything this app doesn't serve itself.
+    let youtubeId: string | undefined
+    if (rawTile.youtubeId !== undefined && rawTile.youtubeId !== null) {
+      if (typeof rawTile.youtubeId !== 'string') {
+        return `${tileLabel} youtubeId must be a string`
+      }
+      const id = rawTile.youtubeId.trim()
+      if (id.length > 0) {
+        if (!isYouTubeVideoId(id)) {
+          return `${tileLabel} youtubeId must be a YouTube video id`
+        }
+        youtubeId = id
+      }
+    }
+
+    let youtubeStart: number | undefined
+    if (rawTile.youtubeStart !== undefined && rawTile.youtubeStart !== null) {
+      const start: unknown = rawTile.youtubeStart
+      if (typeof start !== 'number' || !Number.isSafeInteger(start) || start < 0) {
+        return `${tileLabel} youtubeStart must be a non-negative whole number of seconds`
+      }
+      // A start without a clip is meaningless; drop it rather than storing a stray.
+      if (youtubeId !== undefined && start > 0) youtubeStart = start
+    }
+
+    return {
+      type: 'beatForBeat',
+      words,
+      colors,
+      ...(songTitle ? { songTitle } : {}),
+      ...(artist ? { artist } : {}),
+      ...(youtubeId !== undefined ? { youtubeId } : {}),
+      ...(youtubeStart !== undefined ? { youtubeStart } : {}),
+    }
   }
 
   // Exhaustiveness guard: adding a tile type without a branch above is a compile

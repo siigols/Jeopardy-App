@@ -29,7 +29,7 @@ interface Props {
 }
 
 export default function BoardSelectScreen({ boards, onSelect }: Props) {
-  const { playClick, playHover } = useSounds()
+  const { playHover } = useSounds()
   const navigate = useNavigate()
 
   return (
@@ -41,7 +41,7 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
         <button
           className={styles.newBtn}
           onMouseEnter={playHover}
-          onClick={() => { playClick(); navigate('/boards/new') }}
+          onClick={() => navigate('/boards/new')}
         >
           Ny tavle
         </button>
@@ -55,7 +55,7 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
               <button
                 className={styles.cardMain}
                 onMouseEnter={playHover}
-                onClick={() => { playClick(); onSelect(board.id) }}
+                onClick={() => onSelect(board.id)}
               >
                 <div className={styles.swatches}>
                   {colors.slice(0, 5).map((c, j) => (
@@ -91,7 +91,6 @@ export default function BoardSelectScreen({ boards, onSelect }: Props) {
                   onMouseEnter={playHover}
                   onClick={e => {
                     e.stopPropagation()
-                    playClick()
                     navigate(`/boards/${board.id}/edit`)
                   }}
                 >

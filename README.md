@@ -226,11 +226,24 @@ and mixed boards are the normal case.
 | **Topp 10**         | 10 answers, points awarded by placement                            |
 | **Flervalg**        | 4 options, one correct; optional question and answer images        |
 | **Høyere/Lavere**   | 4–6 rows of name + number, each row with an optional image         |
+| **Beat for Beat**   | A song line hidden behind one box per word, each hiding blue or red |
 
-Vanlig tiles are edited inline in the grid; the other three open in a modal.
+Vanlig tiles are edited inline in the grid; the other four open in a modal.
 
 Every image slot is optional and independent — a Høyere/Lavere question can mix rows
 with and without pictures, and rows without one render as text cards.
+
+Beat for Beat works like the TV game: the author types one line from a song, and each
+word becomes a box the teams can pick. Picking a box reveals the word together with the
+colour — blue or red — the author put behind it; those two colours are hardcoded and stay
+the same in every board theme and in both light and dark mode. The tile awards its normal
+board points and looks like any other tile, so teams get no warning that it is coming.
+
+An optional YouTube link gives the host a "Spill av" button. Only the 11-character video
+id (and a start offset) is ever stored — the pasted URL is parsed by `parseYouTubeUrl` and
+then thrown away, for the same reason board images are restricted to paths this app serves
+itself. The player is mounted only on the host's click and is one invisible pixel, so the
+clip is audio only.
 
 Boards that use question types the editor can't author — `overUnder` and
 `yearCountryImage` — cannot be represented in the editor, so they show no pencil icon

@@ -1,0 +1,57 @@
+.chipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, filter 0.15s;
+}
+
+.chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+
+/*
+ * The same literal blue and red the played question uses (see
+ * BeatForBeatDisplay.module.css) — the editor has to show the true game colours,
+ * and neither surface may let a theme repaint them.
+ */
+.blue {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.red {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.linkOk,
+.linkBad {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.linkOk {
+  color: #4ade80;
+}
+
+.linkBad {
+  color: #f87171;
+}

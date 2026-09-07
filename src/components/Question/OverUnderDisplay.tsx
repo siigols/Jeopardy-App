@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useSounds } from '../../hooks/useSounds'
 import type { OverUnderQuestion } from '../../types/game'
 import styles from './OverUnderDisplay.module.css'
 
@@ -11,12 +10,10 @@ interface Props {
 
 export default function OverUnderDisplay({ content, revealed, onAllRevealed }: Props) {
   const [revealedItems, setRevealedItems] = useState<Set<number>>(new Set())
-  const { playClick } = useSounds()
-
+  
   function handleItemClick(index: number) {
     if (revealed || revealedItems.has(index)) return
 
-    playClick()
 
     const next = new Set(revealedItems)
     next.add(index)

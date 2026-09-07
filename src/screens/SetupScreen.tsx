@@ -14,7 +14,7 @@ const DEFAULT_NAMES = ['Lag 1', 'Lag 2', 'Lag 3', 'Lag 4']
 export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
   const [teamCount, setTeamCount] = useState(2)
   const [names, setNames] = useState<string[]>(DEFAULT_NAMES)
-  const { playClick, playHover, playStart } = useSounds()
+  const { playHover, playStart } = useSounds()
 
   function handleNameChange(index: number, value: string) {
     setNames(prev => {
@@ -36,7 +36,7 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
 
   return (
     <div className={styles.screen}>
-      <button className={styles.backBtn} onMouseEnter={playHover} onClick={() => { playClick(); onBack() }}>← Tilbake</button>
+      <button className={styles.backBtn} onMouseEnter={playHover} onClick={() => onBack()}>← Tilbake</button>
 
       <h1 className={styles.title}>Jeopardy!</h1>
       <p className={styles.boardName}>{gameTitle}</p>
@@ -52,7 +52,7 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
                 key={n}
                 className={`${styles.countBtn} ${teamCount === n ? styles.active : ''}`}
                 onMouseEnter={playHover}
-                onClick={() => { playClick(); setTeamCount(n) }}
+                onClick={() => setTeamCount(n)}
               >
                 {n}
               </button>

@@ -11,6 +11,8 @@ import {
   TYPE_LABELS,
   makeEmptyTile,
   parseHlNumber,
+  splitLyricWords,
+  syncColors,
   tileIsEmpty,
   tileIsFilled,
   withOptionalField,
@@ -20,13 +22,17 @@ import { BOARD_BACKGROUNDS, DEFAULT_BOARD_BACKGROUND_ID, isBoardBackgroundId } f
 import { BOARD_THEMES, DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../data/boardThemes'
 import { draftToGame } from '../utils/draftToGame'
 import {
+  BFB_MAX_WORDS,
   BOARD_CATEGORY_COUNT,
   BOARD_TILE_COUNT,
   BOARD_TILE_POINTS,
   EDITABLE_QUESTION_TYPES,
   HL_MIN_ITEMS,
+  MAX_WORD_TEXT,
   MC_OPTION_COUNT,
   TENABLE_ITEM_COUNT,
+  parseYouTubeUrl,
+  youTubeWatchUrl,
 } from '../types/game'
 import type {
   BoardBackgroundId,
@@ -136,6 +142,18 @@ function contentToTile(content: QuestionContent): TileDraft {
           ...(item.image !== undefined ? { image: item.image } : {}),
         })),
       }
+    case 'beatForBeat':
+      return {
+        type: 'beatForBeat',
+        line: content.words.join(' '),
+        colors: [...content.colors],
+        songTitle: content.songTitle ?? '',
+        artist: content.artist ?? '',
+        // Only an id is stored, so the link the author sees is rebuilt from it.
+        youtubeUrl: content.youtubeId
+          ? youTubeWatchUrl({ id: content.youtubeId, start: content.youtubeStart })
+          : '',
+      }
     default:
       // Image-based types can't be authored here; the board is blocked anyway.
       return { type: null }
@@ -215,6 +233,22 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
           ...(i.image !== undefined ? { image: i.image } : {}),
         })),
       }
+    case 'beatForBeat': {
+      const words = splitLyricWords(tile.line)
+      const songTitle = tile.songTitle.trim()
+      const artist = tile.artist.trim()
+      // A bad link is blocked by validateDraft, so a null here means "no clip".
+      const clip = tile.youtubeUrl.trim() ? parseYouTubeUrl(tile.youtubeUrl) : null
+      return {
+        type: 'beatForBeat',
+        words,
+        colors: syncColors(words, tile.colors),
+        ...(songTitle ? { songTitle } : {}),
+        ...(artist ? { artist } : {}),
+        ...(clip ? { youtubeId: clip.id } : {}),
+        ...(clip?.start !== undefined ? { youtubeStart: clip.start } : {}),
+      }
+    }
   }
 }
 
@@ -301,6 +335,21 @@ function validateTile(tile: TileDraft): string | null {
       }
       return validateHlRows(tile)
     }
+    case 'beatForBeat': {
+      const words = splitLyricWords(tile.line)
+      if (words.length === 0) return 'Beat for Beat mangler tekstlinje.'
+      if (words.length > BFB_MAX_WORDS) {
+        return `Beat for Beat kan ha maks ${BFB_MAX_WORDS} ord (linja har ${words.length}).`
+      }
+      const longest = words.find(w => w.length > MAX_WORD_TEXT)
+      if (longest) {
+        return `Beat for Beat har et ord som er for langt til å bli én boks: «${longest.slice(0, 20)}…».`
+      }
+      if (tile.youtubeUrl.trim() && parseYouTubeUrl(tile.youtubeUrl) === null) {
+        return 'Beat for Beat har en ugyldig YouTube-lenke.'
+      }
+      return null
+    }
   }
 }
 
@@ -344,13 +393,17 @@ function tileSummary(tile: RichTileDraft): string {
       const withImage = tile.items.filter(i => i.image).length
       return `Høyere/Lavere · ${tile.items.length} rader${withImage > 0 ? ` · ${withImage} bilder` : ''}`
     }
+    case 'beatForBeat': {
+      const words = splitLyricWords(tile.line).length
+      return `Beat for Beat · ${words} ord${tile.youtubeUrl.trim() ? ' · lyd' : ''}`
+    }
   }
 }
 
 export default function BoardEditorScreen({ mode }: Props) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { playHover, playClick } = useSounds()
+  const { playHover } = useSounds()
 
   const [draft, setDraft] = useState<DraftState>(emptyDraft)
   const [initialSnapshot, setInitialSnapshot] = useState<string>(() => JSON.stringify(emptyDraft()))
@@ -503,7 +556,6 @@ export default function BoardEditorScreen({ mode }: Props) {
     (ci: number, ti: number, type: EditableQuestionType, current: TileDraft) => {
       if (current.type === type) return
       if (!tileIsEmpty(current) && !window.confirm('Dette sletter innholdet i ruta. Fortsette?')) return
-      playClick()
       // Changing the type can make an open modal's tile no longer modal-editable,
       // so close it here rather than letting it disappear behind a stale `editing`.
       // Only when the modal is showing *this* tile: another tile's type button
@@ -511,16 +563,14 @@ export default function BoardEditorScreen({ mode }: Props) {
       setEditing(prev => (prev && prev.ci === ci && prev.ti === ti ? null : prev))
       updateTile(ci, ti, makeEmptyTile(type))
     },
-    [playClick, updateTile],
+    [updateTile],
   )
 
   function openPreview() {
-    playClick()
     setPreviewing(true)
   }
 
   function handleBack() {
-    playClick()
     if (dirty && !window.confirm('Du har ulagrede endringer. Vil du forlate siden?')) return
     navigate('/')
   }
@@ -585,14 +635,12 @@ export default function BoardEditorScreen({ mode }: Props) {
 
   async function handleSave() {
     if (saving) return
-    playClick()
     await performSave(loadEditCode())
   }
 
   async function handleInlineUnlock(e: FormEvent) {
     e.preventDefault()
     if (unlocking || saving) return
-    playClick()
     setUnlocking(true)
     setInlineError(null)
     try {
@@ -633,7 +681,7 @@ export default function BoardEditorScreen({ mode }: Props) {
           Denne tavla bruker spørsmålstyper som ikke kan lages eller endres i
           redigeringsverktøyet.
         </p>
-        <Link to="/" className={styles.backLink} onMouseEnter={playHover} onClick={playClick}>
+        <Link to="/" className={styles.backLink} onMouseEnter={playHover}>
           ← Tilbake
         </Link>
       </div>
@@ -644,7 +692,7 @@ export default function BoardEditorScreen({ mode }: Props) {
     return (
       <div className={styles.centered}>
         <p className={styles.error}>{loadError}</p>
-        <Link to="/" className={styles.backLink} onMouseEnter={playHover} onClick={playClick}>
+        <Link to="/" className={styles.backLink} onMouseEnter={playHover}>
           ← Tilbake
         </Link>
       </div>
@@ -713,7 +761,6 @@ export default function BoardEditorScreen({ mode }: Props) {
                   className={`${styles.themeCard} ${selected ? styles.themeCardActive : ''}`}
                   onMouseEnter={playHover}
                   onClick={() => {
-                    playClick()
                     setDraft(prev => ({ ...prev, themeId: preset.id }))
                   }}
                 >
@@ -765,7 +812,6 @@ export default function BoardEditorScreen({ mode }: Props) {
                   className={`${styles.themeCard} ${selected ? styles.themeCardActive : ''}`}
                   onMouseEnter={playHover}
                   onClick={() => {
-                    playClick()
                     setDraft(prev => ({ ...prev, backgroundId: preset.id }))
                   }}
                 >
@@ -868,7 +914,6 @@ export default function BoardEditorScreen({ mode }: Props) {
                           aria-label={`${tileName} – rediger`}
                           onMouseEnter={playHover}
                           onClick={() => {
-                            playClick()
                             setEditing({ ci, ti })
                           }}
                         >

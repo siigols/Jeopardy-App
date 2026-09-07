@@ -1,12 +1,16 @@
 import {
+  BFB_MAX_WORDS,
   HL_MIN_ITEMS,
   MAX_LABEL_TEXT,
   MAX_OPTION_TEXT,
   MAX_TILE_TEXT,
+  MAX_WORD_TEXT,
   MC_OPTION_COUNT,
   TENABLE_ITEM_COUNT,
+  parseYouTubeUrl,
 } from '../../types/game'
 import type {
+  BeatColor,
   EditableQuestionType,
   MultipleChoiceTileDraft,
   SimpleTileDraft,
@@ -35,8 +39,27 @@ interface UntypedTileDraft {
   type: null
 }
 
-/** The three types that are edited in the modal rather than inline. */
-export type RichTileDraft = TenableTileDraft | MultipleChoiceTileDraft | HigherLowerEditorTile
+/**
+ * Beat for Beat keeps the lyric line as raw text and the clip as a pasted URL
+ * while editing — the words and the video id are derived in `toPayload`, the same
+ * way a Høyere/Lavere row keeps its number as a string until then.
+ */
+export interface BeatForBeatEditorTile {
+  type: 'beatForBeat'
+  line: string
+  /** One entry per word of `line`, kept in sync by `syncColors`. */
+  colors: BeatColor[]
+  songTitle: string
+  artist: string
+  youtubeUrl: string
+}
+
+/** The four types that are edited in the modal rather than inline. */
+export type RichTileDraft =
+  | TenableTileDraft
+  | MultipleChoiceTileDraft
+  | HigherLowerEditorTile
+  | BeatForBeatEditorTile
 
 /** Editor-local tile union. Mirrors the wire union plus an untyped state. */
 export type TileDraft = UntypedTileDraft | SimpleTileDraft | RichTileDraft
@@ -45,6 +68,26 @@ export type TileDraft = UntypedTileDraft | SimpleTileDraft | RichTileDraft
 export const TEXT_MAX = MAX_TILE_TEXT
 export const MC_OPTION_MAX = MAX_OPTION_TEXT
 export const HL_LABEL_MAX = MAX_LABEL_TEXT
+export const BFB_LABEL_MAX = MAX_LABEL_TEXT
+/** Cap on the raw line, sized so it can never split into more than BFB_MAX_WORDS words. */
+export const BFB_LINE_MAX = BFB_MAX_WORDS * (MAX_WORD_TEXT + 1)
+
+/** The words of a lyric line, one box per entry. Collapses any run of whitespace. */
+export function splitLyricWords(line: string): string[] {
+  return line.trim().split(/\s+/).filter(Boolean)
+}
+
+/**
+ * Keeps the colour array the same length as the words.
+ *
+ * Colours already chosen keep their position, so fixing a typo further along the
+ * line doesn't repaint the boxes the author already set. New positions alternate
+ * blue/red, which gives an author who never touches a chip a mixed line rather
+ * than a solid-blue one.
+ */
+export function syncColors(words: string[], previous: BeatColor[]): BeatColor[] {
+  return words.map((_, i) => previous[i] ?? (i % 2 === 0 ? 'blue' : 'red'))
+}
 
 /**
  * Accepts Norwegian comma decimals; returns null when not a finite number.
@@ -69,6 +112,7 @@ export const TYPE_LABELS: Record<EditableQuestionType, string> = {
   tenable: 'Topp 10',
   multipleChoice: 'Flervalg',
   higherLower: 'Høyere/Lavere',
+  beatForBeat: 'Beat for Beat',
 }
 
 /** Builds a fresh, empty tile of the given type. */
@@ -91,6 +135,8 @@ export function makeEmptyTile(type: EditableQuestionType): TileDraft {
         metric: '',
         items: Array.from({ length: HL_MIN_ITEMS }, () => ({ label: '', numericValue: '' })),
       }
+    case 'beatForBeat':
+      return { type: 'beatForBeat', line: '', colors: [], songTitle: '', artist: '', youtubeUrl: '' }
   }
 }
 
@@ -139,6 +185,10 @@ export function tileIsEmpty(tile: TileDraft): boolean {
         !tile.metric.trim() &&
         tile.items.every(i => !i.label.trim() && !i.numericValue.trim() && !i.image)
       )
+    case 'beatForBeat':
+      return (
+        !tile.line.trim() && !tile.songTitle.trim() && !tile.artist.trim() && !tile.youtubeUrl.trim()
+      )
   }
 }
 
@@ -159,5 +209,11 @@ export function tileIsFilled(tile: TileDraft): boolean {
         tile.items.length >= HL_MIN_ITEMS &&
         tile.items.every(i => Boolean(i.label.trim()) && parseHlNumber(i.numericValue) !== null)
       )
+    case 'beatForBeat': {
+      const words = splitLyricWords(tile.line)
+      if (words.length === 0 || words.length > BFB_MAX_WORDS) return false
+      // A blank link is fine — the clip is optional. A typo'd one is not.
+      return !tile.youtubeUrl.trim() || parseYouTubeUrl(tile.youtubeUrl) !== null
+    }
   }
 }

@@ -1,0 +1,132 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 4vh, 40px);
+  width: min(1100px, 94vw);
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playBtn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.playBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+/*
+ * The clip is audio only: the player is kept in the layout (browsers may refuse
+ * to play media in an iframe they consider unrendered) but is one transparent
+ * pixel that cannot be seen, focused or clicked.
+ */
+.player {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.box {
+  min-width: 88px;
+  min-height: 72px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
+  font-size: clamp(1.1rem, 2.4vw, 2rem);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.12s;
+}
+
+.box:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.box:disabled {
+  cursor: default;
+}
+
+.open {
+  animation: flipIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/*
+ * Blue and red are the rules of the game, not styling: they must read the same
+ * on every board theme and in both light and dark mode. That is why these are
+ * literal values and never var(--color-*) — a theme must not be able to repaint
+ * them, and white text is pinned for the same reason.
+ */
+.blue {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.red {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.blue:hover,
+.red:hover {
+  transform: none;
+}
+
+.fasit {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.6vw, 1.8rem);
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  color: var(--color-accent);
+  text-align: center;
+  text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.5);
+  animation: flipIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes flipIn {
+  0%   { opacity: 0; transform: rotateX(90deg) scale(0.92); }
+  100% { opacity: 1; transform: rotateX(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .words {
+    gap: 8px;
+  }
+
+  .box {
+    min-width: 64px;
+    min-height: 56px;
+    padding: 10px 14px;
+    font-size: 1rem;
+  }
+}

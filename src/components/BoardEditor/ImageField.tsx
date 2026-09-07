@@ -23,7 +23,7 @@ export default function ImageField({ label, value, onChange, compact = false }: 
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { playHover, playClick } = useSounds()
+  const { playHover } = useSounds()
   const inputId = useId()
 
   async function handleFile(file: File | undefined) {
@@ -80,7 +80,6 @@ export default function ImageField({ label, value, onChange, compact = false }: 
             className={styles.btn}
             onMouseEnter={playHover}
             onClick={() => {
-              playClick()
               setError(null)
               onChange(undefined)
             }}
