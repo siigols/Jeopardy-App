@@ -12,13 +12,29 @@ import YearCountryImageDisplay from './YearCountryImageDisplay'
 
 interface Props {
   tile: Tile
-  teams: Team[]
-  teamColors: Record<string, string>
-  buzzerWinner: TeamInfo | null
-  onAward: (teamId: string | null, awardedPoints?: number) => void
+  /** Omitted in preview mode, where there are no teams and nothing to award. */
+  teams?: Team[]
+  teamColors?: Record<string, string>
+  buzzerWinner?: TeamInfo | null
+  onAward?: (teamId: string | null, awardedPoints?: number) => void
+  /**
+   * Board-preview mode: the author is checking the question, not playing it. The
+   * award row is replaced by a close button, and closing is possible before the
+   * answer is revealed.
+   */
+  previewMode?: boolean
+  onClose?: () => void
 }
 
-export default function QuestionView({ tile, teams, teamColors, buzzerWinner, onAward }: Props) {
+export default function QuestionView({
+  tile,
+  teams = [],
+  teamColors = {},
+  buzzerWinner = null,
+  onAward,
+  previewMode = false,
+  onClose,
+}: Props) {
   const [revealed, setReveal] = useState(false)
   const [tenableRevealedCount, setTenableRevealedCount] = useState(0)
   const [tenableAutoRevealActive, setTenableAutoRevealActive] = useState(false)
@@ -82,6 +98,7 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
   }
 
   function handleAward(teamId: string) {
+    if (!onAward) return
     playAward()
 
     if (tile.content.type === 'yearCountryImage') {
@@ -106,6 +123,7 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
   }
 
   function handleSkip() {
+    if (!onAward) return
     playSkip()
     onAward(null)
   }
@@ -137,6 +155,32 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
     }
   }
 
+  const revealButton = (
+    <button
+      className={styles.revealBtn}
+      onMouseEnter={playHover}
+      onClick={handleReveal}
+      disabled={tile.content.type === 'tenable' && tenableAutoRevealActive}
+    >
+      {tile.content.type === 'overUnder'
+        ? 'Vis alle svar'
+        : tile.content.type === 'tenable'
+          ? tenableAutoRevealActive
+            ? 'Avslører...'
+            : 'Start avsløring'
+          : tile.content.type === 'higherLower'
+            ? 'Vis alle svar'
+            : 'Vis svar'}
+    </button>
+  )
+
+  /** Preview-only escape hatch: closes the question without awarding anything. */
+  const closeButton = (
+    <button className={styles.closeBtn} onMouseEnter={playHover} onClick={() => { playClick(); onClose?.() }}>
+      Lukk
+    </button>
+  )
+
   return (
     <div
       className={`${styles.overlay}${buzzerWinner ? ` ${styles.buzzed}` : ''}`}
@@ -154,22 +198,14 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
 
       <div className={styles.actions}>
         {!revealed ? (
-          <button
-            className={styles.revealBtn}
-            onMouseEnter={playHover}
-            onClick={handleReveal}
-            disabled={tile.content.type === 'tenable' && tenableAutoRevealActive}
-          >
-            {tile.content.type === 'overUnder'
-              ? 'Vis alle svar'
-              : tile.content.type === 'tenable'
-                ? tenableAutoRevealActive
-                  ? 'Avslører...'
-                  : 'Start avsløring'
-                : tile.content.type === 'higherLower'
-                  ? 'Vis alle svar'
-                  : 'Vis svar'}
-          </button>
+          previewMode ? (
+            <div className={styles.previewActions}>
+              {revealButton}
+              {closeButton}
+            </div>
+          ) : (
+            revealButton
+          )
         ) : (
           <div className={styles.awardSection}>
             {tile.content.type === 'higherLower' && comparisonCount > 0 && (
@@ -190,31 +226,37 @@ export default function QuestionView({ tile, teams, teamColors, buzzerWinner, on
                 </div>
               </>
             )}
-            <p className={styles.awardLabel}>Gi poeng til:</p>
-            <div className={styles.awardButtons}>
-              {teams.map(team => (
-                <button
-                  key={team.id}
-                  className={styles.teamBtn}
-                  style={{ '--team-color': teamColors[team.id] } as CSSProperties}
-                  onMouseEnter={playHover}
-                  disabled={
-                    (tile.content.type === 'tenable' && selectedTenablePoints == null) ||
-                    (tile.content.type === 'higherLower' && comparisonCount > 0 && selectedCorrectCount == null)
-                  }
-                  onClick={() => handleAward(team.id)}
-                >
-                  {team.name}
-                </button>
-              ))}
-              <button
-                className={styles.skipBtn}
-                onMouseEnter={playHover}
-                onClick={handleSkip}
-              >
-                Ingen
-              </button>
-            </div>
+            {previewMode ? (
+              closeButton
+            ) : (
+              <>
+                <p className={styles.awardLabel}>Gi poeng til:</p>
+                <div className={styles.awardButtons}>
+                  {teams.map(team => (
+                    <button
+                      key={team.id}
+                      className={styles.teamBtn}
+                      style={{ '--team-color': teamColors[team.id] } as CSSProperties}
+                      onMouseEnter={playHover}
+                      disabled={
+                        (tile.content.type === 'tenable' && selectedTenablePoints == null) ||
+                        (tile.content.type === 'higherLower' && comparisonCount > 0 && selectedCorrectCount == null)
+                      }
+                      onClick={() => handleAward(team.id)}
+                    >
+                      {team.name}
+                    </button>
+                  ))}
+                  <button
+                    className={styles.skipBtn}
+                    onMouseEnter={playHover}
+                    onClick={handleSkip}
+                  >
+                    Ingen
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

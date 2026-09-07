@@ -7,9 +7,11 @@ interface Props {
   categories: Category[]
   onTileClick: (categoryIndex: number, tileIndex: number) => void
   theme?: GameTheme
+  /** Preview-only: marks tiles the author has already opened and checked. */
+  isSeen?: (categoryIndex: number, tileIndex: number) => boolean
 }
 
-export default function GameBoard({ categories, onTileClick, theme }: Props) {
+export default function GameBoard({ categories, onTileClick, theme, isSeen }: Props) {
   const rowCount = Math.max(...categories.map(c => c.tiles.length))
   const palette = theme?.categoryColors?.length ? theme.categoryColors : DEFAULT_CATEGORY_COLORS
 
@@ -44,6 +46,7 @@ export default function GameBoard({ categories, onTileClick, theme }: Props) {
                 tile={tile}
                 tileBg={c.tile}
                 tileHover={c.hover}
+                seen={isSeen?.(ci, rowIndex) ?? false}
                 onClick={() => onTileClick(ci, rowIndex)}
               />
             </div>

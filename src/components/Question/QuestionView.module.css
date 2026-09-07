@@ -192,3 +192,36 @@
 .skipBtn:active {
   transform: scale(0.93);
 }
+
+/* Preview-only: the reveal button sits next to a way out, so a question can be
+   closed again without revealing it. */
+.previewActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.closeBtn {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 14px 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.closeBtn:hover {
+  background-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-2px);
+}
+
+.closeBtn:active {
+  transform: scale(0.95);
+}

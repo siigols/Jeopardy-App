@@ -1,0 +1,110 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.topBar {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: var(--color-topbar-bg);
+  border-bottom: 1px solid var(--color-topbar-border);
+}
+
+.titles {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  color: var(--color-text);
+}
+
+.title {
+  font-family: 'Georgia', serif;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: var(--color-accent);
+  letter-spacing: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40vw;
+}
+
+.meta {
+  font-size: 0.72rem;
+  opacity: 0.7;
+  color: var(--color-text);
+}
+
+.controls {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: var(--color-chip-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-chip-border);
+  border-radius: 7px;
+  font-size: 0.75rem;
+  padding: 7px 12px;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btnActive {
+  background: var(--color-accent);
+  color: #111;
+  border-color: transparent;
+}
+
+.boardArea {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+
+/* Matches the gameplay screen: the pitch lines want the board nudged up. */
+.football .boardArea {
+  padding-bottom: max(4px, calc(108px - 8.89vh));
+}
