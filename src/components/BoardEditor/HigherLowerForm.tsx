@@ -1,7 +1,8 @@
 import { useId } from 'react'
 import { useSounds } from '../../hooks/useSounds'
 import { HL_MAX_ITEMS, HL_MIN_ITEMS, HL_POINTS_PER_COMPARISON } from '../../types/game'
-import { HL_LABEL_MAX, TEXT_MAX, parseHlNumber } from './types'
+import ImageField from './ImageField'
+import { HL_LABEL_MAX, TEXT_MAX, parseHlNumber, withOptionalField } from './types'
 import type { HigherLowerEditorItem, HigherLowerEditorTile } from './types'
 import styles from './TileEditorModal.module.css'
 
@@ -27,6 +28,13 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
     onChange({ ...tile, items: tile.items.map((item, i) => (i === index ? { ...item, ...patch } : item)) })
   }
 
+  function setItemImage(index: number, image: string | undefined) {
+    onChange({
+      ...tile,
+      items: tile.items.map((item, i) => (i === index ? withOptionalField(item, 'image', image) : item)),
+    })
+  }
+
   function addRow() {
     if (tile.items.length >= HL_MAX_ITEMS) return
     onChange({ ...tile, items: [...tile.items, { label: '', numericValue: '' }] })
@@ -41,7 +49,8 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
     <div className={styles.body}>
       <p className={styles.note}>
         {HL_MIN_ITEMS}–{HL_MAX_ITEMS} rader. Radene vises i den rekkefølgen de står her, og
-        tallet formateres automatisk når spørsmålet spilles.
+        tallet formateres automatisk når spørsmålet spilles. Bilde per rad er valgfritt —
+        rader uten bilde vises som tekstkort.
       </p>
       <p className={styles.note}>
         Ruta gir {HL_POINTS_PER_COMPARISON} poeng per riktig sammenligning ((rader − 1) × {HL_POINTS_PER_COMPARISON}), ikke rutas egne poeng.
@@ -85,6 +94,12 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
                 onChange={e => setItem(i, { numericValue: e.target.value })}
               />
               <span className={styles.rowPreview}>{preview ?? ''}</span>
+              <ImageField
+                compact
+                label={`Rad ${i + 1} bilde`}
+                value={item.image}
+                onChange={image => setItemImage(i, image)}
+              />
             </div>
           )
         })}

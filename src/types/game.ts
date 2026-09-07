@@ -4,6 +4,10 @@ export interface SimpleQuestion {
   type: 'simple'
   question: string
   answer: string
+  /** Optional uploaded image shown alongside the question text. */
+  questionImage?: string
+  /** Optional uploaded image revealed together with the answer. */
+  answerImage?: string
 }
 
 export interface OverUnderItem {
@@ -39,6 +43,10 @@ export interface MultipleChoiceQuestion {
   question: string
   options: [string, string, string, string]
   correctIndex: number
+  /** Optional uploaded image shown alongside the question text. */
+  questionImage?: string
+  /** Optional uploaded image revealed together with the correct option. */
+  answerImage?: string
 }
 
 export interface HigherLowerItem {
@@ -89,6 +97,11 @@ export interface GameTheme {
   bg?: string
   /** Absent means no scene. 'none' is never stored. */
   decorations?: BoardBackgroundId
+  /**
+   * Optional uploaded photo rendered behind the board, underneath any scene.
+   * Absent means no photo; the two are independent and can be combined.
+   */
+  backgroundImage?: string
 }
 
 export interface Game {
@@ -119,6 +132,27 @@ export const MC_OPTION_COUNT = 4
 export const HL_MIN_ITEMS = 4
 export const HL_MAX_ITEMS = 6
 
+/**
+ * Every image an author can attach is either uploaded through `POST /api/images`
+ * (content-addressed: the id is the sha256 of the bytes) or is one of the static
+ * files the seeded boards ship with. Nothing else is ever accepted: an arbitrary
+ * URL here would let a board author point every player's browser at a third-party
+ * host, and `data:`/`javascript:` values have no business in an `<img src>` we
+ * render for someone else.
+ *
+ * Shared by the editor and the server validator so the two can't drift.
+ */
+const UPLOADED_IMAGE_PATH = /^\/api\/images\/[0-9a-f]{64}$/
+// Some seeded filenames contain spaces ('david villa.png'), so the character
+// class has to allow them; '..' is rejected separately rather than by omitting
+// the dot, which the extension needs anyway.
+const STATIC_IMAGE_PATH = /^\/question-images\/[A-Za-z0-9_ .\-/]+\.(png|jpg|jpeg|webp|gif)$/
+
+export function isUploadedImagePath(value: string): boolean {
+  if (UPLOADED_IMAGE_PATH.test(value)) return true
+  return STATIC_IMAGE_PATH.test(value) && !value.includes('..')
+}
+
 /** Field length caps for editable board text. Shared by client + server so they can't drift. */
 export const MAX_TILE_TEXT = 500
 export const MAX_OPTION_TEXT = 200
@@ -128,6 +162,8 @@ export interface SimpleTileDraft {
   type: 'simple'
   question: string
   answer: string
+  questionImage?: string
+  answerImage?: string
 }
 
 export interface TenableTileDraft {
@@ -141,11 +177,14 @@ export interface MultipleChoiceTileDraft {
   question: string
   options: [string, string, string, string]
   correctIndex: number
+  questionImage?: string
+  answerImage?: string
 }
 
 export interface HigherLowerTileDraftItem {
   label: string
   numericValue: number
+  image?: string
 }
 
 export interface HigherLowerTileDraft {
@@ -163,6 +202,8 @@ export interface BoardDraft {
   description?: string
   themeId?: string
   backgroundId?: BoardBackgroundId
+  /** An uploaded image path, or `null` to clear a photo the board already had. */
+  backgroundImage?: string | null
   tiebreaker?: SimpleQuestion
   categories: {
     name: string

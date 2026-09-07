@@ -7,7 +7,7 @@ import { existsSync } from 'fs'
 import type { LoadedGame } from '../src/types/game.js'
 import type { ServerToClientEvents, ClientToServerEvents } from '../src/types/socket-events.js'
 import { createSession, getSession, openQuestion, closeQuestion, recordBuzz, resetBuzzes } from './session.js'
-import { getAllBoards, getBoard, createBoard, updateBoard, initDb } from './db.js'
+import { getAllBoards, getBoard, createBoard, updateBoard, getImage, putImage, initDb } from './db.js'
 import { validateBoardDraft } from './validation.js'
 import { requireEditCode } from './auth.js'
 
@@ -80,6 +80,75 @@ app.get('/api/boards/:id', async (req, res, next) => {
 
 app.post('/api/verify-code', requireEditCode, (_req, res) => {
   res.json({ ok: true })
+})
+
+/**
+ * Accepted upload formats, and the leading bytes that actually prove it.
+ * The Content-Type header is attacker-controlled, so it only selects the parser
+ * below; what is stored (and later served back with that same type) is decided
+ * by sniffing the bytes.
+ */
+const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+
+/** Largest upload accepted. The editor downscales before sending, so this is a backstop. */
+const MAX_IMAGE_BYTES = 600 * 1024
+
+function sniffImageMime(bytes: Buffer): string | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg'
+  if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return 'image/png'
+  }
+  // WebP is a RIFF container: 'RIFF' <4-byte size> 'WEBP'.
+  if (bytes.length >= 12 && bytes.subarray(0, 4).toString('latin1') === 'RIFF' && bytes.subarray(8, 12).toString('latin1') === 'WEBP') {
+    return 'image/webp'
+  }
+  return null
+}
+
+app.post(
+  '/api/images',
+  requireEditCode,
+  express.raw({ type: [...IMAGE_MIME_TYPES], limit: MAX_IMAGE_BYTES }),
+  async (req, res, next) => {
+    // A body that didn't match one of the declared types never reaches the raw
+    // parser, so req.body is left as an empty object rather than a Buffer.
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      return res.status(415).json({ error: 'Bildet må være JPEG, PNG eller WebP' })
+    }
+    const mime = sniffImageMime(req.body)
+    if (mime === null) {
+      return res.status(415).json({ error: 'Bildet må være JPEG, PNG eller WebP' })
+    }
+    try {
+      const id = await putImage(req.body, mime)
+      res.status(201).json({ url: `/api/images/${id}` })
+    } catch (err) {
+      next(err)
+    }
+  },
+)
+
+app.get('/api/images/:id', async (req, res, next) => {
+  const id: unknown = req.params.id
+  // Ids are sha256 hex and nothing else — this also rules out any path the
+  // router might otherwise hand through.
+  if (typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id)) {
+    return res.status(404).json({ error: 'Image not found' })
+  }
+  let image: Awaited<ReturnType<typeof getImage>>
+  try {
+    image = await getImage(id)
+  } catch (err) {
+    return next(err)
+  }
+  if (!image) {
+    return res.status(404).json({ error: 'Image not found' })
+  }
+  // The id is the hash of the bytes, so the response for a given id can never
+  // change and is safe to cache forever.
+  res.setHeader('Content-Type', image.mime)
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+  res.send(image.bytes)
 })
 
 app.post('/api/boards', requireEditCode, async (req, res, next) => {
