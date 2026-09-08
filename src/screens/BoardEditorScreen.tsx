@@ -495,10 +495,6 @@ export default function BoardEditorScreen({ mode }: Props) {
   const categoryCount = draft.categories.length
   const totalCount = categoryCount * BOARD_TILE_COUNT
   const canAddCategory = categoryCount < BOARD_CATEGORY_MAX
-  // The "add category" placeholder is a grid item like any column, so it has to
-  // be counted — otherwise it wraps onto a second row instead of sitting at the
-  // end of the strip.
-  const gridColumns = canAddCategory ? categoryCount + 1 : categoryCount
 
   /**
    * The draft as the server would store it. Built through the same `draftToGame`
@@ -877,10 +873,33 @@ export default function BoardEditorScreen({ mode }: Props) {
           />
         </section>
 
+        <div className={styles.gridToolbar}>
+          <div className={styles.gridToolbarText}>
+            <h2 className={styles.sectionTitle}>Kategorier</h2>
+            <span className={styles.gridToolbarHint}>
+              {categoryCount} av {BOARD_CATEGORY_MAX} kategorier
+            </span>
+          </div>
+          <button
+            type="button"
+            className={styles.addCategoryBtn}
+            disabled={!canAddCategory}
+            title={
+              canAddCategory
+                ? 'Legg til kategori'
+                : `Tavla kan ha inntil ${BOARD_CATEGORY_MAX} kategorier`
+            }
+            onMouseEnter={playHover}
+            onClick={addCategory}
+          >
+            + Legg til kategori
+          </button>
+        </div>
+
         <div className={styles.gridScroll}>
         <div
           className={styles.grid}
-          style={{ '--editor-cols': gridColumns } as CSSProperties}
+          style={{ '--editor-cols': categoryCount } as CSSProperties}
         >
           {draft.categories.map((category, ci) => (
             <div className={styles.column} key={ci}>
@@ -990,21 +1009,6 @@ export default function BoardEditorScreen({ mode }: Props) {
               })}
             </div>
           ))}
-          {canAddCategory && (
-            <div className={styles.addCategoryColumn}>
-              <button
-                type="button"
-                className={styles.addCategoryBtn}
-                onMouseEnter={playHover}
-                onClick={addCategory}
-              >
-                + Legg til kategori
-              </button>
-              <span className={styles.addCategoryHint}>
-                Inntil {BOARD_CATEGORY_MAX} kategorier
-              </span>
-            </div>
-          )}
         </div>
         </div>
 
