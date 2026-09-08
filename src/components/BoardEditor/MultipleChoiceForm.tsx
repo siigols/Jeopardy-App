@@ -3,6 +3,7 @@ import type { MultipleChoiceTileDraft } from '../../types/game'
 import ImageField from './ImageField'
 import { MC_OPTION_MAX, TEXT_MAX, withOptionalField } from './types'
 import styles from './TileEditorModal.module.css'
+import { Input } from '../ui'
 
 interface Props {
   tile: MultipleChoiceTileDraft
@@ -55,7 +56,7 @@ export default function MultipleChoiceForm({ tile, onChange }: Props) {
           {tile.options.map((option, i) => (
             <div className={styles.row} key={i}>
               <span className={`${styles.rowLabel} ${styles.rowLabelNarrow}`}>{OPTION_LETTERS[i]}</span>
-              <input
+              <Input
                 className={styles.input}
                 value={option}
                 maxLength={MC_OPTION_MAX}

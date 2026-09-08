@@ -161,7 +161,6 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
               onMouseEnter={playHover}
               onClick={() => setShowBuzzerPanel(p => !p)}
               title="Buzzer-panel"
-              style={{ fontSize: '1rem' }}
             >
               📡
             </button>

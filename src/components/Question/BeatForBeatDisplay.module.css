@@ -13,19 +13,21 @@
 }
 
 .playBtn {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-hover-veil);
   color: var(--color-text);
-  border-radius: 999px;
-  padding: 10px 24px;
-  font-size: 1rem;
-  font-weight: 700;
+  border-radius: var(--r-full);
+  padding: var(--sp-3) var(--sp-6);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+  transition: background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
 }
 
 .playBtn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--color-press-veil);
   border-color: var(--color-accent);
   transform: translateY(-1px);
 }
@@ -48,22 +50,24 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
 }
 
 .box {
   min-width: 88px;
   min-height: 72px;
-  padding: 12px 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-chip-bg);
   color: var(--color-text);
   font-size: clamp(1.1rem, 2.4vw, 2rem);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, transform 0.12s;
+  transition: background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
 }
 
 .box:hover:not(:disabled) {
@@ -105,7 +109,7 @@
 .fasit {
   margin: 0;
   font-size: clamp(1.1rem, 2.6vw, 1.8rem);
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-style: italic;
   color: var(--color-accent);
   text-align: center;
@@ -120,13 +124,13 @@
 
 @media (max-width: 640px) {
   .words {
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .box {
     min-width: 64px;
     min-height: 56px;
-    padding: 10px 14px;
-    font-size: 1rem;
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-base);
   }
 }

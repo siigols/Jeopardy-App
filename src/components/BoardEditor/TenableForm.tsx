@@ -2,6 +2,7 @@ import { useId } from 'react'
 import type { TenableTileDraft } from '../../types/game'
 import { TEXT_MAX } from './types'
 import styles from './TileEditorModal.module.css'
+import { Input } from '../ui'
 
 interface Props {
   tile: TenableTileDraft
@@ -39,7 +40,7 @@ export default function TenableForm({ tile, onChange }: Props) {
         {tile.items.map((item, i) => (
           <div className={styles.row} key={i}>
             <span className={styles.rowLabel}>{`${i + 1}. ${(i + 1) * 100} p`}</span>
-            <input
+            <Input
               className={styles.input}
               value={item}
               maxLength={TEXT_MAX}

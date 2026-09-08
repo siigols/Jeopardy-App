@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useSounds } from '../../hooks/useSounds'
 import { clearEditCode, loadEditCode, saveEditCode } from '../../utils/editCode'
 import styles from './CodeGate.module.css'
+import { Input } from '../ui'
 
 interface Props {
   children: ReactNode
@@ -150,7 +151,7 @@ export default function CodeGate({ children }: Props) {
             <label className={styles.label} htmlFor="edit-code">
               Kode
             </label>
-            <input
+            <Input
               id="edit-code"
               className={styles.input}
               type="password"

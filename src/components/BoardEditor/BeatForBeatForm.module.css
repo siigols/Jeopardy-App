@@ -2,23 +2,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .chip {
-  border-radius: 10px;
+  border-radius: var(--r-md);
   border: 1px solid transparent;
-  padding: 8px 14px;
-  font-size: 0.95rem;
-  font-weight: 700;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
   cursor: pointer;
-  transition: transform 0.1s, filter 0.15s;
+  transition: transform var(--dur-fast) var(--ease-out),
+              filter var(--dur-base) var(--ease-out);
 }
 
 .chip:hover {
@@ -43,8 +44,8 @@
 
 .linkOk,
 .linkBad {
-  margin: 6px 0 0;
-  font-size: 0.85rem;
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-md);
   line-height: 1.4;
 }
 

@@ -3,7 +3,7 @@
   grid-template-columns: repeat(var(--col-count), clamp(100px, 18.5vw, 165px));
   grid-auto-rows: auto;
   justify-content: space-around;
-  row-gap: 14px;
+  row-gap: var(--sp-4);
   width: 100%;
   max-width: min(96vw, 1100px);
 }
@@ -15,13 +15,13 @@
   justify-content: center;
   text-align: center;
   font-size: clamp(0.6rem, 1.1vw, 0.85rem);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 10px 6px;
-  border-radius: 10px;
+  padding: var(--sp-3) var(--sp-2);
+  border-radius: var(--r-md);
   min-height: 50px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 .cell {
@@ -29,4 +29,30 @@
   min-height: 0;
   display: flex;
   height: clamp(60px, 9vh, 88px);
+}
+
+/* ── Small screens ───────────────────────────────────────
+   The 100px column floor makes a five-column board wider than a phone, and
+   .boardArea clips the overflow. Below 600px the columns share the width
+   instead. */
+@media (max-width: 600px) {
+  .board {
+    grid-template-columns: repeat(var(--col-count), minmax(0, 1fr));
+    column-gap: var(--sp-1);
+    max-width: 100%;
+  }
+
+  .header {
+    min-height: 38px;
+    padding: var(--sp-2) var(--sp-1);
+    letter-spacing: 0;
+    /* Long category names ("POPULÆRKULTUR") no longer fit one narrow column,
+       so let them break rather than be clipped. */
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+  }
+
+  .cell {
+    height: clamp(44px, 7vh, 64px);
+  }
 }

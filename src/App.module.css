@@ -1,0 +1,37 @@
+/* Full-screen loading / fatal states and the transient bottom toast. Both were
+   previously inline styles on App.tsx. */
+.status {
+  height: 100dvh;
+  padding: var(--sp-8);
+  text-align: center;
+}
+
+.overlay {
+  position: fixed;
+  left: 50%;
+  bottom: var(--sp-8);
+  transform: translateX(-50%);
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: var(--r-md);
+  background: var(--color-overlay-bg);
+  color: #f0f0f8;
+  border: 1px solid var(--color-chip-border);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+}
+
+.dismissBtn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: var(--fs-lg);
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.dismissBtn:hover {
+  opacity: 1;
+}

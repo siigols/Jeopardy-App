@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Team } from '../types/game'
 import { useSounds } from '../hooks/useSounds'
 import styles from './SetupScreen.module.css'
+import { Input } from '../components/ui'
 
 interface Props {
   gameTitle: string
@@ -64,7 +65,7 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
           <label className={styles.label}>Lagnavn</label>
           <div className={styles.inputs}>
             {Array.from({ length: teamCount }, (_, i) => (
-              <input
+              <Input
                 key={i}
                 className={styles.input}
                 value={names[i] ?? `Lag ${i + 1}`}

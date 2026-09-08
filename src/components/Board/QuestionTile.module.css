@@ -7,11 +7,14 @@
   align-items: center;
   justify-content: center;
   font-size: clamp(0.9rem, 1.8vw, 1.5rem);
-  font-weight: 700;
-  font-family: system-ui, sans-serif;
-  border-radius: 10px;
+  font-weight: var(--fw-bold);
+  font-family: var(--font-body);
+  border-radius: var(--r-md);
   box-shadow: var(--shadow-tile);
-  transition: background 0.15s, transform 0.12s, box-shadow 0.15s, opacity 0.45s;
+  transition: background var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              opacity var(--dur-slow) var(--ease-out);
   border: none;
   letter-spacing: 0.02em;
 }
@@ -19,13 +22,14 @@
 .tile:hover:not(.answered) {
   background: var(--tile-hover, #5e18a0);
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-lg);
 }
 
 .tile:active:not(.answered) {
   transform: scale(0.94);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.07s, box-shadow 0.07s;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .answered {
@@ -60,7 +64,7 @@
   position: absolute;
   top: 4px;
   right: 6px;
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   line-height: 1;
   opacity: 0.9;
 }

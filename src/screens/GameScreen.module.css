@@ -22,14 +22,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 var(--sp-4);
   height: 44px;
 }
 
 .title {
-  font-size: 1.15rem;
-  font-family: 'Georgia', serif;
-  font-weight: bold;
+  font-size: var(--fs-lg);
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
   color: var(--color-accent);
   letter-spacing: 2px;
   white-space: nowrap;
@@ -40,7 +40,7 @@
 
 .controls {
   display: flex;
-  gap: 6px;
+  gap: var(--sp-2);
   align-items: center;
   flex-shrink: 0;
 }
@@ -48,15 +48,15 @@
 .iconBtn {
   background: var(--color-chip-bg);
   color: var(--color-text);
-  font-size: 1rem;
+  font-size: var(--fs-base);
   width: 32px;
   height: 32px;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--color-chip-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background var(--dur-base) var(--ease-out);
 }
 
 .iconBtn:hover {
@@ -68,8 +68,8 @@
 .scoresRow {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
   overflow-x: auto;
   scrollbar-width: none;
   border-top: 1px solid var(--color-topbar-border);
@@ -83,11 +83,11 @@
 .teamChip {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   background: color-mix(in srgb, var(--team-color, var(--color-chip-bg)) 18%, var(--color-chip-bg));
   border: 1.5px solid var(--team-color, var(--color-chip-border));
-  border-radius: 999px;
-  padding: 3px 8px 3px 10px;
+  border-radius: var(--r-full);
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -106,12 +106,12 @@
 }
 
 .teamName {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   opacity: 0.65;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide);
   margin-right: 3px;
 }
 
@@ -123,8 +123,8 @@
 }
 
 .teamScore {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--color-accent);
   min-width: 32px;
   text-align: center;
@@ -136,21 +136,21 @@
   background: transparent;
   color: var(--color-text);
   opacity: 0.4;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  border-radius: var(--r-full);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   padding: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--dur-base) var(--ease-out);
 }
 
 .adjBtn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-hover-veil);
 }
 
 /* ── Board area ──────────────────────────────────────── */
@@ -159,7 +159,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--sp-4);
   min-height: 0;
   overflow: hidden;
   position: relative;
@@ -179,13 +179,57 @@
   transform: translateX(-50%);
   background: var(--color-accent);
   color: var(--color-btn-primary-text);
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 10px 28px;
-  border-radius: 999px;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  padding: var(--sp-3) var(--sp-7);
+  border-radius: var(--r-full);
   z-index: 40;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-  letter-spacing: 0.06em;
+  box-shadow: var(--shadow-lg);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+/* ── Small screens ───────────────────────────────────────
+   The two top-bar rows are fixed-height by design (the board area is sized
+   from what is left). Below ~600px they are allowed to grow instead of
+   clipping their contents. */
+@media (max-width: 600px) {
+  .titleRow {
+    height: auto;
+    min-height: 44px;
+    padding: var(--sp-2) var(--sp-3);
+    gap: var(--sp-2);
+  }
+
+  .title {
+    font-size: var(--fs-md);
+    letter-spacing: 1px;
+    max-width: 45vw;
+  }
+
+  .iconBtn {
+    width: 28px;
+    height: 28px;
+    font-size: var(--fs-md);
+  }
+
+  .scoresRow {
+    height: auto;
+    min-height: 46px;
+    padding: var(--sp-2) var(--sp-3);
+  }
+
+  .boardArea {
+    padding: var(--sp-2);
+  }
+
+  .winBanner {
+    top: 96px;
+    max-width: 92vw;
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--fs-sm);
+    white-space: normal;
+    text-align: center;
+  }
 }

@@ -1,48 +1,54 @@
 .wrapper {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: var(--sp-5);
+  right: var(--sp-5);
   z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .toggleBtn {
   background-color: var(--color-score-bg);
   color: var(--color-accent);
   border: 1px solid var(--color-score-border);
-  font-size: 0.8rem;
-  font-weight: bold;
-  padding: 6px 14px;
-  border-radius: 4px;
-  letter-spacing: 0.05em;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-xs);
+  letter-spacing: var(--tracking-wide);
   backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
 }
 
 .toggleBtn:hover {
   background-color: var(--color-tile);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
 }
 
 .panel {
   background-color: var(--color-score-bg);
   border: 2px solid var(--color-score-border);
-  border-radius: 8px;
-  padding: 8px 0;
+  border-radius: var(--r-md);
+  padding: var(--sp-2) 0;
   min-width: 160px;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
 }
 
 .title {
   text-align: center;
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-wider);
   color: var(--color-accent);
-  font-weight: bold;
-  padding: 0 8px 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 4px;
+  font-weight: var(--fw-bold);
+  padding: 0 var(--sp-2) var(--sp-2);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--sp-1);
 }
