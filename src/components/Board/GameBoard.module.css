@@ -5,7 +5,10 @@
   justify-content: space-around;
   row-gap: var(--sp-4);
   width: 100%;
-  max-width: min(96vw, 1100px);
+  /* 1100px holds five 165px columns with room to breathe. A seven-category board
+     needs more than that, so the cap grows with the column count instead of
+     letting the last column fall outside the clipped board area. */
+  max-width: min(96vw, max(1100px, calc(var(--col-count) * 175px)));
 }
 
 .header {

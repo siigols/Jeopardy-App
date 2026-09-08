@@ -179,6 +179,25 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
+  /**
+   * Shows a freshly copied board without re-fetching the list. `retryBoards`
+   * would work too, but it flips the screen back through its loading state,
+   * which is a lot of flicker for one appended card.
+   */
+  const handleBoardCopied = useCallback((game: LoadedGame) => {
+    setBoards(prev => [
+      ...prev,
+      {
+        id: game.id,
+        title: game.title,
+        ...(game.description !== undefined ? { description: game.description } : {}),
+        categories: game.categories.map(c => ({ name: c.name })),
+        ...(game.theme !== undefined ? { theme: game.theme } : {}),
+        editable: game.editable,
+      },
+    ])
+  }, [])
+
   async function handleBoardSelect(id: number) {
     // Last click wins: abort any in-flight selection before starting a new one.
     selectAbortRef.current?.abort()
@@ -271,7 +290,11 @@ export default function App() {
     }
     return (
       <>
-        <BoardSelectScreen boards={boards} onSelect={handleBoardSelect} />
+        <BoardSelectScreen
+          boards={boards}
+          onSelect={handleBoardSelect}
+          onCopied={handleBoardCopied}
+        />
         {boardLoading && <StatusOverlay message="Laster brett …" />}
         {boardsError && (
           <StatusOverlay message={boardsError} onDismiss={() => setBoardsError(null)} autoHideMs={6000} />

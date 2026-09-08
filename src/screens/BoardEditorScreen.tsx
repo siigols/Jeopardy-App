@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSounds } from '../hooks/useSounds'
 import { clearEditCode, loadEditCode, saveEditCode } from '../utils/editCode'
@@ -23,12 +23,15 @@ import { BOARD_THEMES, DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../data/boa
 import { draftToGame } from '../utils/draftToGame'
 import {
   BFB_MAX_WORDS,
-  BOARD_CATEGORY_COUNT,
+  BOARD_CATEGORY_DEFAULT,
+  BOARD_CATEGORY_MAX,
+  BOARD_CATEGORY_MIN,
   BOARD_TILE_COUNT,
   BOARD_TILE_POINTS,
   EDITABLE_QUESTION_TYPES,
   HL_MIN_ITEMS,
   MAX_WORD_TEXT,
+  BOARD_TITLE_MAX,
   MC_OPTION_COUNT,
   TENABLE_ITEM_COUNT,
   parseYouTubeUrl,
@@ -70,9 +73,16 @@ interface DraftState {
   categories: CategoryDraft[]
 }
 
-const TITLE_MAX = 100
+const TITLE_MAX = BOARD_TITLE_MAX
 const DESCRIPTION_MAX = 300
 const CATEGORY_MAX = 60
+
+function makeEmptyCategory(): CategoryDraft {
+  return {
+    name: '',
+    tiles: Array.from({ length: BOARD_TILE_COUNT }, () => ({ type: null }) as TileDraft),
+  }
+}
 
 function emptyDraft(): DraftState {
   return {
@@ -81,10 +91,7 @@ function emptyDraft(): DraftState {
     themeId: DEFAULT_BOARD_THEME_ID,
     backgroundId: DEFAULT_BOARD_BACKGROUND_ID,
     tiebreaker: { question: '', answer: '' },
-    categories: Array.from({ length: BOARD_CATEGORY_COUNT }, () => ({
-      name: '',
-      tiles: Array.from({ length: BOARD_TILE_COUNT }, () => ({ type: null }) as TileDraft),
-    })),
+    categories: Array.from({ length: BOARD_CATEGORY_DEFAULT }, makeEmptyCategory),
   }
 }
 
@@ -160,9 +167,14 @@ function contentToTile(content: QuestionContent): TileDraft {
   }
 }
 
-/** Flattens a loaded Game into the editor draft, padding to the fixed 5x5 grid. */
+/** Keeps a stored board's categories within the range the editor can represent. */
+function clampCategories(categories: LoadedGame['categories']): LoadedGame['categories'] {
+  if (categories.length === 0) return [{ name: '', tiles: [] }]
+  return categories.slice(0, BOARD_CATEGORY_MAX)
+}
+
+/** Flattens a loaded Game into the editor draft, padding each column to 5 tiles. */
 function gameToDraft(game: LoadedGame): DraftState {
-  const base = emptyDraft()
   // An unknown stored theme id would round-trip into a server `unknown themeId` 400.
   const storedThemeId = game.theme?.id
   const themeId = storedThemeId && getBoardTheme(storedThemeId) ? storedThemeId : DEFAULT_BOARD_THEME_ID
@@ -179,18 +191,17 @@ function gameToDraft(game: LoadedGame): DraftState {
       question: game.tiebreaker?.question ?? '',
       answer: game.tiebreaker?.answer ?? '',
     },
-    categories: base.categories.map((blank, ci) => {
-      const category = game.categories[ci]
-      if (!category) return blank
-      return {
-        name: category.name,
-        tiles: blank.tiles.map((blankTile, ti) => {
-          const tile = category.tiles[ti]
-          if (!tile) return blankTile
-          return contentToTile(tile.content)
-        }),
-      }
-    }),
+    // Driven by the stored board rather than a fixed column count, so a board
+    // with more or fewer categories than a new one round-trips intact. A board
+    // stored with none at all (or more than the editor allows) still has to
+    // produce something saveable, hence the clamp.
+    categories: clampCategories(game.categories).map(category => ({
+      name: category.name,
+      tiles: Array.from({ length: BOARD_TILE_COUNT }, (_, ti) => {
+        const tile = category.tiles[ti]
+        return tile ? contentToTile(tile.content) : ({ type: null } as TileDraft)
+      }),
+    })),
   }
 }
 
@@ -481,6 +492,14 @@ export default function BoardEditorScreen({ mode }: Props) {
     [draft],
   )
 
+  const categoryCount = draft.categories.length
+  const totalCount = categoryCount * BOARD_TILE_COUNT
+  const canAddCategory = categoryCount < BOARD_CATEGORY_MAX
+  // The "add category" placeholder is a grid item like any column, so it has to
+  // be counted — otherwise it wraps onto a second row instead of sitting at the
+  // end of the strip.
+  const gridColumns = canAddCategory ? categoryCount + 1 : categoryCount
+
   /**
    * The draft as the server would store it. Built through the same `draftToGame`
    * the API uses, so the preview cannot drift from what a save produces. Only
@@ -533,6 +552,30 @@ export default function BoardEditorScreen({ mode }: Props) {
       ...prev,
       categories: prev.categories.map((c, i) => (i === ci ? { ...c, name } : c)),
     }))
+  }, [])
+
+  const addCategory = useCallback(() => {
+    setDraft(prev =>
+      prev.categories.length >= BOARD_CATEGORY_MAX
+        ? prev
+        : { ...prev, categories: [...prev.categories, makeEmptyCategory()] },
+    )
+  }, [])
+
+  /**
+   * Drops a whole column. The confirm has to happen here rather than inside the
+   * updater, which must stay pure — the same reason `chooseType` prompts up front.
+   * `draft` is read through the setter's `prev` for the removal itself, but the
+   * decision to prompt needs the current column, so it comes from the render.
+   */
+  const removeCategory = useCallback((ci: number, category: CategoryDraft, count: number) => {
+    if (count <= BOARD_CATEGORY_MIN) return
+    const hasContent = category.name.trim() !== '' || category.tiles.some(tileIsFilled)
+    if (hasContent && !window.confirm(`Slette kategori ${ci + 1} med alt innholdet?`)) return
+    // Every index after `ci` shifts down, so an open modal would end up editing
+    // a different tile than the one it was opened on.
+    setEditing(null)
+    setDraft(prev => ({ ...prev, categories: prev.categories.filter((_, i) => i !== ci) }))
   }, [])
 
   const updateTile = useCallback((ci: number, ti: number, tile: TileDraft) => {
@@ -834,17 +877,38 @@ export default function BoardEditorScreen({ mode }: Props) {
           />
         </section>
 
-        <div className={styles.grid}>
+        <div className={styles.gridScroll}>
+        <div
+          className={styles.grid}
+          style={{ '--editor-cols': gridColumns } as CSSProperties}
+        >
           {draft.categories.map((category, ci) => (
             <div className={styles.column} key={ci}>
-              <input
-                className={styles.categoryInput}
-                value={category.name}
-                maxLength={CATEGORY_MAX}
-                placeholder={`Kategori ${ci + 1}`}
-                aria-label={`Kategori ${ci + 1} navn`}
-                onChange={e => updateCategory(ci, e.target.value)}
-              />
+              <div className={styles.categoryHeader}>
+                <input
+                  className={styles.categoryInput}
+                  value={category.name}
+                  maxLength={CATEGORY_MAX}
+                  placeholder={`Kategori ${ci + 1}`}
+                  aria-label={`Kategori ${ci + 1} navn`}
+                  onChange={e => updateCategory(ci, e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.removeCategoryBtn}
+                  aria-label={`Fjern kategori ${ci + 1}`}
+                  title={
+                    categoryCount <= BOARD_CATEGORY_MIN
+                      ? `Tavla må ha minst ${BOARD_CATEGORY_MIN} kategori`
+                      : 'Fjern kategori'
+                  }
+                  disabled={categoryCount <= BOARD_CATEGORY_MIN}
+                  onMouseEnter={playHover}
+                  onClick={() => removeCategory(ci, category, categoryCount)}
+                >
+                  ×
+                </button>
+              </div>
               {category.tiles.map((tile, ti) => {
                 const tileName = `Kategori ${ci + 1}, ${BOARD_TILE_POINTS[ti]} poeng`
                 return (
@@ -926,6 +990,22 @@ export default function BoardEditorScreen({ mode }: Props) {
               })}
             </div>
           ))}
+          {canAddCategory && (
+            <div className={styles.addCategoryColumn}>
+              <button
+                type="button"
+                className={styles.addCategoryBtn}
+                onMouseEnter={playHover}
+                onClick={addCategory}
+              >
+                + Legg til kategori
+              </button>
+              <span className={styles.addCategoryHint}>
+                Inntil {BOARD_CATEGORY_MAX} kategorier
+              </span>
+            </div>
+          )}
+        </div>
         </div>
 
         <section className={styles.section}>
@@ -968,7 +1048,7 @@ export default function BoardEditorScreen({ mode }: Props) {
 
         <div className={styles.footer}>
           <span className={styles.fillCount}>
-            {filledCount} av {BOARD_CATEGORY_COUNT * BOARD_TILE_COUNT} ruter er fylt ut.
+            {filledCount} av {totalCount} ruter er fylt ut.
           </span>
           {saveError && <span className={styles.error}>{saveError}</span>}
           {needsCode && (
@@ -1013,7 +1093,7 @@ export default function BoardEditorScreen({ mode }: Props) {
         <BoardPreview
           game={previewGame}
           filledCount={filledCount}
-          totalCount={BOARD_CATEGORY_COUNT * BOARD_TILE_COUNT}
+          totalCount={totalCount}
           onClose={() => setPreviewing(false)}
         />
       )}

@@ -205,9 +205,12 @@ limiter.
 ## Board editor
 
 - **"Ny tavle"** on the board-select screen opens a blank editor at `/boards/new`.
-- Editable boards show a **pencil icon** on their card, linking to `/boards/:id/edit`.
-- The editor covers 5 categories × 5 tiles, plus title, description and an optional
-  tiebreaker.
+- Editable boards show a **pencil icon** on their card, linking to `/boards/:id/edit`,
+  and a **copy icon** that duplicates the board as "«Tittel» (kopi)" via
+  `POST /api/boards/:id/copy`. The copy is a new board — editing it leaves the
+  original untouched.
+- The editor covers 1–7 categories (added and removed in the editor) × 5 tiles, plus
+  title, description and an optional tiebreaker.
 - The board's colour theme is picked from a set of presets — no custom colour pickers.
 - The background is a preset scene (stjerner, konfetti, …) plus, optionally, a photo you
   upload. The two are independent layers, so a board can have either or both.
@@ -217,8 +220,8 @@ Both routes sit behind a code gate: you enter the edit code once, it is verified
 
 ### Question types
 
-Each of the 25 tiles gets its own question type, chosen independently. Mixed columns
-and mixed boards are the normal case.
+Every tile gets its own question type, chosen independently. Mixed columns and mixed
+boards are the normal case.
 
 | Type                | What it is                                                        |
 | ------------------- | ----------------------------------------------------------------- |

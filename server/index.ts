@@ -7,7 +7,16 @@ import { existsSync } from 'fs'
 import type { LoadedGame } from '../src/types/game.js'
 import type { ServerToClientEvents, ClientToServerEvents } from '../src/types/socket-events.js'
 import { createSession, getSession, openQuestion, closeQuestion, recordBuzz, resetBuzzes } from './session.js'
-import { getAllBoards, getBoard, createBoard, updateBoard, getImage, putImage, initDb } from './db.js'
+import {
+  getAllBoards,
+  getBoard,
+  createBoard,
+  updateBoard,
+  copyBoard,
+  getImage,
+  putImage,
+  initDb,
+} from './db.js'
 import { validateBoardDraft } from './validation.js'
 import { requireEditCode } from './auth.js'
 
@@ -199,6 +208,40 @@ app.put('/api/boards/:id', requireEditCode, async (req, res, next) => {
     return res.status(404).json({ error: 'Board not found' })
   }
   res.json(updated)
+})
+
+app.post('/api/boards/:id/copy', requireEditCode, async (req, res, next) => {
+  const id = parseBoardId(req.params.id)
+  if (id === null) {
+    return res.status(400).json({ error: 'Invalid board id' })
+  }
+
+  let existing: LoadedGame | null
+  try {
+    existing = await getBoard(id)
+  } catch (err) {
+    return next(err)
+  }
+  if (!existing) {
+    return res.status(404).json({ error: 'Board not found' })
+  }
+  // The copy is only worth having if it can then be edited, and the board list
+  // only offers the action on editable boards. Same guard as the PUT above.
+  if (!existing.editable) {
+    return res.status(409).json({ error: 'Denne tavla kan ikke kopieres her' })
+  }
+
+  let copy: LoadedGame | null
+  try {
+    copy = await copyBoard(id)
+  } catch (err) {
+    return next(err)
+  }
+  // Deleted between the read and the copy.
+  if (!copy) {
+    return res.status(404).json({ error: 'Board not found' })
+  }
+  res.status(201).json(copy)
 })
 
 // Serve built frontend in production
