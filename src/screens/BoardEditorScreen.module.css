@@ -107,23 +107,46 @@
   min-height: 68px;
 }
 
-/* The column count is set by the author (1-7), so the grid scrolls sideways
-   rather than reflowing into rows: wrapping a board's categories onto a second
-   row stops them reading as columns, which is the whole point of the layout. */
+.gridToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.gridToolbarText {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+}
+
+.gridToolbarHint {
+  font-size: var(--fs-xs);
+  opacity: 0.5;
+}
+
 .gridScroll {
-  overflow-x: auto;
   padding-bottom: var(--sp-2);
 }
 
+/* Columns stay at a readable width and wrap onto a new row when the author's
+   category count (1-7) no longer fits: a cramped seven-across strip is harder
+   to edit than two rows of full-width columns. The max-width keeps a board with
+   few categories from stretching its columns across the whole page. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(var(--editor-cols, 5), minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
   gap: var(--sp-4);
+  max-width: calc(var(--editor-cols, 5) * 340px
+    + (var(--editor-cols, 5) - 1) * var(--sp-4));
 }
 
 @media (max-width: 780px) {
   .grid {
-    grid-template-columns: repeat(var(--editor-cols, 5), minmax(78vw, 1fr));
+    grid-template-columns: 1fr;
+    max-width: none;
   }
 }
 
@@ -163,18 +186,6 @@
   cursor: not-allowed;
 }
 
-.addCategoryColumn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-2);
-  min-height: 160px;
-  padding: var(--sp-4);
-  border: 1px dashed var(--color-chip-border);
-  border-radius: var(--r-lg);
-}
-
 .addCategoryBtn {
   background: var(--color-chip-bg);
   border: 1px solid var(--color-chip-border);
@@ -187,14 +198,13 @@
   transition: border-color var(--dur-base) var(--ease-out);
 }
 
-.addCategoryBtn:hover {
+.addCategoryBtn:hover:not(:disabled) {
   border-color: var(--color-accent);
 }
 
-.addCategoryHint {
-  font-size: var(--fs-xs);
-  opacity: 0.5;
-  text-align: center;
+.addCategoryBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .column {
