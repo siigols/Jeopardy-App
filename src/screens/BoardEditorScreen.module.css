@@ -107,22 +107,94 @@
   min-height: 68px;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--sp-4);
+/* The column count is set by the author (1-7), so the grid scrolls sideways
+   rather than reflowing into rows: wrapping a board's categories onto a second
+   row stops them reading as columns, which is the whole point of the layout. */
+.gridScroll {
+  overflow-x: auto;
+  padding-bottom: var(--sp-2);
 }
 
-@media (max-width: 1200px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--editor-cols, 5), minmax(210px, 1fr));
+  gap: var(--sp-4);
 }
 
 @media (max-width: 780px) {
   .grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--editor-cols, 5), minmax(78vw, 1fr));
   }
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+}
+
+.categoryHeader .categoryInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.removeCategoryBtn {
+  flex: none;
+  width: 34px;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--r-sm);
+  color: var(--color-text);
+  opacity: 0.5;
+  font-size: var(--fs-md);
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+}
+
+.removeCategoryBtn:hover:not(:disabled) {
+  opacity: 1;
+  border-color: var(--color-accent);
+}
+
+.removeCategoryBtn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.addCategoryColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 160px;
+  padding: var(--sp-4);
+  border: 1px dashed var(--color-chip-border);
+  border-radius: var(--r-lg);
+}
+
+.addCategoryBtn {
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-chip-border);
+  border-radius: var(--r-sm);
+  color: var(--color-text);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+.addCategoryBtn:hover {
+  border-color: var(--color-accent);
+}
+
+.addCategoryHint {
+  font-size: var(--fs-xs);
+  opacity: 0.5;
+  text-align: center;
 }
 
 .column {

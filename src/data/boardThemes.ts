@@ -14,12 +14,15 @@ const CLASSIC_CATEGORY_COLORS: CategoryColor[] = [
   { tile: '#7c1038', hover: '#9e1448', header: '#590b28' },
   { tile: '#7a3008', hover: '#9c3e0a', header: '#562005' },
   { tile: '#1a5c3a', hover: '#22784c', header: '#10402a' },
+  { tile: '#12386b', hover: '#17498c', header: '#0c2649' },
+  { tile: '#6b5209', hover: '#8b6a0c', header: '#473605' },
 ]
 
 /**
- * Preset palettes offered by the board editor. Each theme has exactly five
- * category colors (tile / hover / header, darkest last) so white text stays
- * readable on every surface. Shared by client and server.
+ * Preset palettes offered by the board editor. Each theme has one category color
+ * (tile / hover / header, darkest last) per category a board may have, so a
+ * seven-category board never repeats a color. White text stays readable on every
+ * surface. Shared by client and server.
  */
 export const BOARD_THEMES: BoardThemePreset[] = [
   {
@@ -45,6 +48,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#0b5f74', hover: '#0f7d97', header: '#07404e' },
         { tile: '#8a1055', hover: '#b0156d', header: '#5c0a39' },
         { tile: '#155c1f', hover: '#1c7a2a', header: '#0d3d14' },
+        { tile: '#4b0f8c', hover: '#6113af', header: '#320a5e' },
+        { tile: '#8a5a06', hover: '#b0740a', header: '#5c3c04' },
       ],
     },
   },
@@ -61,6 +66,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#4a5620', hover: '#63722b', header: '#2f3714' },
         { tile: '#1a4f4a', hover: '#236a63', header: '#103532' },
         { tile: '#5a3d18', hover: '#775121', header: '#3b280f' },
+        { tile: '#26483a', hover: '#33604e', header: '#192f26' },
+        { tile: '#3f4a2a', hover: '#556237', header: '#29311b' },
       ],
     },
   },
@@ -77,6 +84,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#8a1443', hover: '#ae1a55', header: '#5e0e2e' },
         { tile: '#6b2160', hover: '#8a2b7c', header: '#481641' },
         { tile: '#9c5a08', hover: '#c2730c', header: '#6a3d05' },
+        { tile: '#7a1220', hover: '#9c1729', header: '#520c16' },
+        { tile: '#8a6b0a', hover: '#b08a0d', header: '#5c4706' },
       ],
     },
   },
@@ -93,6 +102,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#123a7a', hover: '#184ea1', header: '#0c2752' },
         { tile: '#0a5a52', hover: '#0e766b', header: '#073d38' },
         { tile: '#2a3f7a', hover: '#3853a1', header: '#1c2b52' },
+        { tile: '#071f4a', hover: '#0a2b66', header: '#051531' },
+        { tile: '#2c4a6b', hover: '#3a628c', header: '#1d3147' },
       ],
     },
   },
@@ -109,6 +120,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#1c2c44', hover: '#283c5c', header: '#131e2e' },
         { tile: '#382348', hover: '#4c3062', header: '#251731' },
         { tile: '#232f3a', hover: '#314150', header: '#172029' },
+        { tile: '#2e2a4d', hover: '#3e3968', header: '#1e1c33' },
+        { tile: '#1f3340', hover: '#2b4657', header: '#152229' },
       ],
     },
   },
@@ -125,6 +138,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#6b0f2a', hover: '#8a1436', header: '#4a0a1d' },
         { tile: '#93430a', hover: '#ba550d', header: '#622c06' },
         { tile: '#5a1450', hover: '#761a69', header: '#3c0d35' },
+        { tile: '#4a0f0f', hover: '#661515', header: '#310a0a' },
+        { tile: '#7a5205', hover: '#9c6907', header: '#523605' },
       ],
     },
   },
@@ -141,6 +156,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#1d3f6e', hover: '#26538f', header: '#132a49' },
         { tile: '#0f5a5f', hover: '#14767c', header: '#0a3c40' },
         { tile: '#2b3f66', hover: '#385286', header: '#1c2a44' },
+        { tile: '#25506b', hover: '#31698b', header: '#183547' },
+        { tile: '#123f52', hover: '#18546c', header: '#0c2a37' },
       ],
     },
   },
@@ -157,6 +174,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#6d1030', hover: '#8d1540', header: '#490a20' },
         { tile: '#2a2a72', hover: '#383896', header: '#1c1c4c' },
         { tile: '#6b4a05', hover: '#8c6107', header: '#473106' },
+        { tile: '#0d4a2a', hover: '#116237', header: '#08311c' },
+        { tile: '#8a1058', hover: '#b01572', header: '#5c0a3a' },
       ],
     },
   },
@@ -173,6 +192,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#6b4a1f', hover: '#8a6029', header: '#472f14' },
         { tile: '#4a3566', hover: '#604485', header: '#312344' },
         { tile: '#7a2f4a', hover: '#9c3d5f', header: '#521f32' },
+        { tile: '#2f4a6b', hover: '#3d618c', header: '#1f3147' },
+        { tile: '#4a5c2f', hover: '#61793d', header: '#313d1f' },
       ],
     },
   },
@@ -189,6 +210,8 @@ export const BOARD_THEMES: BoardThemePreset[] = [
         { tile: '#6b5a05', hover: '#8b7507', header: '#473c04' },
         { tile: '#1f5c47', hover: '#297a5e', header: '#143d2f' },
         { tile: '#6b3d05', hover: '#8b5007', header: '#472906' },
+        { tile: '#0f5c5c', hover: '#147a7a', header: '#0a3d3d' },
+        { tile: '#7a2f0a', hover: '#9c3e0d', header: '#521f06' },
       ],
     },
   },

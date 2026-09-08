@@ -144,10 +144,20 @@ export interface Game {
   tiebreaker?: SimpleQuestion
 }
 
-/** User-created boards are a fixed 5x5 grid. Shared by client + server so they can't drift. */
-export const BOARD_CATEGORY_COUNT = 5
+/**
+ * Board shape limits. Shared by client + server so they can't drift.
+ *
+ * The number of categories is up to the author; the rows are not, because each
+ * row is one fixed point value.
+ */
+export const BOARD_CATEGORY_MIN = 1
+export const BOARD_CATEGORY_MAX = 7
+/** Columns a brand-new board starts with. */
+export const BOARD_CATEGORY_DEFAULT = 5
 export const BOARD_TILE_POINTS = [200, 400, 600, 800, 1000] as const
 export const BOARD_TILE_COUNT = BOARD_TILE_POINTS.length
+/** Longest board title, enforced by the editor and the server validator alike. */
+export const BOARD_TITLE_MAX = 100
 
 /** Question types the board editor can create and round-trip. */
 export const EDITABLE_QUESTION_TYPES = [

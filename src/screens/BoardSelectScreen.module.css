@@ -1,5 +1,9 @@
 .screen {
-  min-height: 100vh;
+  /* `body` is `overflow: hidden`, so a screen that outgrows the viewport has to
+     scroll itself or its lower cards are simply unreachable — which the board
+     list does as soon as there are more than a handful of boards. */
+  height: 100vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -93,11 +97,18 @@
   outline-offset: -2px;
 }
 
-.editBtn {
+/* A row rather than one absolutely-positioned button, so the copy and edit
+   actions sit side by side instead of stacking on top of each other. */
+.cardActions {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 1;
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.iconBtn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -113,16 +124,77 @@
               color var(--dur-base) var(--ease-out);
 }
 
-.editBtn:hover,
-.editBtn:focus-visible {
+.iconBtn:hover:not(:disabled),
+.iconBtn:focus-visible {
   opacity: 1;
   background: var(--color-accent);
   color: var(--color-btn-primary-text);
 }
 
+.iconBtn:disabled {
+  opacity: 0.3;
+  cursor: progress;
+}
+
 .editIcon {
   width: 15px;
   height: 15px;
+}
+
+/* Sits below the action row, inside the card, so an error or the code prompt
+   never covers the board title. */
+.cardNotice {
+  position: absolute;
+  top: 46px;
+  right: 10px;
+  left: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  /* Opaque, not the translucent chip surface: this floats over the card title,
+     which would otherwise read straight through the code field. */
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.codeRow {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.codeInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.codeSubmit {
+  flex: none;
+  background: var(--color-accent);
+  color: var(--color-btn-primary-text);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.codeSubmit:disabled {
+  opacity: 0.5;
+}
+
+.noticeLabel {
+  font-size: var(--fs-xs);
+  opacity: 0.6;
+}
+
+.noticeError {
+  font-size: var(--fs-xs);
+  color: #f87171;
 }
 
 .swatches {

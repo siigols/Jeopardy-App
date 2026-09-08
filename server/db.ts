@@ -6,6 +6,7 @@ import { dirname, resolve } from 'path'
 import type { Game, BoardSummary, LoadedGame, BoardDraft } from '../src/types/game.js'
 import {
   BFB_MAX_WORDS,
+  BOARD_TITLE_MAX,
   EDITABLE_QUESTION_TYPES,
   HL_MAX_ITEMS,
   HL_MIN_ITEMS,
@@ -307,6 +308,60 @@ export async function updateBoard(id: number, draft: BoardDraft): Promise<Loaded
   })
 
   return { ...game, id, editable: boardIsEditable(game) }
+}
+
+const COPY_SUFFIX = ' (kopi)'
+
+/** Titles the copy of a board, keeping the result inside the stored title limit. */
+function copyTitle(title: string): string {
+  const room = BOARD_TITLE_MAX - COPY_SUFFIX.length
+  const base = title.length > room ? title.slice(0, room).trimEnd() : title
+  return `${base}${COPY_SUFFIX}`
+}
+
+/**
+ * Duplicates a board under a new id, with " (kopi)" appended to its title.
+ *
+ * The stored JSON is cloned verbatim rather than round-tripped through
+ * `draftToGame`, so theme, background, tiebreaker and any content the editor
+ * draft can't express all survive exactly. Uploaded images are content-addressed
+ * and unowned, so both boards can point at the same `/api/images/<hash>` path.
+ *
+ * Returns null if the board no longer exists.
+ */
+export async function copyBoard(id: number): Promise<LoadedGame | null> {
+  const result = await db().execute({
+    sql: 'SELECT id, title, description, data FROM boards WHERE id = ?',
+    args: [id],
+  })
+  const rawRow = result.rows[0]
+  if (!rawRow) return null
+  const row = toBoardRow(rawRow)
+  if (!row) return null
+
+  let existing: Game
+  try {
+    existing = JSON.parse(row.data) as Game
+  } catch {
+    throw new Error(`Malformed board data for board ${row.id} ("${row.title}")`)
+  }
+  // Copying a structurally-invalid row would only spread the damage; treat it as
+  // missing, exactly as `getBoard` does.
+  if (!isValidGame(existing)) return null
+
+  const game: Game = { ...existing, title: copyTitle(existing.title) }
+  const now = new Date().toISOString()
+
+  const inserted = await db().execute({
+    sql: 'INSERT INTO boards (title, description, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+    args: [game.title, game.description ?? null, JSON.stringify(game), now, now],
+  })
+
+  if (inserted.lastInsertRowid === undefined) {
+    throw new Error('Board copy insert returned no id')
+  }
+
+  return { ...game, id: Number(inserted.lastInsertRowid), editable: boardIsEditable(game) }
 }
 
 /**

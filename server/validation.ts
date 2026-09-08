@@ -1,8 +1,10 @@
 import type { BeatColor, BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion } from '../src/types/game.js'
 import {
   BFB_MAX_WORDS,
-  BOARD_CATEGORY_COUNT,
+  BOARD_CATEGORY_MAX,
+  BOARD_CATEGORY_MIN,
   BOARD_TILE_COUNT,
+  BOARD_TITLE_MAX,
   HL_MAX_ITEMS,
   HL_MIN_ITEMS,
   MAX_LABEL_TEXT,
@@ -17,7 +19,7 @@ import {
 import { getBoardTheme } from '../src/data/boardThemes.js'
 import { isBoardBackgroundId } from '../src/data/boardBackgrounds.js'
 
-const MAX_TITLE = 100
+const MAX_TITLE = BOARD_TITLE_MAX
 const MAX_DESCRIPTION = 300
 const MAX_CATEGORY_NAME = 60
 
@@ -491,8 +493,10 @@ export function validateBoardDraft(input: unknown): ValidationResult {
   if (!Array.isArray(input.categories)) {
     return fail('categories must be an array')
   }
-  if (input.categories.length !== BOARD_CATEGORY_COUNT) {
-    return fail(`categories must contain exactly ${BOARD_CATEGORY_COUNT} categories`)
+  if (input.categories.length < BOARD_CATEGORY_MIN || input.categories.length > BOARD_CATEGORY_MAX) {
+    return fail(
+      `categories must contain between ${BOARD_CATEGORY_MIN} and ${BOARD_CATEGORY_MAX} categories`,
+    )
   }
 
   const categories: BoardDraft['categories'] = []
