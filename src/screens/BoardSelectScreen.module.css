@@ -1,5 +1,9 @@
 .screen {
-  min-height: 100vh;
+  /* `body` is `overflow: hidden`, so a screen that outgrows the viewport has to
+     scroll itself or its lower cards are simply unreachable — which the board
+     list does as soon as there are more than a handful of boards. */
+  height: 100vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
