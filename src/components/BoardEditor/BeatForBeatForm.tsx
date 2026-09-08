@@ -5,6 +5,7 @@ import { BFB_LABEL_MAX, BFB_LINE_MAX, splitLyricWords, syncColors } from './type
 import type { BeatForBeatEditorTile } from './types'
 import styles from './TileEditorModal.module.css'
 import chipStyles from './BeatForBeatForm.module.css'
+import { Input } from '../ui'
 
 interface Props {
   tile: BeatForBeatEditorTile
@@ -103,7 +104,7 @@ export default function BeatForBeatForm({ tile, onChange }: Props) {
         <label className={styles.label} htmlFor={songId}>
           Sang (valgfritt)
         </label>
-        <input
+        <Input
           id={songId}
           className={styles.input}
           value={tile.songTitle}
@@ -117,7 +118,7 @@ export default function BeatForBeatForm({ tile, onChange }: Props) {
         <label className={styles.label} htmlFor={artistId}>
           Artist (valgfritt)
         </label>
-        <input
+        <Input
           id={artistId}
           className={styles.input}
           value={tile.artist}
@@ -131,7 +132,7 @@ export default function BeatForBeatForm({ tile, onChange }: Props) {
         <label className={styles.label} htmlFor={linkId}>
           YouTube-lenke (valgfritt)
         </label>
-        <input
+        <Input
           id={linkId}
           className={styles.input}
           value={tile.youtubeUrl}

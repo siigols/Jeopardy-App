@@ -1,7 +1,7 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 /* Inline layout for the Høyere/Lavere rows, where the label is redundant next
@@ -25,18 +25,18 @@
 }
 
 .label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   opacity: 0.5;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-wider);
 }
 
 .controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
 }
 
@@ -44,7 +44,7 @@
 .placeholder {
   width: 56px;
   height: 42px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--color-input-border);
   flex: 0 0 auto;
 }
@@ -59,7 +59,7 @@
   align-items: center;
   justify-content: center;
   background: var(--color-input-bg);
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   opacity: 0.35;
 }
 
@@ -80,15 +80,16 @@
 .btn {
   background: transparent;
   border: 1px solid var(--color-chip-border);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   color: var(--color-text);
   opacity: 0.7;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 6px 12px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  padding: var(--sp-2) var(--sp-3);
   cursor: pointer;
-  transition: opacity 0.15s, border-color 0.15s;
+  transition: opacity var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
 }
 
 .btn:hover {
@@ -109,6 +110,6 @@
 }
 
 .error {
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: #ff6b6b;
 }

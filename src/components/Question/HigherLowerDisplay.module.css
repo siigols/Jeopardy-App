@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .metric {
@@ -11,8 +11,8 @@
   font-size: clamp(0.9rem, 2vw, 1.3rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
+  color: var(--color-text-muted);
+  font-weight: var(--fw-semibold);
 }
 
 .panels {
@@ -27,7 +27,7 @@
 .panel {
   position: relative;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   min-height: 300px;
 }
 
@@ -45,8 +45,8 @@
   background:
     radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 60%),
     linear-gradient(160deg, var(--color-accent) 0%, #2a2338 35%, #14141f 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
 }
 
 .overlay {
@@ -56,9 +56,9 @@
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  padding: 24px 16px;
+  padding: var(--sp-6) var(--sp-4);
   background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 /* Imageless panels supply their own background, so replace the bottom-up
@@ -73,7 +73,7 @@
     rgba(0, 0, 0, 0.4) 55%,
     rgba(0, 0, 0, 0.25) 100%
   );
-  gap: 18px;
+  gap: var(--sp-5);
 }
 
 .label {
@@ -92,12 +92,13 @@
 
 .value {
   font-size: clamp(1rem, 2.5vw, 1.6rem);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: #fff;
   background: rgba(0, 0, 0, 0.5);
-  padding: 6px 16px;
-  border-radius: 999px;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  transition: transform var(--dur-slow) var(--ease-out),
+              opacity var(--dur-slow) var(--ease-out);
 }
 
 .higher {
@@ -110,35 +111,35 @@
 
 .hiddenHint {
   font-size: clamp(0.9rem, 2vw, 1.3rem);
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  padding: 8px 18px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  letter-spacing: 0.03em;
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--r-full);
+  background: var(--color-press-veil);
+  border: 2px solid var(--color-border-strong);
+  letter-spacing: var(--tracking-wide);
 }
 
 .divider {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
-  font-size: 1.4rem;
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-xl);
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.6);
-  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-wide);
 }
 
 .answerBadge {
   position: absolute;
   top: 16px;
   right: 16px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-md);
+  font-size: var(--fs-base);
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
   color: #fff;
   animation: popIn 0.3s ease;
 }
@@ -153,9 +154,9 @@
 
 .progress {
   margin: 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-semibold);
 }
 
 .controls {
@@ -165,19 +166,19 @@
 }
 
 .controlBtn {
-  padding: 10px 24px;
+  padding: var(--sp-3) var(--sp-6);
   border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--r-md);
+  background: var(--color-press-veil);
   color: #fff;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--dur-base) var(--ease-out);
 }
 
 .controlBtn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--color-press-veil);
 }
 
 @keyframes popIn {

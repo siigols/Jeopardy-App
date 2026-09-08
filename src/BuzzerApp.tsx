@@ -1,4 +1,6 @@
 import BuzzerScreen from './screens/BuzzerScreen'
+import { Text, VStack } from './components/ui'
+import styles from './screens/BuzzerScreen.module.css'
 
 export default function BuzzerApp() {
   const params = new URLSearchParams(window.location.search)
@@ -7,10 +9,10 @@ export default function BuzzerApp() {
 
   if (!sessionCode || isNaN(teamIndex) || teamIndex < 0) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', flexDirection: 'column', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
-        <p style={{ fontSize: '1.5rem' }}>Ugyldig buzzer-lenke.</p>
-        <p style={{ color: 'var(--color-text-muted, #888)' }}>Be verten om å sende deg riktig URL.</p>
-      </div>
+      <VStack className={styles.fatal} align="center" justify="center" gap={4}>
+        <Text size="xl">Ugyldig buzzer-lenke.</Text>
+        <Text tone="muted">Be verten om å sende deg riktig URL.</Text>
+      </VStack>
     )
   }
 

@@ -7,6 +7,8 @@ import SetupScreen from './screens/SetupScreen'
 import GameScreen from './screens/GameScreen'
 import TiebreakerScreen from './screens/TiebreakerScreen'
 import PodiumScreen from './screens/PodiumScreen'
+import { Button, HStack, Text, VStack } from './components/ui'
+import styles from './App.module.css'
 
 type AppState = 'board-select' | 'setup' | 'game' | 'tiebreaker' | 'podium'
 type Theme = 'dark' | 'light'
@@ -347,27 +349,15 @@ export default function App() {
 
 function StatusScreen({ message, detail, actionLabel, onAction }: { message: string; detail?: string; actionLabel?: string; onAction?: () => void }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', flexDirection: 'column', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
-      <p style={{ fontSize: '1.5rem' }}>{message}</p>
-      {detail && <p style={{ color: 'var(--color-text-muted, #888)' }}>{detail}</p>}
+    <VStack className={styles.status} align="center" justify="center" gap={4}>
+      <Text size="xl">{message}</Text>
+      {detail && <Text tone="muted">{detail}</Text>}
       {actionLabel && onAction && (
-        <button
-          type="button"
-          onClick={onAction}
-          style={{
-            padding: '0.6rem 1.4rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            background: 'var(--color-btn-primary, #f5a623)',
-            color: 'var(--color-btn-primary-text, #09090f)',
-          }}
-        >
+        <Button type="button" variant="primary" size="lg" onClick={onAction}>
           {actionLabel}
-        </button>
+        </Button>
       )}
-    </div>
+    </VStack>
   )
 }
 
@@ -387,44 +377,19 @@ function StatusOverlay({ message, onDismiss, autoHideMs }: { message: string; on
   }, [hasDismiss, autoHideMs, message])
 
   return (
-    <div
-      role="status"
-      style={{
-        position: 'fixed',
-        left: '50%',
-        bottom: '2rem',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '0.75rem 1.5rem',
-        borderRadius: '0.5rem',
-        background: 'var(--color-overlay-bg, #09090f)',
-        color: 'var(--color-text, #f0f0f8)',
-        border: '1px solid var(--color-chip-border, rgba(255, 255, 255, 0.1))',
-        boxShadow: 'var(--shadow-tile, 0 3px 12px rgba(0, 0, 0, 0.5))',
-        zIndex: 100,
-      }}
-    >
+    <HStack role="status" className={styles.overlay} gap={3} align="center">
       <span>{message}</span>
       {onDismiss && (
-        <button
+        <Button
           type="button"
+          variant="unstyled"
+          className={styles.dismissBtn}
           onClick={onDismiss}
           aria-label="Lukk"
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'inherit',
-            cursor: 'pointer',
-            fontSize: '1.1rem',
-            lineHeight: 1,
-            padding: 0,
-          }}
         >
           ×
-        </button>
+        </Button>
       )}
-    </div>
+    </HStack>
   )
 }

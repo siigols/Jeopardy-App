@@ -1,21 +1,28 @@
 .panel {
   position: absolute;
+  /* Always a dark slab, regardless of theme — re-bind the ink and veil tokens
+     so the light theme does not paint dark text on it. */
+  --color-text: #f0f0f8;
+  --color-text-muted: #a0a0b4;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-hover-veil: rgba(255, 255, 255, 0.1);
+  --color-chip-bg: rgba(255, 255, 255, 0.06);
   top: 0;
   right: 0;
   bottom: 0;
   width: min(380px, 90vw);
   z-index: 4;
   overflow-y: auto;
-  padding: 14px;
+  padding: var(--sp-4);
   background: rgba(12, 12, 18, 0.94);
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid var(--color-border);
   color: var(--color-text);
   backdrop-filter: blur(4px);
 }
 
 .summary {
-  margin: 0 0 10px;
-  font-size: 0.8rem;
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sm);
   opacity: 0.85;
 }
 
@@ -25,12 +32,12 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .row {
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--r-md);
+  background: var(--color-chip-bg);
 }
 
 .rowError {
@@ -40,24 +47,24 @@
 .rowBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   width: 100%;
-  padding: 6px 8px;
+  padding: var(--sp-2) var(--sp-2);
   text-align: left;
   background: none;
   border: none;
   color: inherit;
-  border-radius: 8px;
+  border-radius: var(--r-md);
 }
 
 button.rowBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-hover-veil);
 }
 
 .mark {
   flex-shrink: 0;
   width: 1.1em;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .ok { color: #4ade80; }
@@ -69,8 +76,8 @@ button.rowBtn:hover {
   width: 38px;
   height: 38px;
   object-fit: cover;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-sm);
+  background: var(--color-hover-veil);
 }
 
 .thumbEmpty {
@@ -84,12 +91,12 @@ button.rowBtn:hover {
 }
 
 .location {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
 }
 
 .url {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   opacity: 0.6;
   overflow: hidden;
   text-overflow: ellipsis;

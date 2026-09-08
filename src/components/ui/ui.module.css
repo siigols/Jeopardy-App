@@ -1,0 +1,196 @@
+/* Shared styles for the local primitives layer. Everything resolves against
+   the tokens in src/index.css so a theme flip restyles all of it. */
+
+/* ── Stack ────────────────────────────────────────────────── */
+:where(.stack) {
+  display: flex;
+  min-width: 0;
+}
+
+.hstack {
+  flex-direction: row;
+  align-items: center;
+}
+
+.vstack {
+  flex-direction: column;
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+:where(.card) {
+  border-radius: var(--r-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              transform var(--dur-base) var(--ease-out);
+}
+
+.cardElevated {
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+.cardOutline {
+  background: transparent;
+  border-color: var(--color-border-strong);
+}
+
+.cardSubtle {
+  background: var(--color-chip-bg);
+  border-color: var(--color-chip-border);
+}
+
+/* ── Button ───────────────────────────────────────────────── */
+:where(.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.btnSm {
+  font-size: var(--fs-sm);
+  padding: var(--sp-1) var(--sp-3);
+}
+
+.btnMd {
+  font-size: var(--fs-md);
+  padding: var(--sp-2) var(--sp-4);
+}
+
+.btnLg {
+  font-size: var(--fs-lg);
+  padding: var(--sp-3) var(--sp-6);
+}
+
+.btnPrimary {
+  background: var(--color-btn-primary);
+  color: var(--color-btn-primary-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btnPrimary:active:not(:disabled) {
+  box-shadow: var(--shadow-xs);
+}
+
+.btnSecondary {
+  background: var(--color-chip-bg);
+  border-color: var(--color-chip-border);
+  color: var(--color-text);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: var(--color-hover-veil);
+  border-color: var(--color-border-strong);
+}
+
+.btnSecondary:active:not(:disabled) {
+  background: var(--color-press-veil);
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: var(--color-hover-veil);
+  color: var(--color-text);
+}
+
+.btnGhost:active:not(:disabled) {
+  background: var(--color-press-veil);
+}
+
+.btnIcon {
+  background: var(--color-hover-veil);
+  color: var(--color-text);
+  border-radius: var(--r-full);
+  padding: 0;
+  aspect-ratio: 1;
+  line-height: 1;
+}
+
+.btnIcon:hover:not(:disabled) {
+  background: var(--color-press-veil);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Input ────────────────────────────────────────────────── */
+:where(.input) {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  color: var(--color-text);
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  transition: border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+:where(.input)::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+:where(.heading) {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.2;
+}
+
+:where(.text) {
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+.sizeXs { font-size: var(--fs-xs); }
+.sizeSm { font-size: var(--fs-sm); }
+.sizeMd { font-size: var(--fs-md); }
+.sizeBase { font-size: var(--fs-base); }
+.sizeLg { font-size: var(--fs-lg); }
+.sizeXl { font-size: var(--fs-xl); }
+.size2xl { font-size: var(--fs-2xl); }
+.size3xl { font-size: var(--fs-3xl); }
+
+.toneDefault { color: var(--color-text); }
+.toneMuted { color: var(--color-text-muted); }
+.toneAccent { color: var(--color-accent); }

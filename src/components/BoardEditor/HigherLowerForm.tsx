@@ -5,6 +5,7 @@ import ImageField from './ImageField'
 import { HL_LABEL_MAX, TEXT_MAX, parseHlNumber, withOptionalField } from './types'
 import type { HigherLowerEditorItem, HigherLowerEditorTile } from './types'
 import styles from './TileEditorModal.module.css'
+import { Input } from '../ui'
 
 const NUMBER_FORMAT = new Intl.NumberFormat('nb-NO')
 
@@ -60,7 +61,7 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
         <label className={styles.label} htmlFor={metricId}>
           Måleenhet
         </label>
-        <input
+        <Input
           id={metricId}
           className={styles.input}
           value={tile.metric}
@@ -77,7 +78,7 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
           return (
             <div className={styles.row} key={i}>
               <span className={`${styles.rowLabel} ${styles.rowLabelNarrow}`}>{i + 1}</span>
-              <input
+              <Input
                 className={styles.input}
                 value={item.label}
                 maxLength={HL_LABEL_MAX}
@@ -85,7 +86,7 @@ export default function HigherLowerForm({ tile, onChange }: Props) {
                 aria-label={`Rad ${i + 1} navn`}
                 onChange={e => setItem(i, { label: e.target.value })}
               />
-              <input
+              <Input
                 className={`${styles.input} ${styles.hlValue}`}
                 value={item.numericValue}
                 inputMode="decimal"

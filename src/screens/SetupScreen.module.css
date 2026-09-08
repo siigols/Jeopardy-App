@@ -4,8 +4,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
-  gap: 12px;
+  padding: var(--sp-8) var(--sp-4);
+  gap: var(--sp-3);
   position: relative;
 }
 
@@ -16,13 +16,14 @@
   background: transparent;
   color: var(--color-text);
   opacity: 0.45;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 6px 12px;
-  border-radius: 6px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
   border: 1px solid var(--color-chip-border);
-  transition: opacity 0.15s, border-color 0.15s;
+  transition: opacity var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
 }
 
 .backBtn:hover {
@@ -32,40 +33,40 @@
 
 .title {
   font-size: clamp(2rem, 6vw, 4rem);
-  font-family: 'Georgia', serif;
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
   color: var(--color-accent);
   letter-spacing: 6px;
 }
 
 .boardName {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   opacity: 0.4;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-wider);
   margin-bottom: 12px;
 }
 
 .card {
   background: var(--color-chip-bg);
   border: 1px solid var(--color-chip-border);
-  border-radius: 16px;
-  padding: 32px 40px;
+  border-radius: var(--r-lg);
+  padding: var(--sp-8) var(--sp-10);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--sp-6);
   width: 100%;
   max-width: 440px;
   backdrop-filter: blur(12px);
 }
 
 .subtitle {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--tracking-wider);
   color: var(--color-text);
   opacity: 0.45;
   text-align: center;
@@ -74,34 +75,34 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
   opacity: 0.5;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-wider);
 }
 
 .countBtns {
   display: flex;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .countBtn {
   flex: 1;
-  padding: 9px 0;
-  font-size: 0.95rem;
-  font-weight: 700;
+  padding: var(--sp-2) 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
   background: transparent;
   color: var(--color-text);
   border: 1px solid var(--color-chip-border);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   opacity: 0.6;
-  transition: all 0.15s;
+  transition: all var(--dur-base) var(--ease-out);
 }
 
 .countBtn:hover {
@@ -119,18 +120,18 @@
 .inputs {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .input {
   background: var(--color-input-bg);
   border: 1px solid var(--color-input-border);
   color: var(--color-text);
-  padding: 10px 14px;
-  font-size: 0.95rem;
-  border-radius: 8px;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-base);
+  border-radius: var(--r-md);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--dur-base) var(--ease-out);
 }
 
 .input:focus {
@@ -140,16 +141,40 @@
 .startBtn {
   background: var(--color-accent);
   color: var(--color-btn-primary-text);
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 14px;
-  border-radius: 10px;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   margin-top: 4px;
-  transition: background 0.15s, transform 0.1s;
+  transition: background var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
 }
 
 .startBtn:hover {
   background: var(--color-accent-hover);
+}
+
+/* ── Small screens ───────────────────────────────────────
+   The card's 40px side padding ate most of a phone's width; tighten it and
+   pull the back button in from the corner. */
+@media (max-width: 600px) {
+  .screen {
+    padding: var(--sp-6) var(--sp-4);
+  }
+
+  .card {
+    padding: var(--sp-6) var(--sp-5);
+  }
+
+  .backBtn {
+    top: var(--sp-3);
+    left: var(--sp-3);
+  }
+
+  .countBtn {
+    padding: var(--sp-2) 0;
+    font-size: var(--fs-md);
+  }
 }
