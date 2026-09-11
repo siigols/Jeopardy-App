@@ -251,46 +251,46 @@
   letter-spacing: 0.08em;
 }
 
-.typeSelector {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-1);
+.tileHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
-.typeBtn {
+.typeSelect {
+  flex: 1;
+  min-width: 0;
   background: var(--color-input-bg);
   border: 1px solid var(--color-input-border);
-  color: var(--color-text);
-  opacity: 0.55;
+  color: var(--color-accent);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-md);
-  transition: opacity var(--dur-base) var(--ease-out),
-              border-color var(--dur-base) var(--ease-out),
-              background var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out);
 }
 
-.typeBtn:hover {
-  opacity: 0.95;
+.typeSelect:hover {
   border-color: var(--color-accent);
 }
 
-.typeBtnActive {
-  opacity: 1;
-  border-color: var(--color-accent);
-  background: var(--color-chip-bg);
-  color: var(--color-accent);
-}
-
-.typePrompt {
-  font-size: var(--fs-sm);
+/* Untyped ruter read as a placeholder rather than a picked value. */
+.typeSelectEmpty {
   color: var(--color-text);
-  opacity: 0.4;
+  opacity: 0.55;
   font-style: italic;
-  padding: var(--sp-2) 0;
+  text-transform: none;
+}
+
+/* The list itself is drawn by the OS, which does not inherit the tile's
+   colours — spell them out so options stay readable in both themes. */
+.typeSelect option {
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  font-style: normal;
+  text-transform: none;
 }
 
 .tileSummary {
