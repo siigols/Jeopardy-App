@@ -20,6 +20,37 @@
   backdrop-filter: blur(4px);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.closeBtn {
+  flex-shrink: 0;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  color: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  background: var(--color-hover-veil);
+}
+
 .summary {
   margin: 0 0 var(--sp-3);
   font-size: var(--fs-sm);

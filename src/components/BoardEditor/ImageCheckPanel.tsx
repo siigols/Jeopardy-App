@@ -9,6 +9,7 @@ interface Props {
   game: Game
   /** Opens the tile an image belongs to. Not called for board-level images. */
   onGoToTile: (categoryIndex: number, tileIndex: number) => void
+  onClose: () => void
 }
 
 /**
@@ -16,7 +17,7 @@ interface Props {
  * resolve, so a typo'd path or a photo that never finished uploading is caught
  * without opening all 25 ruter one by one.
  */
-export default function ImageCheckPanel({ game, onGoToTile }: Props) {
+export default function ImageCheckPanel({ game, onGoToTile, onClose }: Props) {
   const refs = useMemo(() => collectBoardImages(game), [game])
   // Uploads are content-addressed, so the same photo can appear on several tiles.
   // Fetch each distinct URL once and key the results by URL.
@@ -55,6 +56,18 @@ export default function ImageCheckPanel({ game, onGoToTile }: Props) {
 
   return (
     <aside className={styles.panel} aria-label="Bildesjekk">
+      <header className={styles.header}>
+        <h2 className={styles.heading}>Bildesjekk</h2>
+        <button
+          type="button"
+          className={styles.closeBtn}
+          aria-label="Lukk bildesjekk"
+          onClick={onClose}
+        >
+          ✕
+        </button>
+      </header>
+
       <p className={styles.summary}>
         {refs.length === 0
           ? 'Ingen bilder i denne tavla.'

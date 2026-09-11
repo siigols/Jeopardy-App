@@ -40,16 +40,18 @@ export default function BoardPreview({ game, filledCount, totalCount, onClose }:
 
   const closeQuestion = useCallback(() => setActive(null), [])
 
-  // Esc closes the question first, then the preview itself.
+  // Esc backs out one layer at a time: question, then the image panel, then
+  // the preview itself.
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
       if (active) setActive(null)
+      else if (showImages) setShowImages(false)
       else onClose()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [active, onClose])
+  }, [active, showImages, onClose])
 
   const openTile = useCallback((ci: number, ti: number) => {
     playOpen()
@@ -117,14 +119,17 @@ export default function BoardPreview({ game, filledCount, totalCount, onClose }:
           theme={game.theme}
           isSeen={isSeen}
         />
-      </main>
 
-      {showImages && (
-        <ImageCheckPanel
-          game={game}
-          onGoToTile={(ci, ti) => { setShowImages(false); openTile(ci, ti) }}
-        />
-      )}
+        {/* Lives inside the board area, not the overlay: anchored to the overlay
+            it covered the top bar and with it the only buttons that close it. */}
+        {showImages && (
+          <ImageCheckPanel
+            game={game}
+            onGoToTile={(ci, ti) => { setShowImages(false); openTile(ci, ti) }}
+            onClose={() => setShowImages(false)}
+          />
+        )}
+      </main>
 
       {active && activeTile && (
         // Keyed on the tile so jumping straight from one question to another
