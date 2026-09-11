@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useSounds } from '../../hooks/useSounds'
 import { youTubeEmbedUrl, type BeatForBeatQuestion } from '../../types/game'
 import styles from './BeatForBeatDisplay.module.css'
@@ -32,6 +32,11 @@ export default function BeatForBeatDisplay({ content, revealed }: Props) {
 
   const hasClip = Boolean(content.youtubeId)
   const fasit = [content.songTitle, content.artist].filter(Boolean).join(' – ')
+
+  // Every box is the same size, whatever word is behind it: a box that grew with
+  // its word would tell the players how long the answer is before they open it.
+  // One width, taken from the longest word in the line, fits them all.
+  const boxChars = Math.min(16, Math.max(4, ...content.words.map(word => word.length)))
 
   function flip(index: number) {
     if (flipped.has(index)) return
@@ -70,7 +75,7 @@ export default function BeatForBeatDisplay({ content, revealed }: Props) {
         </div>
       )}
 
-      <div className={styles.words}>
+      <div className={styles.words} style={{ '--bfb-chars': boxChars } as CSSProperties}>
         {content.words.map((word, index) => {
           const isOpen = revealed || flipped.has(index)
           const color = content.colors[index] ?? 'blue'

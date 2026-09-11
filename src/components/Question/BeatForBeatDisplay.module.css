@@ -65,10 +65,23 @@
   width: 100%;
 }
 
+/*
+ * Uniform size, never sized by the word: the width is one value for the whole
+ * line (--bfb-chars, set from the longest word) so a wide box cannot hint at a
+ * long word behind it. Words in a row share a height because the flex items
+ * stretch, so a word that has to wrap does not stand out either.
+ */
 .box {
-  min-width: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: calc(var(--bfb-chars, 6) * 1ch + 2 * var(--sp-5));
+  max-width: 100%;
   min-height: 72px;
   padding: var(--sp-3) var(--sp-5);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
   border-radius: var(--r-lg);
   border: 1px solid var(--color-border);
   background: var(--color-chip-bg);
@@ -139,7 +152,7 @@
   }
 
   .box {
-    min-width: 64px;
+    width: calc(var(--bfb-chars, 6) * 1ch + 2 * var(--sp-4));
     min-height: 56px;
     padding: var(--sp-3) var(--sp-4);
     font-size: var(--fs-base);
