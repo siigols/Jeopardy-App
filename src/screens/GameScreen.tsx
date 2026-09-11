@@ -5,6 +5,7 @@ import QuestionView from '../components/Question/QuestionView'
 import SessionPanel from '../components/SessionPanel/SessionPanel'
 import { useSocket } from '../hooks/useSocket'
 import { useSounds } from '../hooks/useSounds'
+import { buzzerEnabledForType } from '../types/game'
 import type { Game, Team, Tile } from '../types/game'
 import type { TeamInfo } from '../types/socket-events'
 import { loadGameState, saveGameState } from '../utils/sessionStore'
@@ -96,7 +97,14 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
     playOpen()
     setActive({ categoryIndex: ci, tileIndex: ti })
     setBuzzerWinner(null)
-    socket.emit('question-open', { code: sessionCode })
+
+    // Host-driven types take no buzz-ins. Closing rather than simply not opening
+    // matters: it disarms phones still armed from the previous tile.
+    const tile = categories[ci].tiles[ti]
+    socket.emit(
+      buzzerEnabledForType(tile.content.type) ? 'question-open' : 'question-close',
+      { code: sessionCode },
+    )
   }
 
   function handleAward(teamId: string | null, awardedPoints?: number) {

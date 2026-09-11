@@ -402,6 +402,18 @@ export function higherLowerComparisons(content: QuestionContent): number {
 }
 
 /**
+ * Whether a question type takes buzz-ins.
+ *
+ * Høyere/Lavere and Beat for Beat are host-driven: the host clicks through the
+ * comparisons or flips the words, and there is nothing for a team to race to
+ * answer first. Leaving the buzzer armed there only produces stray buzzes that
+ * burn a team's one buzz for the round.
+ */
+export function buzzerEnabledForType(type: QuestionType): boolean {
+  return type !== 'higherLower' && type !== 'beatForBeat'
+}
+
+/**
  * The points a tile actually awards, as shown on the board.
  *
  * Most types award `tile.points` flat, but two ignore it:

@@ -17,7 +17,7 @@ import YearCountryImageDisplay from './YearCountryImageDisplay'
  */
 const REVEAL_LABELS: Partial<Record<QuestionType, string>> = {
   overUnder: 'Vis alle svar',
-  higherLower: 'Vis alle svar',
+  higherLower: 'Hopp til oppsummering',
   beatForBeat: 'Vis hele linja',
 }
 
@@ -154,7 +154,14 @@ export default function QuestionView({
       case 'multipleChoice':
         return <MultipleChoiceDisplay content={tile.content} revealed={revealed} />
       case 'higherLower':
-        return <HigherLowerDisplay content={tile.content} revealed={revealed} onAllRevealed={handleReveal} />
+        return (
+          <HigherLowerDisplay
+            content={tile.content}
+            revealed={revealed}
+            onAllRevealed={handleReveal}
+            onCorrectCount={(count) => setSelectedHigherLowerData({ tile, correct: count })}
+          />
+        )
       case 'beatForBeat':
         return <BeatForBeatDisplay content={tile.content} revealed={revealed} />
       default:
