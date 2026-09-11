@@ -932,28 +932,29 @@ export default function BoardEditorScreen({ mode }: Props) {
                 const tileName = `Kategori ${ci + 1}, ${BOARD_TILE_POINTS[ti]} poeng`
                 return (
                   <div className={styles.tileCard} key={ti}>
-                    <span className={styles.points}>{BOARD_TILE_POINTS[ti]}</span>
-
-                    <div
-                      className={styles.typeSelector}
-                      role="group"
-                      aria-label={`${tileName} – spørsmålstype`}
-                    >
-                      {EDITABLE_QUESTION_TYPES.map(type => (
-                        <button
-                          key={type}
-                          type="button"
-                          aria-pressed={tile.type === type}
-                          className={`${styles.typeBtn} ${tile.type === type ? styles.typeBtnActive : ''}`}
-                          onMouseEnter={playHover}
-                          onClick={() => chooseType(ci, ti, type, tile)}
-                        >
-                          {TYPE_LABELS[type]}
-                        </button>
-                      ))}
+                    {/* Points and type share one row: 25 ruter on screen at once,
+                        so every line the chooser saves is a line of board. */}
+                    <div className={styles.tileHead}>
+                      <span className={styles.points}>{BOARD_TILE_POINTS[ti]}</span>
+                      <select
+                        className={`${styles.typeSelect} ${tile.type === null ? styles.typeSelectEmpty : ''}`}
+                        aria-label={`${tileName} – spørsmålstype`}
+                        value={tile.type ?? ''}
+                        onMouseEnter={playHover}
+                        onChange={e => chooseType(ci, ti, e.target.value as EditableQuestionType, tile)}
+                      >
+                        {/* Only reachable before a type is picked; `chooseType`
+                            has no way back to an untyped tile. */}
+                        <option value="" disabled>
+                          Velg type
+                        </option>
+                        {EDITABLE_QUESTION_TYPES.map(type => (
+                          <option key={type} value={type}>
+                            {TYPE_LABELS[type]}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-
-                    {tile.type === null && <span className={styles.typePrompt}>Velg type</span>}
 
                     {tile.type === 'simple' && (
                       <>
@@ -1013,7 +1014,7 @@ export default function BoardEditorScreen({ mode }: Props) {
         </div>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Omspørsmål (valgfritt)</h2>
+          <h2 className={styles.sectionTitle}>Tie breaker (valgfritt)</h2>
           <div className={styles.field}>
             <label className={styles.label} htmlFor={tiebreakerQuestionId}>
               Spørsmål
