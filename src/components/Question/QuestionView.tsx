@@ -184,10 +184,19 @@ export default function QuestionView({
     </button>
   )
 
-  /** Preview-only escape hatch: closes the question without awarding anything. */
+  /**
+   * The way out of an open question without awarding anything. In preview it just
+   * closes; in a game it backs out of a misclicked tile, which leaves the tile
+   * unanswered and reopenable. Styled low-key in game mode so it can't be mistaken
+   * for "Ingen", which does consume the tile.
+   */
   const closeButton = (
-    <button className={styles.closeBtn} onMouseEnter={playHover} onClick={() => onClose?.()}>
-      Lukk
+    <button
+      className={previewMode ? styles.closeBtn : styles.backBtn}
+      onMouseEnter={playHover}
+      onClick={() => onClose?.()}
+    >
+      {previewMode ? 'Lukk' : '← Tilbake'}
     </button>
   )
 
@@ -208,14 +217,10 @@ export default function QuestionView({
 
       <div className={styles.actions}>
         {!revealed ? (
-          previewMode ? (
-            <div className={styles.previewActions}>
-              {revealButton}
-              {closeButton}
-            </div>
-          ) : (
-            revealButton
-          )
+          <div className={styles.actionRow}>
+            {revealButton}
+            {onClose && closeButton}
+          </div>
         ) : (
           <div className={styles.awardSection}>
             {tile.content.type === 'higherLower' && comparisonCount > 0 && (
@@ -265,6 +270,7 @@ export default function QuestionView({
                     Ingen
                   </button>
                 </div>
+                {onClose && closeButton}
               </>
             )}
           </div>
