@@ -215,9 +215,9 @@
   transform: scale(0.93);
 }
 
-/* Preview-only: the reveal button sits next to a way out, so a question can be
-   closed again without revealing it. */
-.previewActions {
+/* The reveal button sits next to a way out, so a question can be closed again
+   without revealing it. */
+.actionRow {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
@@ -247,5 +247,33 @@
 }
 
 .closeBtn:active {
+  transform: scale(0.95);
+}
+
+/* In-game "back": same shape as .closeBtn but deliberately quieter than .skipBtn,
+   because this one leaves the tile unanswered and that one consumes it. */
+.backBtn {
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  padding: var(--sp-3) var(--sp-7);
+  border-radius: var(--r-full);
+  border: 1px solid var(--color-border);
+  opacity: 0.6;
+  transition: opacity var(--dur-base) var(--ease-out),
+              background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.backBtn:hover {
+  opacity: 1;
+  background-color: var(--color-hover-veil);
+  border-color: var(--color-border-strong);
+}
+
+.backBtn:active {
   transform: scale(0.95);
 }

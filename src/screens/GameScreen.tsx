@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import GameBoard from '../components/Board/GameBoard'
 import BoardBackground from '../components/Backgrounds/BoardBackground'
 import QuestionView from '../components/Question/QuestionView'
@@ -106,6 +106,28 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
       { code: sessionCode },
     )
   }
+
+  /**
+   * Undoes a misclick: returns to the board without burning the tile. The whole
+   * QuestionView unmounts, which is also what stops a beat-for-beat clip and the
+   * tenable reveal timer — see BeatForBeatDisplay's note on resetting by unmount.
+   */
+  const closeQuestion = useCallback(() => {
+    setActive(null)
+    setBuzzerWinner(null)
+    socket.emit('question-close', { code: sessionCode })
+  }, [socket, sessionCode])
+
+  // Esc backs out of an open question. Unlike the preview's two-level Esc, it
+  // never leaves the game itself.
+  useEffect(() => {
+    if (!active) return
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeQuestion()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [active, closeQuestion])
 
   function handleAward(teamId: string | null, awardedPoints?: number) {
     if (!active) return
@@ -216,13 +238,15 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
         />
       </main>
 
-      {activeTile && (
+      {active && activeTile && (
         <QuestionView
+          key={`${active.categoryIndex}-${active.tileIndex}`}
           tile={activeTile}
           teams={teams}
           teamColors={teamColors}
           buzzerWinner={buzzerWinner}
           onAward={handleAward}
+          onClose={closeQuestion}
         />
       )}
     </div>
