@@ -1,5 +1,28 @@
+/* Høyere/Lavere.
+   Green and red are literal hex rather than theme tokens because they are a
+   game rule — "you guessed right" / "you guessed wrong" — not styling that a
+   board theme should be able to repaint. Same call as the blue/red in
+   BeatForBeatDisplay.module.css. */
 .container {
+  --hl-correct: #1e9e57;
+  --hl-wrong: #d2483c;
+  --hl-neutral: rgba(255, 255, 255, 0.16);
+
   width: min(1100px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.empty {
+  color: var(--color-text-muted);
+  font-size: var(--fs-lg);
+}
+
+/* ── Header: metric + per-comparison progress dots ─────────── */
+
+.head {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8,12 +31,48 @@
 
 .metric {
   margin: 0;
-  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--r-full);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border);
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-wider);
+  color: var(--color-text);
   font-weight: var(--fw-semibold);
+  box-shadow: var(--shadow-sm);
 }
+
+.dots {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--hl-neutral);
+  border: 1px solid transparent;
+  transition: background-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.dotCorrect {
+  background: var(--hl-correct);
+}
+
+.dotWrong {
+  background: var(--hl-wrong);
+}
+
+/* The comparison on screen right now. */
+.dotCurrent {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* ── Panels ────────────────────────────────────────────────── */
 
 .panels {
   width: 100%;
@@ -27,8 +86,23 @@
 .panel {
   position: relative;
   overflow: hidden;
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   min-height: 300px;
+  border: 2px solid transparent;
+  box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: panelIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.panelCorrect {
+  border-color: var(--hl-correct);
+  box-shadow: var(--shadow-lg), 0 0 28px color-mix(in srgb, var(--hl-correct) 45%, transparent);
+}
+
+.panelWrong {
+  border-color: var(--hl-wrong);
+  box-shadow: var(--shadow-lg), 0 0 28px color-mix(in srgb, var(--hl-wrong) 45%, transparent);
 }
 
 .image {
@@ -45,8 +119,6 @@
   background:
     radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 60%),
     linear-gradient(160deg, var(--color-accent) 0%, #2a2338 35%, #14141f 100%);
-  border: 1px solid var(--color-border);
-  border-radius: var(--r-lg);
 }
 
 .overlay {
@@ -57,8 +129,8 @@
   justify-content: flex-end;
   align-items: center;
   padding: var(--sp-6) var(--sp-4);
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
-  gap: var(--sp-2);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.22) 50%, transparent 100%);
+  gap: var(--sp-3);
 }
 
 /* Imageless panels supply their own background, so replace the bottom-up
@@ -82,6 +154,7 @@
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   text-align: center;
+  letter-spacing: var(--tracking-tight);
 }
 
 .labelLarge {
@@ -90,23 +163,19 @@
   text-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
 }
 
+/* Tabular figures keep the digits from shifting when the hidden pill is
+   swapped for the real value. */
 .value {
+  font-variant-numeric: tabular-nums;
   font-size: clamp(1rem, 2.5vw, 1.6rem);
   font-weight: var(--fw-bold);
   color: #fff;
-  background: rgba(0, 0, 0, 0.5);
-  padding: var(--sp-2) var(--sp-4);
+  background: rgba(0, 0, 0, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: var(--sp-2) var(--sp-5);
   border-radius: var(--r-full);
-  transition: transform var(--dur-slow) var(--ease-out),
-              opacity var(--dur-slow) var(--ease-out);
-}
-
-.higher {
-  background: rgba(20, 133, 56, 0.85);
-}
-
-.lower {
-  background: rgba(180, 40, 30, 0.85);
+  backdrop-filter: blur(6px);
+  animation: valueIn 0.3s var(--ease-out) both;
 }
 
 .hiddenHint {
@@ -115,9 +184,10 @@
   color: var(--color-text);
   padding: var(--sp-2) var(--sp-5);
   border-radius: var(--r-full);
-  background: var(--color-press-veil);
-  border: 2px solid var(--color-border-strong);
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px dashed rgba(255, 255, 255, 0.35);
   letter-spacing: var(--tracking-wide);
+  text-align: center;
 }
 
 .divider {
@@ -125,7 +195,18 @@
   align-items: center;
   justify-content: center;
   padding: 0 var(--sp-3);
-  font-size: var(--fs-xl);
+}
+
+.dividerBadge {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-full);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  font-size: var(--fs-lg);
   font-weight: 900;
   color: var(--color-text-muted);
   letter-spacing: var(--tracking-wide);
@@ -135,50 +216,266 @@
   position: absolute;
   top: 16px;
   right: 16px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-md);
+  border-radius: var(--r-full);
   font-size: var(--fs-base);
   font-weight: 800;
   letter-spacing: var(--tracking-wide);
   color: #fff;
-  animation: popIn 0.3s ease;
+  box-shadow: var(--shadow-md);
+  animation: popIn 0.3s var(--ease-spring) both;
 }
 
-.badgeHigher {
-  background: rgba(20, 133, 56, 0.9);
+.badgeMark {
+  font-size: var(--fs-lg);
+  line-height: 1;
 }
 
-.badgeLower {
-  background: rgba(180, 40, 30, 0.9);
+.badgeCorrect {
+  background: var(--hl-correct);
 }
 
-.progress {
-  margin: 0;
-  font-size: var(--fs-md);
-  color: var(--color-text-muted);
-  font-weight: var(--fw-semibold);
+.badgeWrong {
+  background: var(--hl-wrong);
 }
+
+/* ── Controls ──────────────────────────────────────────────── */
 
 .controls {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  min-height: 60px;
 }
 
-.controlBtn {
-  padding: var(--sp-3) var(--sp-6);
-  border: none;
-  border-radius: var(--r-md);
-  background: var(--color-press-veil);
-  color: #fff;
+.guessRow,
+.resultRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.guessBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-8);
+  border-radius: var(--r-full);
+  border: 2px solid currentColor;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.guessArrow {
+  font-size: 0.85em;
+}
+
+.guessHigher {
+  color: var(--hl-correct);
+}
+
+.guessLower {
+  color: var(--hl-wrong);
+}
+
+.guessBtn:hover {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  box-shadow: 0 6px 22px color-mix(in srgb, currentColor 35%, transparent);
+  transform: translateY(-2px);
+}
+
+.guessBtn:active {
+  transform: scale(0.95);
+}
+
+.guessedNote {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+}
+
+.noteCorrect {
+  color: var(--hl-correct);
+}
+
+.noteWrong {
+  color: var(--hl-wrong);
+}
+
+.nextBtn {
+  padding: var(--sp-3) var(--sp-7);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--r-full);
+  background: var(--color-chip-bg);
+  color: var(--color-text);
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
   cursor: pointer;
-  transition: background var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out),
+              background-color var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
 }
 
-.controlBtn:hover {
-  background: var(--color-press-veil);
+.nextBtn:hover {
+  border-color: var(--color-accent);
+  background: var(--color-hover-veil);
+  transform: translateY(-2px);
+}
+
+.nextBtn:active {
+  transform: scale(0.95);
+}
+
+/* ── Recap ─────────────────────────────────────────────────── */
+
+.recap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  animation: panelIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.recapScore {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 3.5vw, 2rem);
+  color: var(--color-text);
+}
+
+.recapScore strong {
+  color: var(--color-accent);
+  font-size: 1.3em;
+}
+
+.recapList {
+  width: 100%;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.recapRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--color-chip-bg);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--hl-neutral);
+}
+
+.rowCorrect {
+  border-left-color: var(--hl-correct);
+  background: color-mix(in srgb, var(--hl-correct) 12%, var(--color-chip-bg));
+}
+
+.rowWrong {
+  border-left-color: var(--hl-wrong);
+  background: color-mix(in srgb, var(--hl-wrong) 12%, var(--color-chip-bg));
+}
+
+.rowNeutral {
+  opacity: 0.7;
+}
+
+.recapNum {
+  width: 26px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.recapPair {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  font-size: var(--fs-md);
+  color: var(--color-text);
+}
+
+.recapItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-weight: var(--fw-semibold);
+}
+
+.recapValue {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-weight: var(--fw-medium);
+}
+
+.recapArrow {
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+}
+
+.recapTruth {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.recapVerdict {
+  width: 24px;
+  text-align: center;
+  font-size: var(--fs-lg);
+  font-weight: 900;
+}
+
+.rowCorrect .recapVerdict {
+  color: var(--hl-correct);
+}
+
+.rowWrong .recapVerdict {
+  color: var(--hl-wrong);
+}
+
+/* ── Motion ────────────────────────────────────────────────── */
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes valueIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes popIn {
@@ -189,5 +486,37 @@
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* ── Narrow screens ────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .panels {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .panel {
+    min-height: 190px;
+  }
+
+  .divider {
+    padding: var(--sp-2) 0;
+  }
+
+  .dividerBadge {
+    width: 40px;
+    height: 40px;
+    font-size: var(--fs-md);
+  }
+
+  .recapRow {
+    grid-template-columns: auto 1fr auto;
+    gap: var(--sp-2) var(--sp-3);
+  }
+
+  .recapTruth {
+    grid-column: 2;
   }
 }
