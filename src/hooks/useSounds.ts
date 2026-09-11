@@ -4,7 +4,6 @@ export function useSounds() {
   const { play: _playOpen } = useSound('ui/pop_open')
   const { play: _playAward } = useSound('arcade/coin_bling')
   const { play: _playSkip } = useSound('game/miss')
-  const { play: _playBuzz } = useSound('ambient/heartbeat')
   const { play: _playHover } = useSound('ui/button_soft')
   const { play: _playStart } = useSound('arcade/power_up')
 
@@ -12,7 +11,6 @@ export function useSounds() {
     playOpen: () => _playOpen(),
     playAward: () => _playAward(),
     playSkip: () => _playSkip(),
-    playBuzz: () => _playBuzz(),
     playHover: () => _playHover({ volume: 0.4 }),
     playStart: () => _playStart(),
   }

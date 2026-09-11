@@ -17,21 +17,12 @@ export default function BuzzerScreen({ sessionCode, teamIndex }: Props) {
   const [teamName, setTeamName] = useState('')
   const [teamColor, setTeamColor] = useState('#888')
   const [winner, setWinner] = useState<TeamInfo | null>(null)
-  const prevState = useRef<BuzzerState>('connecting')
   // Mirror the server's view. Refs because the socket listeners are registered
   // once and must read the current values, not the ones in their closure.
   const spent = useRef(false)
   const questionOpen = useRef(false)
 
-  const { play: playHeartbeat } = useSound('ambient/heartbeat')
   const { play: playBuzzPress } = useSound('ui/button_hard')
-
-  useEffect(() => {
-    if (state === 'won' && prevState.current !== 'won') {
-      playHeartbeat()
-    }
-    prevState.current = state
-  }, [state, playHeartbeat])
 
   useEffect(() => {
     /** The state to show when this team isn't the subject of a live buzz. */

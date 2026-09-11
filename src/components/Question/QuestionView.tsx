@@ -51,7 +51,7 @@ export default function QuestionView({
   const [tenableAutoRevealActive, setTenableAutoRevealActive] = useState(false)
   const [selectedTenableData, setSelectedTenableData] = useState<{ tile: Tile | null; points: number | null }>({ tile: null, points: null })
   const [selectedHigherLowerData, setSelectedHigherLowerData] = useState<{ tile: Tile | null; correct: number | null }>({ tile: null, correct: null })
-  const { playAward, playSkip, playBuzz, playHover } = useSounds()
+  const { playAward, playSkip, playHover } = useSounds()
 
   // Auto-reset selected points when tile changes
   const selectedTenablePoints = selectedTenableData.tile === tile ? selectedTenableData.points : null
@@ -77,10 +77,6 @@ export default function QuestionView({
 
     return () => window.clearTimeout(timer)
   }, [tile.content, revealed, tenableAutoRevealActive, tenableRevealedCount])
-
-  useEffect(() => {
-    if (buzzerWinner) playBuzz()
-  }, [buzzerWinner, playBuzz])
 
   function handleReveal() {
     if (tile.content.type === 'tenable') {
