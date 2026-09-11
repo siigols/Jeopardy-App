@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(20px, 4vh, 40px);
-  width: min(1100px, 94vw);
+  width: min(2000px, 94vw);
 }
 
 .title {
@@ -57,36 +57,76 @@
   pointer-events: none;
 }
 
-.words {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--sp-3);
-  width: 100%;
+/*
+ * The width one box wants: the longest word in the line at the largest type size
+ * (a character is about 1.1rem there) plus the padding. Registered as a length so
+ * the component can read it back in pixels — it is what the column count is
+ * measured against.
+ */
+@property --bfb-box-max {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
 }
 
 /*
- * Uniform size, never sized by the word: the width is one value for the whole
- * line (--bfb-chars, set from the longest word) so a wide box cannot hint at a
- * long word behind it. Words in a row share a height because the flex items
- * stretch, so a word that has to wrap does not stand out either.
+ * A row of equal columns, never a wrapping strip of fixed-width boxes: the
+ * component says how many boxes stand side by side (--bfb-cols) and the columns
+ * divide whatever width is left between them. That is what keeps a long line
+ * whole — the boxes give up a few pixels each instead of pushing the last word
+ * onto a row by itself.
+ *
+ * The row is never wider than the boxes need, so a short line stays a tidy
+ * centred group rather than stretching across the screen.
+ */
+.words {
+  --bfb-gap: var(--sp-3);
+  --bfb-pad: var(--sp-5);
+  --bfb-cols: 1;
+  --bfb-box-max: calc(var(--bfb-chars, 6) * 1.1rem + 2 * var(--bfb-pad));
+
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: repeat(var(--bfb-cols), minmax(0, 1fr));
+  gap: var(--bfb-gap);
+  width: min(
+    100%,
+    calc(var(--bfb-cols) * var(--bfb-box-max) + (var(--bfb-cols) - 1) * var(--bfb-gap))
+  );
+  margin-inline: auto;
+}
+
+/*
+ * Uniform size, never sized by the word: every box is one column wide, so a wide
+ * box cannot hint at a long word behind it. Boxes in a row share a height because
+ * grid items stretch, so a word that has to wrap does not stand out either.
+ *
+ * The type is sized from the column rather than the viewport: a narrowed column
+ * would otherwise keep full-size text and break words over three lines. The
+ * formula is "what still fits" — the column minus its padding, shared between the
+ * characters of a word (a character is roughly 0.58em in this face) — clamped so
+ * it never grows past the old maximum or shrinks below readable.
  */
 .box {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  width: calc(var(--bfb-chars, 6) * 1ch + 2 * var(--sp-5));
-  max-width: 100%;
   min-height: 72px;
-  padding: var(--sp-3) var(--sp-5);
+  padding: var(--sp-3) var(--bfb-pad);
   line-height: 1.15;
   overflow-wrap: anywhere;
   border-radius: var(--r-lg);
   border: 1px solid var(--color-border);
   background: var(--color-chip-bg);
   color: var(--color-text);
-  font-size: clamp(1.1rem, 2.4vw, 2rem);
+  font-size: clamp(
+    1rem,
+    calc(
+      ((100cqi - (var(--bfb-cols) - 1) * var(--bfb-gap)) / var(--bfb-cols) - 2 * var(--bfb-pad))
+      / (var(--bfb-chars, 6) * 0.58)
+    ),
+    2rem
+  );
   font-weight: var(--fw-bold);
   cursor: pointer;
   transition: background-color var(--dur-base) var(--ease-out),
@@ -146,15 +186,17 @@
   100% { opacity: 1; transform: rotateX(0) scale(1); }
 }
 
+/*
+ * Tighter boxes on a phone. The column count follows on its own, since it is
+ * measured from the room these leave.
+ */
 @media (max-width: 640px) {
   .words {
-    gap: var(--sp-2);
+    --bfb-gap: var(--sp-2);
+    --bfb-pad: var(--sp-4);
   }
 
   .box {
-    width: calc(var(--bfb-chars, 6) * 1ch + 2 * var(--sp-4));
     min-height: 56px;
-    padding: var(--sp-3) var(--sp-4);
-    font-size: var(--fs-base);
   }
 }

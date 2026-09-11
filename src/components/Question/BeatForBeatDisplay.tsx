@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { useSounds } from '../../hooks/useSounds'
 import { youTubeEmbedUrl, type BeatForBeatQuestion } from '../../types/game'
 import styles from './BeatForBeatDisplay.module.css'
@@ -10,6 +10,37 @@ interface Props {
 
 /** Spoken colour names, so the meaning never lives in colour alone. */
 const COLOR_NAMES = { blue: 'blå', red: 'rød' } as const
+
+/**
+ * How far a box may be squeezed below the width it wants before the line is
+ * better off breaking, the width no box ever goes under, and the number of boxes
+ * a row keeps even when they no longer fit comfortably. A little over half is
+ * deliberate: it is what lets a full line of long words stay on one row on a
+ * wide screen, while a row of postage stamps never happens.
+ */
+const BOX_SQUEEZE = 0.55
+const BOX_MIN_PX = 96
+const ROW_MIN_BOXES = 3
+
+/** How many boxes fit side by side in `available` px, given the width one box wants. */
+function boxesPerRow(available: number, ideal: number, gap: number) {
+  const fits = (box: number) => Math.floor((available + gap) / (box + gap))
+  const comfortable = fits(Math.max(BOX_MIN_PX, ideal * BOX_SQUEEZE))
+  // Without a lower bound, a line of long words on a phone — where no box can be
+  // comfortable — would come out one word per row, a column rather than a line.
+  const crowded = Math.min(ROW_MIN_BOXES, fits(BOX_MIN_PX))
+  return Math.max(1, comfortable, crowded)
+}
+
+/**
+ * Columns for `count` boxes when at most `maxPerRow` fit side by side: as few
+ * rows as that allows, with the boxes spread evenly over them — ten words that
+ * cannot share a row become 5 + 5, never 9 + 1.
+ */
+function columnsFor(count: number, maxPerRow: number) {
+  const rows = Math.max(1, Math.ceil(count / maxPerRow))
+  return Math.max(1, Math.ceil(count / rows))
+}
 
 /**
  * Beat for Beat: one box per word of a song line. A box flips on click and shows
@@ -37,6 +68,39 @@ export default function BeatForBeatDisplay({ content, revealed }: Props) {
   // its word would tell the players how long the answer is before they open it.
   // One width, taken from the longest word in the line, fits them all.
   const boxChars = Math.min(16, Math.max(4, ...content.words.map(word => word.length)))
+
+  // How many boxes stand side by side. The line is a sentence, so it stays on one
+  // row whenever the screen can hold it — the boxes give up a few pixels each
+  // rather than dropping the last words onto a row of their own — and breaks into
+  // even rows only once the boxes would be squeezed past BOX_SQUEEZE. That is a
+  // question about pixels, so it is measured rather than guessed at breakpoints:
+  // the width a box wants depends on the longest word in this particular line.
+  const count = content.words.length
+  const wordsRef = useRef<HTMLDivElement>(null)
+  const [columns, setColumns] = useState(count)
+
+  useLayoutEffect(() => {
+    const words = wordsRef.current
+    const row = words?.parentElement
+    if (!words || !row) return
+
+    // The row around the grid is what gets measured, never the grid: the grid's
+    // own width follows from the column count, so measuring it would feed each
+    // result into the next measurement.
+    const update = () => {
+      const style = getComputedStyle(words)
+      const gap = parseFloat(style.columnGap) || 0
+      // Registered as a <length> in the stylesheet, so it arrives here in px.
+      const ideal = parseFloat(style.getPropertyValue('--bfb-box-max'))
+      if (!ideal) return
+      setColumns(columnsFor(count, boxesPerRow(row.clientWidth, ideal, gap)))
+    }
+
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(row)
+    return () => observer.disconnect()
+  }, [count, boxChars])
 
   function flip(index: number) {
     if (flipped.has(index)) return
@@ -75,7 +139,11 @@ export default function BeatForBeatDisplay({ content, revealed }: Props) {
         </div>
       )}
 
-      <div className={styles.words} style={{ '--bfb-chars': boxChars } as CSSProperties}>
+      <div
+        ref={wordsRef}
+        className={styles.words}
+        style={{ '--bfb-chars': boxChars, '--bfb-cols': columns } as CSSProperties}
+      >
         {content.words.map((word, index) => {
           const isOpen = revealed || flipped.has(index)
           const color = content.colors[index] ?? 'blue'
