@@ -40,6 +40,8 @@ export default function BeatForBeatDisplay({ content, revealed }: Props) {
 
   return (
     <div className={styles.container}>
+      <h2 className={styles.title}>Beat for beat</h2>
+
       {hasClip && (
         <div className={styles.playerRow}>
           <button
