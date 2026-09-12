@@ -16,6 +16,7 @@ import type {
   SimpleTileDraft,
   TenableTileDraft,
 } from '../../types/game'
+import { parseNumericInput } from '../../utils/parseNumber'
 
 /**
  * Høyere/Lavere rows keep their number as a *string* while editing so the user
@@ -91,20 +92,10 @@ export function syncColors(words: string[], previous: BeatColor[]): BeatColor[] 
 
 /**
  * Accepts Norwegian comma decimals; returns null when not a finite number.
- *
- * Spaces are stripped — plain, non-breaking (U+00A0) and narrow no-break
- * (U+202F) — so a value copied straight out of the `nb-NO` grouped preview
- * ("1 234") round-trips. Anything containing a character outside the numeric
- * alphabet is rejected up front, because `Number()` happily parses forms we
- * don't want here (e.g. '0x10' -> 16, 'Infinity' -> Infinity).
+ * The implementation moved to src/utils/parseNumber.ts when the tiebreaker's
+ * phone input started sharing it — see the note there on bundle boundaries.
  */
-export function parseHlNumber(raw: string): number | null {
-  const stripped = raw.replace(/[\s\u00a0\u202f]/g, '')
-  if (!stripped) return null
-  if (!/^[0-9.,+\-eE]+$/.test(stripped)) return null
-  const n = Number(stripped.replace(',', '.'))
-  return Number.isFinite(n) ? n : null
-}
+export const parseHlNumber = parseNumericInput
 
 /** Norwegian labels for the per-tile type selector. */
 export const TYPE_LABELS: Record<EditableQuestionType, string> = {

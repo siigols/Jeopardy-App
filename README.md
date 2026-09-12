@@ -202,6 +202,34 @@ everyone out after 10 failed guesses. Setting `TRUST_PROXY` makes Express derive
 there is no proxy in front — otherwise clients can spoof the header and dodge the
 limiter.
 
+## Tiebreaker
+
+When the last tile is answered and two or more teams are level at the top, the game goes
+to a tiebreaker before the podium. Which of the two forms it takes is decided by the
+board's own tiebreaker answer — there is no setting:
+
+- **The answer is a number** (`1971`, `2,5`, `-40`) — the tied teams each type an
+  estimate on their phone, and the host screen plots every guess on a ruler while a
+  needle sweeps up from zero, swings past the answer and settles on it. Closest wins.
+- **Anything else** (`7. minutt`, `Magna Carta`) — the original host-judged flow: show
+  the answer, then click whichever team got it right.
+
+Exponent notation (`1e5`) is deliberately *not* treated as a number: it is far more
+likely to be prose than an intended 100000, and guessing wrong silently swaps the mode.
+
+Only the tied teams get an input; everyone else's phone shows a spectator screen. Guesses
+stay on the server until the host reveals, so a player holding two phones cannot read the
+opposition's number off the second one.
+
+If two teams end up exactly equally close — or nobody answers — the reveal ends on a
+deadlock, and the host can either start another round with a question typed in on the
+spot (narrowed to just the deadlocked teams, so it converges) or award it directly.
+
+A guess far outside the sensible range is pinned to the end of the ruler with a torn edge
+rather than stretching the scale until nobody else can be told apart. It still loses.
+
+The winner gets +1 point, which is what breaks the tie on the podium.
+
 ## Board editor
 
 - **"Ny tavle"** on the board-select screen opens a blank editor at `/boards/new`.
@@ -210,7 +238,8 @@ limiter.
   `POST /api/boards/:id/copy`. The copy is a new board — editing it leaves the
   original untouched.
 - The editor covers 1–7 categories (added and removed in the editor) × 5 tiles, plus
-  title, description and an optional tiebreaker.
+  title, description and an optional tiebreaker. Give the tiebreaker a **numeric**
+  answer to get the phone-answered version — see [Tiebreaker](#tiebreaker).
 - The board's colour theme is picked from a set of presets — no custom colour pickers.
 - The background is a preset scene (stjerner, konfetti, …) plus, optionally, a photo you
   upload. The two are independent layers, so a board can have either or both.

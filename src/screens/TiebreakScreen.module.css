@@ -1,0 +1,177 @@
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  background: color-mix(in srgb, var(--team-color, #888) 18%, #09090f);
+  padding: var(--sp-8);
+}
+
+/*
+ * The answering state anchors to the top instead. buzz.html sets
+ * user-scalable=no, so when the soft keyboard opens the visual viewport shrinks
+ * and a centred column disappears behind the keyboard with no way to scroll to
+ * it. Top-aligned plus a scrollable page keeps the field reachable.
+ */
+.pageForm {
+  justify-content: flex-start;
+  padding-top: var(--sp-8);
+  gap: var(--sp-4);
+}
+
+.teamLabel {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--team-color, #fff);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.kicker {
+  margin: 0;
+  font-size: var(--fs-sm);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--team-color, #fff) 55%, #fff);
+}
+
+/* Small on purpose — the question belongs to the big screen. */
+.question {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-base);
+  line-height: 1.4;
+  color: color-mix(in srgb, #fff 75%, transparent);
+}
+
+.input {
+  width: 100%;
+  max-width: 320px;
+  /* Below 16px iOS zooms the page on focus, which user-scalable=no then traps. */
+  font-size: 2.25rem;
+  font-weight: 800;
+  text-align: center;
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  border: 3px solid color-mix(in srgb, var(--team-color, #888) 50%, transparent);
+  background: #12121c;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--team-color, #888);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--team-color, #888) 20%, transparent);
+}
+
+/* Reads the parsed number back, grouped — a fat-finger check before locking in. */
+.echo {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: var(--fs-lg);
+  color: color-mix(in srgb, var(--team-color, #fff) 70%, #fff);
+}
+
+.submitBtn {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--sp-5);
+  border: none;
+  border-radius: var(--r-lg);
+  background: var(--team-color, #e74c3c);
+  color: #fff;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out),
+              opacity var(--dur-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.submitBtn:disabled {
+  background: #2a2a3a;
+  color: #555;
+  cursor: default;
+}
+
+/* Same 240px circle as the buzzer, so the phone never changes shape mid-game. */
+.badge {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--r-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+}
+
+.badgeLocked {
+  background: var(--team-color, #22c55e);
+  color: #fff;
+  box-shadow: 0 0 0 12px color-mix(in srgb, var(--team-color, #22c55e) 30%, transparent);
+}
+
+.badgeIdle {
+  background: #241f30;
+  color: color-mix(in srgb, var(--team-color, #888) 45%, #555);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--team-color, #888) 30%, transparent);
+}
+
+.badgeWon {
+  background: var(--team-color, #22c55e);
+  color: #fff;
+  box-shadow:
+    0 0 0 12px color-mix(in srgb, var(--team-color, #22c55e) 30%, transparent),
+    0 0 0 24px color-mix(in srgb, var(--team-color, #22c55e) 15%, transparent);
+  animation: badgePop var(--dur-slow) var(--ease-spring) both;
+}
+
+.badgeLost {
+  background: #1e1e2e;
+  color: #555;
+  box-shadow: none;
+}
+
+.bigValue {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.statusText {
+  font-size: var(--fs-lg);
+  color: color-mix(in srgb, var(--team-color, #fff) 60%, #fff);
+  margin: 0;
+  text-align: center;
+}
+
+.statusMuted {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: color-mix(in srgb, #fff 45%, transparent);
+  text-align: center;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: #ff8a8a;
+  text-align: center;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
