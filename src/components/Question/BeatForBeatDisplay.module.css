@@ -58,18 +58,6 @@
 }
 
 /*
- * The width one box wants: the longest word in the line at the largest type size
- * (a character is about 1.1rem there) plus the padding. Registered as a length so
- * the component can read it back in pixels — it is what the column count is
- * measured against.
- */
-@property --bfb-box-max {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
-}
-
-/*
  * A row of equal columns, never a wrapping strip of fixed-width boxes: the
  * component says how many boxes stand side by side (--bfb-cols) and the columns
  * divide whatever width is left between them. That is what keeps a long line
@@ -83,9 +71,11 @@
   --bfb-gap: var(--sp-3);
   --bfb-pad: var(--sp-5);
   --bfb-cols: 1;
-  --bfb-box-max: calc(var(--bfb-chars, 6) * 1.1rem + 2 * var(--bfb-pad));
+  /* Both are set from the component, which measures them; these only stand in
+     for the first layout pass. */
+  --bfb-box-max: 12rem;
+  --bfb-font: 1.5rem;
 
-  container-type: inline-size;
   display: grid;
   grid-template-columns: repeat(var(--bfb-cols), minmax(0, 1fr));
   gap: var(--bfb-gap);
@@ -101,11 +91,10 @@
  * box cannot hint at a long word behind it. Boxes in a row share a height because
  * grid items stretch, so a word that has to wrap does not stand out either.
  *
- * The type is sized from the column rather than the viewport: a narrowed column
- * would otherwise keep full-size text and break words over three lines. The
- * formula is "what still fits" — the column minus its padding, shared between the
- * characters of a word (a character is roughly 0.58em in this face) — clamped so
- * it never grows past the old maximum or shrinks below readable.
+ * The type is sized from the column rather than the viewport: the component
+ * measures the widest word and hands down the largest size that keeps it on one
+ * line in the width the column ended up with. Wrapping is the last resort it
+ * leaves for a word too long for a phone to show whole.
  */
 .box {
   display: flex;
@@ -119,14 +108,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-chip-bg);
   color: var(--color-text);
-  font-size: clamp(
-    1rem,
-    calc(
-      ((100cqi - (var(--bfb-cols) - 1) * var(--bfb-gap)) / var(--bfb-cols) - 2 * var(--bfb-pad))
-      / (var(--bfb-chars, 6) * 0.58)
-    ),
-    2rem
-  );
+  font-size: var(--bfb-font);
   font-weight: var(--fw-bold);
   cursor: pointer;
   transition: background-color var(--dur-base) var(--ease-out),
