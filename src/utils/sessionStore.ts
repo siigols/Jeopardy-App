@@ -11,6 +11,12 @@ export interface AppSavedState {
   tiedTeams: Team[]
   theme: 'dark' | 'light'
   gameKey: number
+  /**
+   * The phone-pairing code. Lives here rather than only in GameSavedState
+   * because `handleGameComplete` clears the game state on its way into the
+   * tiebreaker, which still needs to reach the phones.
+   */
+  sessionCode: string
 }
 
 export interface GameSavedState {

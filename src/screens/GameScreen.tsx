@@ -13,13 +13,11 @@ import styles from './GameScreen.module.css'
 
 const TEAM_COLORS = ['#e74c3c', '#3b82f6', '#22c55e', '#f97316']
 
-function generateCode(): string {
-  return Math.random().toString(36).slice(2, 8).toUpperCase()
-}
-
 interface Props {
   game: Game
   teams: Team[]
+  /** Owned by App so it survives into the tiebreaker. */
+  sessionCode: string
   theme: 'dark' | 'light'
   onThemeToggle: () => void
   onReset: () => void
@@ -31,7 +29,7 @@ interface ActiveTile {
   tileIndex: number
 }
 
-export default function GameScreen({ game, teams: initialTeams, theme, onThemeToggle, onReset, onGameComplete }: Props) {
+export default function GameScreen({ game, teams: initialTeams, sessionCode, theme, onThemeToggle, onReset, onGameComplete }: Props) {
   const savedGame = useRef(loadGameState()).current
 
   const [categories, setCategories] = useState(savedGame?.categories ?? game.categories)
@@ -43,9 +41,9 @@ export default function GameScreen({ game, teams: initialTeams, theme, onThemeTo
   const [showBuzzerPanel, setShowBuzzerPanel] = useState(false)
   const { playOpen, playHover } = useSounds()
   const socket = useSocket()
-  const sessionCode = useRef(savedGame?.sessionCode ?? generateCode()).current
 
-  // Persist in-game state on changes
+  // Persist in-game state on changes. The code is still written here as well as
+  // in App's own state — that copy is what the one-shot migration in App reads.
   useEffect(() => {
     saveGameState({ categories, teams, sessionCode })
   }, [categories, teams, sessionCode])

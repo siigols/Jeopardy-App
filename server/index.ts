@@ -6,7 +6,20 @@ import { dirname, resolve } from 'path'
 import { existsSync } from 'fs'
 import type { LoadedGame } from '../src/types/game.js'
 import type { ServerToClientEvents, ClientToServerEvents } from '../src/types/socket-events.js'
-import { createSession, getSession, openQuestion, closeQuestion, recordBuzz, resetBuzzes } from './session.js'
+import {
+  createSession,
+  getSession,
+  openQuestion,
+  closeQuestion,
+  recordBuzz,
+  resetBuzzes,
+  startTiebreak,
+  submitTiebreak,
+  revealTiebreak,
+  endTiebreak,
+  tiebreakHostState,
+  tiebreakPhoneState,
+} from './session.js'
 import {
   getAllBoards,
   getBoard,
@@ -281,24 +294,30 @@ io.on('connection', socket => {
   socket.on('create-session', ({ code, teams }, ack) => {
     const session = createSession(code, teams)
     socket.join(code)
-    // The round survives a host reload, so hand the spent buzzes back too.
-    ack({ ok: true, used: [...session.usedBuzzes] })
+    // The round survives a host reload, so hand the spent buzzes back too — and
+    // any live tiebreak round, so a reloaded host adopts it instead of starting
+    // a second one over the answers teams have already sent.
+    ack({ ok: true, used: [...session.usedBuzzes], tiebreak: tiebreakHostState(session) })
   })
 
   socket.on('join-buzzer', ({ code, teamIndex }, ack) => {
     const session = getSession(code)
     if (!session) {
-      ack({ teamName: '?', teamColor: '#888', questionOpen: false, buzzer: null, used: [] })
+      ack({ teamName: '?', teamColor: '#888', questionOpen: false, buzzer: null, used: [], tiebreak: null })
       return
     }
     socket.join(code)
     const team = session.teams[teamIndex]
+    // This ack is the phone's whole state resync, so it has to carry the
+    // tiebreak round too: a phone that reloads mid-round must come back to the
+    // screen it left, not to the buzzer.
     ack({
       teamName: team?.name ?? '?',
       teamColor: team?.color ?? '#888',
       questionOpen: session.questionOpen,
       buzzer: session.buzzer,
       used: [...session.usedBuzzes],
+      tiebreak: tiebreakPhoneState(session, teamIndex),
     })
   })
 
@@ -324,6 +343,49 @@ io.on('connection', socket => {
 
   socket.on('buzz-reset', ({ code }) => {
     io.to(code).emit('buzz-state', { used: resetBuzzes(code) })
+  })
+
+  socket.on('tiebreak-start', ({ code, participants, question, correct }, ack) => {
+    const round = startTiebreak(code, { participants, question, correct })
+    if (round === null) {
+      // Unknown code: the host emitted this before its create-session landed.
+      ack({ ok: false, round: 0 })
+      return
+    }
+    ack({ ok: true, round })
+    io.to(code).emit('tiebreak-started', { round, participants, question })
+  })
+
+  socket.on('tiebreak-submit', ({ code, round, teamIndex, value }, ack) => {
+    // Guard the shape here rather than trusting the client's types: this is the
+    // one tiebreak payload a player's device sends, and a NaN would poison the
+    // reveal's axis maths for everyone.
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      ack({ ok: false, reason: 'no-round' })
+      return
+    }
+    const result = submitTiebreak(code, round, teamIndex, value)
+    if ('error' in result) {
+      ack({ ok: false, reason: result.error })
+      return
+    }
+    // The phone locks on this ack, not on the broadcast below, so unlike the
+    // buzzed/buzz-state pair these two have no ordering constraint.
+    ack({ ok: true })
+    io.to(code).emit('tiebreak-progress', { round, submitted: result.submitted })
+  })
+
+  socket.on('tiebreak-reveal', ({ code }) => {
+    const result = revealTiebreak(code)
+    if (!result) return
+    // Broadcast to the room including the host, which does not flip its own
+    // state optimistically — so host and phones reveal in the same tick.
+    io.to(code).emit('tiebreak-revealed', result)
+  })
+
+  socket.on('tiebreak-end', ({ code }) => {
+    endTiebreak(code)
+    io.to(code).emit('tiebreak-ended')
   })
 })
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Team, BoardSummary, LoadedGame } from './types/game'
-import { loadAppState, saveAppState, clearGameState, clearAppState } from './utils/sessionStore'
+import { loadAppState, saveAppState, loadGameState, clearGameState, clearAppState } from './utils/sessionStore'
+import { generateCode } from './utils/sessionCode'
 import type { AppSavedState } from './utils/sessionStore'
 import BoardSelectScreen from './screens/BoardSelectScreen'
 import SetupScreen from './screens/SetupScreen'
@@ -46,6 +47,17 @@ export default function App() {
   const [tiedTeams, setTiedTeams] = useState<Team[]>(initial.saved?.tiedTeams ?? [])
   const [theme, setTheme] = useState<Theme>((initial.saved?.theme as Theme) ?? 'dark')
   const [gameKey, setGameKey] = useState(initial.saved?.gameKey ?? 0)
+  /**
+   * The phone-pairing code, owned here so it outlives GameScreen — the
+   * tiebreaker takes answers from the same phones after that screen unmounts.
+   *
+   * The `loadGameState()` fallback is a one-shot migration: sessions persisted
+   * before the code moved up here have it only under the game key, and without
+   * this every phone link would die on the first reload after deploying.
+   */
+  const [sessionCode, setSessionCode] = useState(
+    () => initial.saved?.sessionCode ?? loadGameState()?.sessionCode ?? generateCode()
+  )
 
   const [boards, setBoards] = useState<BoardSummary[]>([])
   const [boardsLoading, setBoardsLoading] = useState(true)
@@ -172,8 +184,9 @@ export default function App() {
       tiedTeams,
       theme,
       gameKey,
+      sessionCode,
     })
-  }, [restorePending, appState, selectedGame, teams, finalTeams, tiedTeams, theme, gameKey])
+  }, [restorePending, appState, selectedGame, teams, finalTeams, tiedTeams, theme, gameKey, sessionCode])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -233,6 +246,10 @@ export default function App() {
   function handleReset() {
     clearGameState()
     setGameKey(k => k + 1)
+    // A new board is a new game, so retire the code. "Spill igjen" deliberately
+    // does not: keeping it there means the phones everyone already opened keep
+    // working for the rematch.
+    setSessionCode(generateCode())
     // Back to the board list: drop the current board and any stale restore
     // error so the session is persisted as a clean board-select state.
     setSelectedGame(null)
@@ -337,6 +354,7 @@ export default function App() {
         key={gameKey}
         game={selectedGame}
         teams={teams}
+        sessionCode={sessionCode}
         theme={theme}
         onThemeToggle={toggleTheme}
         onReset={handleReset}
@@ -350,6 +368,7 @@ export default function App() {
       <TiebreakerScreen
         tiedTeams={tiedTeams}
         allTeams={finalTeams}
+        sessionCode={sessionCode}
         question={selectedGame.tiebreaker}
         onResolved={handleTiebreakerResolved}
       />

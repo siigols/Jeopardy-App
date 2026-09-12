@@ -301,3 +301,157 @@
 .teamBtn:active {
   transform: scale(0.95);
 }
+
+/* ── Numeric tiebreaker: collecting answers ──────────── */
+.phoneHint {
+  margin-top: 14px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-accent);
+  animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) 1.4s both;
+}
+
+.progressStrip {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 22px;
+  position: relative;
+  z-index: 2;
+}
+
+.progressTeam {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  border: 1.5px solid color-mix(in srgb, var(--team-color) 35%, transparent);
+  background: color-mix(in srgb, var(--team-color) 8%, var(--color-chip-bg));
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  opacity: 0.55;
+  transition: opacity var(--dur-base) var(--ease-out),
+              background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+}
+
+.progressDone {
+  opacity: 1;
+  border-color: var(--team-color);
+  background: color-mix(in srgb, var(--team-color) 22%, var(--color-chip-bg));
+}
+
+.progressTick {
+  font-weight: var(--fw-bold);
+  color: var(--team-color);
+}
+
+.progressCount {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--color-text);
+  opacity: 0.5;
+  font-weight: var(--fw-semibold);
+  position: relative;
+  z-index: 2;
+}
+
+/*
+ * Everyone has answered. The button starts asking to be pressed rather than
+ * firing on its own — the host is running the room and wants to hold the beat.
+ */
+.revealBtnReady {
+  animation: readyPulse 1.6s ease-in-out infinite;
+}
+
+/* ── Numeric tiebreaker: the reveal ──────────────────── */
+.revealQuestion {
+  margin: 18px 0 10px;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  opacity: 0.7;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.winnerLine {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.deadlockLine {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Deadlock: run another round ─────────────────────── */
+.rerunForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: min(420px, 88vw);
+}
+
+.rerunInput {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--color-chip-border);
+  background: var(--color-chip-bg);
+  color: var(--color-text);
+  font-size: var(--fs-md);
+  text-align: center;
+}
+
+.rerunInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.rerunEcho {
+  min-height: 1.2em;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+
+.secondaryBtn {
+  background: transparent;
+  color: var(--color-text);
+  opacity: 0.65;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  padding: var(--sp-3) var(--sp-7);
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--color-chip-border);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.secondaryBtn:hover {
+  opacity: 1;
+}
+
+.revealBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+}
+
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3); transform: scale(1); }
+  50%      { box-shadow: 0 6px 32px rgba(245, 166, 35, 0.6); transform: scale(1.04); }
+}
