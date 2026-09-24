@@ -33,6 +33,7 @@ function contentImages(content: QuestionContent): { url: string; role: string }[
       return content.image ? [{ url: content.image, role: 'bilde' }] : []
     case 'tenable':
     case 'beatForBeat':
+    case 'stepByStep':
       return []
   }
 }

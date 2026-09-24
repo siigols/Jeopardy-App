@@ -61,6 +61,12 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
         ...(tile.youtubeId !== undefined ? { youtubeId: tile.youtubeId } : {}),
         ...(tile.youtubeStart !== undefined ? { youtubeStart: tile.youtubeStart } : {}),
       }
+    case 'stepByStep':
+      return {
+        type: 'stepByStep',
+        ...(tile.title !== undefined ? { title: tile.title } : {}),
+        steps: tile.steps,
+      }
     case 'simple':
       return { type: 'simple', question: tile.question, answer: tile.answer, ...imageFields(tile) }
   }

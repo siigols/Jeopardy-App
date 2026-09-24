@@ -8,6 +8,7 @@ import HigherLowerDisplay from './HigherLowerDisplay'
 import OverUnderDisplay from './OverUnderDisplay'
 import styles from './QuestionView.module.css'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
+import StepByStepDisplay from './StepByStepDisplay'
 import TenableDisplay from './TenableDisplay'
 import YearCountryImageDisplay from './YearCountryImageDisplay'
 
@@ -51,11 +52,18 @@ export default function QuestionView({
   const [tenableAutoRevealActive, setTenableAutoRevealActive] = useState(false)
   const [selectedTenableData, setSelectedTenableData] = useState<{ tile: Tile | null; points: number | null }>({ tile: null, points: null })
   const [selectedHigherLowerData, setSelectedHigherLowerData] = useState<{ tile: Tile | null; correct: number | null }>({ tile: null, correct: null })
+  const [stepData, setStepData] = useState<{ tile: Tile | null; shown: number }>({ tile: null, shown: 0 })
+  const [manualPointsData, setManualPointsData] = useState<{ tile: Tile | null; value: string }>({ tile: null, value: '' })
   const { playAward, playSkip, playHover } = useSounds()
 
   // Auto-reset selected points when tile changes
   const selectedTenablePoints = selectedTenableData.tile === tile ? selectedTenableData.points : null
   const selectedCorrectCount = selectedHigherLowerData.tile === tile ? selectedHigherLowerData.correct : null
+  const stepsShown = stepData.tile === tile ? stepData.shown : 0
+  const manualPointsText = manualPointsData.tile === tile ? manualPointsData.value : String(tile.points)
+  const manualPoints = /^-?\d+$/.test(manualPointsText.trim()) ? Number(manualPointsText.trim()) : null
+  /** Steg for steg: question + answer per step, counted separately. */
+  const stepPartCount = tile.content.type === 'stepByStep' ? tile.content.steps.length * 2 : 0
 
   /** Number of comparisons in the active higherLower tile (N items → N-1). 0 for other types. */
   const comparisonCount = higherLowerComparisons(tile.content)
@@ -79,6 +87,13 @@ export default function QuestionView({
   }, [tile.content, revealed, tenableAutoRevealActive, tenableRevealedCount])
 
   function handleReveal() {
+    if (tile.content.type === 'stepByStep') {
+      const next = stepsShown + 1
+      setStepData({ tile, shown: next })
+      if (next >= stepPartCount) setReveal(true)
+      return
+    }
+
     if (tile.content.type === 'tenable') {
       if (tile.content.items.length === 0) {
         setReveal(true)
@@ -114,6 +129,12 @@ export default function QuestionView({
     if (tile.content.type === 'tenable') {
       if (selectedTenablePoints == null) return
       onAward(teamId, selectedTenablePoints)
+      return
+    }
+
+    if (tile.content.type === 'stepByStep') {
+      if (manualPoints == null) return
+      onAward(teamId, manualPoints)
       return
     }
 
@@ -164,6 +185,8 @@ export default function QuestionView({
         )
       case 'beatForBeat':
         return <BeatForBeatDisplay content={tile.content} revealed={revealed} />
+      case 'stepByStep':
+        return <StepByStepDisplay content={tile.content} shownCount={stepsShown} />
       default:
         return <p>Ukjent spørsmålstype</p>
     }
@@ -180,7 +203,9 @@ export default function QuestionView({
         ? tenableAutoRevealActive
           ? 'Avslører...'
           : 'Start avsløring'
-        : REVEAL_LABELS[tile.content.type] ?? 'Vis svar'}
+        : tile.content.type === 'stepByStep'
+          ? `Vis ${stepsShown % 2 === 0 ? 'spørsmål' : 'svar'} ${Math.floor(stepsShown / 2) + 1}`
+          : REVEAL_LABELS[tile.content.type] ?? 'Vis svar'}
     </button>
   )
 
@@ -219,6 +244,11 @@ export default function QuestionView({
         {!revealed ? (
           <div className={styles.actionRow}>
             {revealButton}
+            {tile.content.type === 'stepByStep' && stepsShown > 0 && stepsShown % 2 === 0 && (
+              <button className={styles.revealBtn} onMouseEnter={playHover} onClick={() => setReveal(true)}>
+                Stopp her
+              </button>
+            )}
             {onClose && closeButton}
           </div>
         ) : (
@@ -241,6 +271,18 @@ export default function QuestionView({
                 </div>
               </>
             )}
+            {tile.content.type === 'stepByStep' && !previewMode && (
+              <label className={styles.awardLabel}>
+                Poeng:{' '}
+                <input
+                  className={styles.pointsInput}
+                  type="number"
+                  step={100}
+                  value={manualPointsText}
+                  onChange={e => setManualPointsData({ tile, value: e.target.value })}
+                />
+              </label>
+            )}
             {previewMode ? (
               closeButton
             ) : (
@@ -255,6 +297,7 @@ export default function QuestionView({
                       onMouseEnter={playHover}
                       disabled={
                         (tile.content.type === 'tenable' && selectedTenablePoints == null) ||
+                        (tile.content.type === 'stepByStep' && manualPoints == null) ||
                         (tile.content.type === 'higherLower' && comparisonCount > 0 && selectedCorrectCount == null)
                       }
                       onClick={() => handleAward(team.id)}

@@ -12,6 +12,7 @@ import {
   MAX_TILE_TEXT,
   MAX_WORD_TEXT,
   MC_OPTION_COUNT,
+  STEP_COUNT,
   TENABLE_ITEM_COUNT,
   isUploadedImagePath,
   isYouTubeVideoId,
@@ -23,7 +24,7 @@ const MAX_TITLE = BOARD_TITLE_MAX
 const MAX_DESCRIPTION = 300
 const MAX_CATEGORY_NAME = 60
 
-const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower', 'beatForBeat'] as const
+const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower', 'beatForBeat', 'stepByStep'] as const
 
 const BEAT_COLORS: readonly BeatColor[] = ['blue', 'red']
 
@@ -41,6 +42,8 @@ const MAX_ITEMS_BY_TYPE: Record<RichTileType, number> = {
   higherLower: HL_MAX_ITEMS,
   // beatForBeat ignores `items`; its own array is `words`, capped separately below.
   beatForBeat: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
+  // stepByStep ignores `items`; its own array is `steps`, checked below.
+  stepByStep: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
 }
 
 /** Same idea for `options`, which only `multipleChoice` actually uses. */
@@ -49,6 +52,7 @@ const MAX_OPTIONS_BY_TYPE: Record<RichTileType, number> = {
   multipleChoice: MC_OPTION_COUNT,
   higherLower: TENABLE_ITEM_COUNT,
   beatForBeat: TENABLE_ITEM_COUNT,
+  stepByStep: TENABLE_ITEM_COUNT,
 }
 
 export type ValidationResult =
@@ -96,7 +100,7 @@ function isImageError(value: string | undefined | { error: string }): value is {
  * blank `simple` tiles rather than rejected.
  */
 function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boolean {
-  const texts = [tile.prompt, tile.question, tile.metric, tile.answer, tile.songTitle, tile.artist, tile.youtubeId]
+  const texts = [tile.prompt, tile.question, tile.metric, tile.answer, tile.songTitle, tile.artist, tile.youtubeId, tile.title]
   if (texts.some(value => asText(value).length > 0)) return false
   // An image is author content too. Without this a tile whose only content is a
   // picture would be silently replaced by a blank simple tile on save.
@@ -121,6 +125,11 @@ function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boo
   if (Array.isArray(words)) {
     if (words.length > BFB_MAX_WORDS) return false
     if (words.some(word => asText(word).length > 0)) return false
+  }
+  const steps: unknown = tile.steps
+  if (Array.isArray(steps)) {
+    if (steps.length > STEP_COUNT) return false
+    if (steps.some(step => !isPlainObject(step) || asText(step.question) || asText(step.answer))) return false
   }
   return true
 }
@@ -342,6 +351,33 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
       hlItems.push({ label, numericValue, ...(image !== undefined ? { image } : {}) })
     }
     return { type: 'higherLower', metric, items: hlItems }
+  }
+
+  if (tileType === 'stepByStep') {
+    const title = asText(rawTile.title)
+    if (title.length > MAX_LABEL_TEXT) {
+      return `${tileLabel} title must be at most ${MAX_LABEL_TEXT} characters`
+    }
+    if (!Array.isArray(rawTile.steps) || rawTile.steps.length !== STEP_COUNT) {
+      return `${tileLabel} must contain exactly ${STEP_COUNT} steps`
+    }
+    const steps: { question: string; answer: string }[] = []
+    for (let i = 0; i < rawTile.steps.length; i++) {
+      const raw: unknown = rawTile.steps[i]
+      if (!isPlainObject(raw)) {
+        return `${tileLabel} step ${i + 1} must be an object`
+      }
+      const question = asText(raw.question)
+      const answer = asText(raw.answer)
+      if (question.length === 0 || answer.length === 0) {
+        return `${tileLabel} step ${i + 1} needs both question and answer`
+      }
+      if (question.length > MAX_TILE_TEXT || answer.length > MAX_TILE_TEXT) {
+        return `${tileLabel} step ${i + 1} text must be at most ${MAX_TILE_TEXT} characters`
+      }
+      steps.push({ question, answer })
+    }
+    return { type: 'stepByStep', ...(title ? { title } : {}), steps }
   }
 
   if (tileType === 'beatForBeat') {

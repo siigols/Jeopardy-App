@@ -11,6 +11,7 @@ import {
   HL_MAX_ITEMS,
   HL_MIN_ITEMS,
   MC_OPTION_COUNT,
+  STEP_COUNT,
   TENABLE_ITEM_COUNT,
 } from '../src/types/game.js'
 import { DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../src/data/boardThemes.js'
@@ -151,6 +152,9 @@ export function boardIsEditable(game: Game): boolean {
       if (content.type === 'higherLower') {
         if (!Array.isArray(content.items)) return false
         return content.items.length >= HL_MIN_ITEMS && content.items.length <= HL_MAX_ITEMS
+      }
+      if (content.type === 'stepByStep') {
+        return Array.isArray(content.steps) && content.steps.length === STEP_COUNT
       }
       if (content.type === 'beatForBeat') {
         const words: unknown = content.words

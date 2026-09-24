@@ -1,4 +1,4 @@
-export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable' | 'multipleChoice' | 'higherLower' | 'beatForBeat'
+export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable' | 'multipleChoice' | 'higherLower' | 'beatForBeat' | 'stepByStep'
 
 export interface SimpleQuestion {
   type: 'simple'
@@ -95,7 +95,23 @@ export interface BeatForBeatQuestion {
   youtubeStart?: number
 }
 
-export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion | MultipleChoiceQuestion | HigherLowerQuestion | BeatForBeatQuestion
+export interface StepByStepStep {
+  question: string
+  answer: string
+}
+
+/**
+ * Steg for steg: {STEP_COUNT} questions revealed one at a time, each followed by
+ * its answer. The team decides how far to go — once a question is shown they have
+ * to answer it. Points are set by the host when awarding.
+ */
+export interface StepByStepQuestion {
+  type: 'stepByStep'
+  title?: string
+  steps: StepByStepStep[]
+}
+
+export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion | MultipleChoiceQuestion | HigherLowerQuestion | BeatForBeatQuestion | StepByStepQuestion
 
 export interface Tile {
   points: number
@@ -166,6 +182,7 @@ export const EDITABLE_QUESTION_TYPES = [
   'multipleChoice',
   'higherLower',
   'beatForBeat',
+  'stepByStep',
 ] as const satisfies readonly BoardTileDraft['type'][]
 export type EditableQuestionType = BoardTileDraft['type']
 
@@ -176,6 +193,8 @@ export const HL_MIN_ITEMS = 4
 export const HL_MAX_ITEMS = 6
 /** Longest lyric line a Beat for Beat tile can hide, in words. */
 export const BFB_MAX_WORDS = 40
+/** Number of question/answer pairs in a Steg for steg tile. */
+export const STEP_COUNT = 4
 
 /**
  * Every image an author can attach is either uploaded through `POST /api/images`
@@ -348,6 +367,12 @@ export interface BeatForBeatTileDraft {
   youtubeStart?: number
 }
 
+export interface StepByStepTileDraft {
+  type: 'stepByStep'
+  title?: string
+  steps: StepByStepStep[]
+}
+
 /** A single editor tile on the wire. Tagged union, chosen per tile. */
 export type BoardTileDraft =
   | SimpleTileDraft
@@ -355,6 +380,7 @@ export type BoardTileDraft =
   | MultipleChoiceTileDraft
   | HigherLowerTileDraft
   | BeatForBeatTileDraft
+  | StepByStepTileDraft
 
 /** The minimal wire shape the board editor POSTs to /api/boards. */
 export interface BoardDraft {

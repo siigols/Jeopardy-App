@@ -33,6 +33,7 @@ import {
   MAX_WORD_TEXT,
   BOARD_TITLE_MAX,
   MC_OPTION_COUNT,
+  STEP_COUNT,
   TENABLE_ITEM_COUNT,
   parseYouTubeUrl,
   youTubeWatchUrl,
@@ -161,6 +162,15 @@ function contentToTile(content: QuestionContent): TileDraft {
           ? youTubeWatchUrl({ id: content.youtubeId, start: content.youtubeStart })
           : '',
       }
+    case 'stepByStep':
+      return {
+        type: 'stepByStep',
+        title: content.title ?? '',
+        steps: Array.from({ length: STEP_COUNT }, (_, i) => ({
+          question: content.steps[i]?.question ?? '',
+          answer: content.steps[i]?.answer ?? '',
+        })),
+      }
     default:
       // Image-based types can't be authored here; the board is blocked anyway.
       return { type: null }
@@ -258,6 +268,14 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
         ...(artist ? { artist } : {}),
         ...(clip ? { youtubeId: clip.id } : {}),
         ...(clip?.start !== undefined ? { youtubeStart: clip.start } : {}),
+      }
+    }
+    case 'stepByStep': {
+      const title = tile.title.trim()
+      return {
+        type: 'stepByStep',
+        ...(title ? { title } : {}),
+        steps: tile.steps.map(s => ({ question: s.question.trim(), answer: s.answer.trim() })),
       }
     }
   }
@@ -361,6 +379,11 @@ function validateTile(tile: TileDraft): string | null {
       }
       return null
     }
+    case 'stepByStep': {
+      const i = tile.steps.findIndex(s => !s.question.trim() || !s.answer.trim())
+      if (i === -1) return null
+      return `Steg for steg, steg ${i + 1} mangler ${tile.steps[i].question.trim() ? 'svar' : 'spørsmål'}.`
+    }
   }
 }
 
@@ -407,6 +430,10 @@ function tileSummary(tile: RichTileDraft): string {
     case 'beatForBeat': {
       const words = splitLyricWords(tile.line).length
       return `Beat for Beat · ${words} ord${tile.youtubeUrl.trim() ? ' · lyd' : ''}`
+    }
+    case 'stepByStep': {
+      const done = tile.steps.filter(s => s.question.trim() && s.answer.trim()).length
+      return `Steg for steg · ${done}/${STEP_COUNT}`
     }
   }
 }

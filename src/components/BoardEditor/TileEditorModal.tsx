@@ -5,6 +5,7 @@ import { BOARD_TILE_POINTS } from '../../types/game'
 import BeatForBeatForm from './BeatForBeatForm'
 import HigherLowerForm from './HigherLowerForm'
 import MultipleChoiceForm from './MultipleChoiceForm'
+import StepByStepForm from './StepByStepForm'
 import TenableForm from './TenableForm'
 import { TYPE_LABELS } from './types'
 import type { RichTileDraft } from './types'
@@ -105,6 +106,7 @@ export default function TileEditorModal({ categoryIndex, tileIndex, tile, onChan
         {tile.type === 'multipleChoice' && <MultipleChoiceForm tile={tile} onChange={onChange} />}
         {tile.type === 'higherLower' && <HigherLowerForm tile={tile} onChange={onChange} />}
         {tile.type === 'beatForBeat' && <BeatForBeatForm tile={tile} onChange={onChange} />}
+        {tile.type === 'stepByStep' && <StepByStepForm tile={tile} onChange={onChange} />}
 
         <div className={styles.footer}>
           <button type="button" className={styles.doneBtn} onMouseEnter={playHover} onClick={onClose}>
