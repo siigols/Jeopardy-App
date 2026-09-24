@@ -17,13 +17,15 @@ export default function QuestionTile({ tile, tileBg, tileHover, onClick, seen = 
   const { label, isRange } = tilePointsLabel(tile)
   // Visible label stays compact ("0-1000"); screen readers get the spoken form.
   const spokenLabel = isRange ? label.replace('-', ' til ') : label
+  // Steg for steg shows its title instead of points (points are set when awarding).
+  const stepTitle = tile.content.type === 'stepByStep' ? tile.content.title?.trim() : undefined
 
   return (
     <button
       className={`${styles.tile} ${tile.answered ? styles.answered : ''} ${seen && !tile.answered ? styles.seen : ''}`}
       onClick={onClick}
       disabled={tile.answered}
-      aria-label={tile.answered ? 'Besvart' : `${spokenLabel} poeng${seen ? ', sjekket' : ''}`}
+      aria-label={tile.answered ? 'Besvart' : `${stepTitle || `${spokenLabel} poeng`}${seen ? ', sjekket' : ''}`}
       style={!tile.answered ? {
         '--tile-bg': tileBg,
         '--tile-hover': tileHover,
@@ -31,7 +33,9 @@ export default function QuestionTile({ tile, tileBg, tileHover, onClick, seen = 
     >
       {!tile.answered && (
         <>
-          <span className={`${styles.points} ${isRange ? styles.pointsRange : ''}`}>{label}</span>
+          {stepTitle
+            ? <span className={`${styles.points} ${styles.title}`}>{stepTitle}</span>
+            : <span className={`${styles.points} ${isRange ? styles.pointsRange : ''}`}>{label}</span>}
           {seen && <span className={styles.seenMark} aria-hidden="true">✓</span>}
         </>
       )}
