@@ -6,6 +6,7 @@ import {
   MAX_TILE_TEXT,
   MAX_WORD_TEXT,
   MC_OPTION_COUNT,
+  STEP_COUNT,
   TENABLE_ITEM_COUNT,
   parseYouTubeUrl,
 } from '../../types/game'
@@ -14,6 +15,7 @@ import type {
   EditableQuestionType,
   MultipleChoiceTileDraft,
   SimpleTileDraft,
+  StepByStepTileDraft,
   TenableTileDraft,
 } from '../../types/game'
 import { parseNumericInput } from '../../utils/parseNumber'
@@ -33,6 +35,11 @@ export interface HigherLowerEditorTile {
   type: 'higherLower'
   metric: string
   items: HigherLowerEditorItem[]
+}
+
+/** Steg for steg while editing: the title is always a string, cleared on save. */
+export interface StepByStepEditorTile extends StepByStepTileDraft {
+  title: string
 }
 
 /** A tile the author has not picked a type for yet. */
@@ -55,9 +62,10 @@ export interface BeatForBeatEditorTile {
   youtubeUrl: string
 }
 
-/** The four types that are edited in the modal rather than inline. */
+/** The types that are edited in the modal rather than inline. */
 export type RichTileDraft =
   | TenableTileDraft
+  | StepByStepEditorTile
   | MultipleChoiceTileDraft
   | HigherLowerEditorTile
   | BeatForBeatEditorTile
@@ -104,6 +112,7 @@ export const TYPE_LABELS: Record<EditableQuestionType, string> = {
   multipleChoice: 'Flervalg',
   higherLower: 'Høyere/Lavere',
   beatForBeat: 'Beat for Beat',
+  stepByStep: 'Steg for steg',
 }
 
 /** Builds a fresh, empty tile of the given type. */
@@ -128,6 +137,12 @@ export function makeEmptyTile(type: EditableQuestionType): TileDraft {
       }
     case 'beatForBeat':
       return { type: 'beatForBeat', line: '', colors: [], songTitle: '', artist: '', youtubeUrl: '' }
+    case 'stepByStep':
+      return {
+        type: 'stepByStep',
+        title: '',
+        steps: Array.from({ length: STEP_COUNT }, () => ({ question: '', answer: '' })),
+      }
   }
 }
 
@@ -180,6 +195,8 @@ export function tileIsEmpty(tile: TileDraft): boolean {
       return (
         !tile.line.trim() && !tile.songTitle.trim() && !tile.artist.trim() && !tile.youtubeUrl.trim()
       )
+    case 'stepByStep':
+      return !tile.title.trim() && tile.steps.every(s => !s.question.trim() && !s.answer.trim())
   }
 }
 
@@ -206,5 +223,7 @@ export function tileIsFilled(tile: TileDraft): boolean {
       // A blank link is fine — the clip is optional. A typo'd one is not.
       return !tile.youtubeUrl.trim() || parseYouTubeUrl(tile.youtubeUrl) !== null
     }
+    case 'stepByStep':
+      return tile.steps.every(s => Boolean(s.question.trim()) && Boolean(s.answer.trim()))
   }
 }
