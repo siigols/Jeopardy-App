@@ -1,4 +1,4 @@
-import type { BeatColor, BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion } from '../src/types/game.js'
+import type { BeatColor, BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion, StepByStepStep, YouTubeRef } from '../src/types/game.js'
 import {
   BFB_MAX_WORDS,
   BOARD_CATEGORY_MAX,
@@ -87,6 +87,20 @@ function optionalImage(raw: unknown, label: string): string | undefined | { erro
   if (value.length === 0) return undefined
   if (!isUploadedImagePath(value)) return { error: `${label} must be an uploaded image path` }
   return value
+}
+
+/**
+ * Parses an optional `{ id, start? }` YouTube reference. Returns `undefined` when
+ * absent, `null` when malformed. Same bare-id-only rule as Beat for Beat's clip.
+ */
+function optionalYouTube(raw: unknown): YouTubeRef | undefined | null {
+  if (raw === undefined || raw === null) return undefined
+  if (!isPlainObject(raw)) return null
+  if (typeof raw.id !== 'string' || !isYouTubeVideoId(raw.id)) return null
+  const start: unknown = raw.start
+  if (start === undefined || start === null) return { id: raw.id }
+  if (typeof start !== 'number' || !Number.isSafeInteger(start) || start < 0) return null
+  return start > 0 ? { id: raw.id, start } : { id: raw.id }
 }
 
 /** Narrows the `optionalImage` result to its failure case. */
@@ -361,7 +375,7 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
     if (!Array.isArray(rawTile.steps) || rawTile.steps.length !== STEP_COUNT) {
       return `${tileLabel} must contain exactly ${STEP_COUNT} steps`
     }
-    const steps: { question: string; answer: string }[] = []
+    const steps: StepByStepStep[] = []
     for (let i = 0; i < rawTile.steps.length; i++) {
       const raw: unknown = rawTile.steps[i]
       if (!isPlainObject(raw)) {
@@ -375,7 +389,17 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
       if (question.length > MAX_TILE_TEXT || answer.length > MAX_TILE_TEXT) {
         return `${tileLabel} step ${i + 1} text must be at most ${MAX_TILE_TEXT} characters`
       }
-      steps.push({ question, answer })
+      const questionYoutube = optionalYouTube(raw.questionYoutube)
+      const answerYoutube = optionalYouTube(raw.answerYoutube)
+      if (questionYoutube === null || answerYoutube === null) {
+        return `${tileLabel} step ${i + 1} has an invalid YouTube reference`
+      }
+      steps.push({
+        question,
+        answer,
+        ...(questionYoutube ? { questionYoutube } : {}),
+        ...(answerYoutube ? { answerYoutube } : {}),
+      })
     }
     return { type: 'stepByStep', ...(title ? { title } : {}), steps }
   }

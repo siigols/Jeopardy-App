@@ -15,6 +15,7 @@ import {
   syncColors,
   tileIsEmpty,
   tileIsFilled,
+  youTubeUrlOk,
   withOptionalField,
 } from '../components/BoardEditor/types'
 import type { HigherLowerEditorTile, RichTileDraft, TileDraft } from '../components/BoardEditor/types'
@@ -169,6 +170,8 @@ function contentToTile(content: QuestionContent): TileDraft {
         steps: Array.from({ length: STEP_COUNT }, (_, i) => ({
           question: content.steps[i]?.question ?? '',
           answer: content.steps[i]?.answer ?? '',
+          questionUrl: content.steps[i]?.questionYoutube ? youTubeWatchUrl(content.steps[i].questionYoutube!) : '',
+          answerUrl: content.steps[i]?.answerYoutube ? youTubeWatchUrl(content.steps[i].answerYoutube!) : '',
         })),
       }
     default:
@@ -275,7 +278,16 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
       return {
         type: 'stepByStep',
         ...(title ? { title } : {}),
-        steps: tile.steps.map(s => ({ question: s.question.trim(), answer: s.answer.trim() })),
+        steps: tile.steps.map(s => {
+          const questionYoutube = s.questionUrl.trim() ? parseYouTubeUrl(s.questionUrl) : null
+          const answerYoutube = s.answerUrl.trim() ? parseYouTubeUrl(s.answerUrl) : null
+          return {
+            question: s.question.trim(),
+            answer: s.answer.trim(),
+            ...(questionYoutube ? { questionYoutube } : {}),
+            ...(answerYoutube ? { answerYoutube } : {}),
+          }
+        }),
       }
     }
   }
@@ -381,8 +393,12 @@ function validateTile(tile: TileDraft): string | null {
     }
     case 'stepByStep': {
       const i = tile.steps.findIndex(s => !s.question.trim() || !s.answer.trim())
-      if (i === -1) return null
-      return `Steg for steg, steg ${i + 1} mangler ${tile.steps[i].question.trim() ? 'svar' : 'spørsmål'}.`
+      if (i !== -1) {
+        return `Steg for steg, steg ${i + 1} mangler ${tile.steps[i].question.trim() ? 'svar' : 'spørsmål'}.`
+      }
+      const bad = tile.steps.findIndex(s => !youTubeUrlOk(s.questionUrl) || !youTubeUrlOk(s.answerUrl))
+      if (bad !== -1) return `Steg for steg, steg ${bad + 1} har en ugyldig YouTube-lenke.`
+      return null
     }
   }
 }
