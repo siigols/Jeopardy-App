@@ -7,6 +7,7 @@ import HigherLowerForm from './HigherLowerForm'
 import MultipleChoiceForm from './MultipleChoiceForm'
 import StepByStepForm from './StepByStepForm'
 import TenableForm from './TenableForm'
+import TimelineForm from './TimelineForm'
 import { TYPE_LABELS } from './types'
 import type { RichTileDraft } from './types'
 import styles from './TileEditorModal.module.css'
@@ -107,6 +108,7 @@ export default function TileEditorModal({ categoryIndex, tileIndex, tile, onChan
         {tile.type === 'higherLower' && <HigherLowerForm tile={tile} onChange={onChange} />}
         {tile.type === 'beatForBeat' && <BeatForBeatForm tile={tile} onChange={onChange} />}
         {tile.type === 'stepByStep' && <StepByStepForm tile={tile} onChange={onChange} />}
+        {tile.type === 'timeline' && <TimelineForm tile={tile} onChange={onChange} />}
 
         <div className={styles.footer}>
           <button type="button" className={styles.doneBtn} onMouseEnter={playHover} onClick={onClose}>

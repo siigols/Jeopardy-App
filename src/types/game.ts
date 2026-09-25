@@ -1,4 +1,4 @@
-export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable' | 'multipleChoice' | 'higherLower' | 'beatForBeat' | 'stepByStep'
+export type QuestionType = 'simple' | 'overUnder' | 'yearCountryImage' | 'tenable' | 'multipleChoice' | 'higherLower' | 'beatForBeat' | 'stepByStep' | 'timeline'
 
 export interface SimpleQuestion {
   type: 'simple'
@@ -115,7 +115,25 @@ export interface StepByStepQuestion {
   steps: StepByStepStep[]
 }
 
-export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion | MultipleChoiceQuestion | HigherLowerQuestion | BeatForBeatQuestion | StepByStepQuestion
+export interface TimelineEvent {
+  label: string
+  /** Whole year; negative for BC. */
+  year: number
+}
+
+/**
+ * Plasser hendelsen: one anchor event is shown on the timeline with its year.
+ * The players place {TIMELINE_EVENT_COUNT} other events before or after it, and
+ * the host reveals the right order and years.
+ */
+export interface TimelineQuestion {
+  type: 'timeline'
+  title?: string
+  anchor: TimelineEvent
+  events: TimelineEvent[]
+}
+
+export type QuestionContent = SimpleQuestion | OverUnderQuestion | YearCountryImageQuestion | TenableQuestion | MultipleChoiceQuestion | HigherLowerQuestion | BeatForBeatQuestion | StepByStepQuestion | TimelineQuestion
 
 export interface Tile {
   points: number
@@ -187,6 +205,7 @@ export const EDITABLE_QUESTION_TYPES = [
   'higherLower',
   'beatForBeat',
   'stepByStep',
+  'timeline',
 ] as const satisfies readonly BoardTileDraft['type'][]
 export type EditableQuestionType = BoardTileDraft['type']
 
@@ -199,6 +218,11 @@ export const HL_MAX_ITEMS = 6
 export const BFB_MAX_WORDS = 40
 /** Number of question/answer pairs in a Steg for steg tile. */
 export const STEP_COUNT = 4
+/** Number of events the players place around the anchor in a Plasser hendelsen tile. */
+export const TIMELINE_EVENT_COUNT = 4
+/** Year bounds for timeline events. */
+export const TIMELINE_YEAR_MIN = -100000
+export const TIMELINE_YEAR_MAX = 10000
 
 /**
  * Every image an author can attach is either uploaded through `POST /api/images`
@@ -377,6 +401,13 @@ export interface StepByStepTileDraft {
   steps: StepByStepStep[]
 }
 
+export interface TimelineTileDraft {
+  type: 'timeline'
+  title?: string
+  anchor: TimelineEvent
+  events: TimelineEvent[]
+}
+
 /** A single editor tile on the wire. Tagged union, chosen per tile. */
 export type BoardTileDraft =
   | SimpleTileDraft
@@ -385,6 +416,7 @@ export type BoardTileDraft =
   | HigherLowerTileDraft
   | BeatForBeatTileDraft
   | StepByStepTileDraft
+  | TimelineTileDraft
 
 /** The minimal wire shape the board editor POSTs to /api/boards. */
 export interface BoardDraft {

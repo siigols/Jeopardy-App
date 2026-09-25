@@ -8,6 +8,9 @@ import {
   MC_OPTION_COUNT,
   STEP_COUNT,
   TENABLE_ITEM_COUNT,
+  TIMELINE_EVENT_COUNT,
+  TIMELINE_YEAR_MAX,
+  TIMELINE_YEAR_MIN,
   parseYouTubeUrl,
 } from '../../types/game'
 import type {
@@ -51,6 +54,27 @@ export interface StepByStepEditorTile {
   steps: StepByStepEditorStep[]
 }
 
+/** One Plasser hendelsen event while editing: the year is kept as typed until `toPayload`. */
+export interface TimelineEditorEvent {
+  label: string
+  year: string
+}
+
+export interface TimelineEditorTile {
+  type: 'timeline'
+  title: string
+  anchor: TimelineEditorEvent
+  events: TimelineEditorEvent[]
+}
+
+/** A whole year (negative for BC) within the allowed range, or null. */
+export function parseTimelineYear(raw: string): number | null {
+  const text = raw.trim()
+  if (!/^-?\d+$/.test(text)) return null
+  const year = Number(text)
+  return year >= TIMELINE_YEAR_MIN && year <= TIMELINE_YEAR_MAX ? year : null
+}
+
 /** True when a pasted link is either blank or a valid YouTube link. */
 export function youTubeUrlOk(url: string): boolean {
   return !url.trim() || parseYouTubeUrl(url) !== null
@@ -80,6 +104,7 @@ export interface BeatForBeatEditorTile {
 export type RichTileDraft =
   | TenableTileDraft
   | StepByStepEditorTile
+  | TimelineEditorTile
   | MultipleChoiceTileDraft
   | HigherLowerEditorTile
   | BeatForBeatEditorTile
@@ -127,6 +152,7 @@ export const TYPE_LABELS: Record<EditableQuestionType, string> = {
   higherLower: 'Høyere/Lavere',
   beatForBeat: 'Beat for Beat',
   stepByStep: 'Steg for steg',
+  timeline: 'Plasser hendelsen',
 }
 
 /** Builds a fresh, empty tile of the given type. */
@@ -156,6 +182,13 @@ export function makeEmptyTile(type: EditableQuestionType): TileDraft {
         type: 'stepByStep',
         title: '',
         steps: Array.from({ length: STEP_COUNT }, () => ({ question: '', answer: '', questionUrl: '', answerUrl: '' })),
+      }
+    case 'timeline':
+      return {
+        type: 'timeline',
+        title: '',
+        anchor: { label: '', year: '' },
+        events: Array.from({ length: TIMELINE_EVENT_COUNT }, () => ({ label: '', year: '' })),
       }
   }
 }
@@ -216,6 +249,11 @@ export function tileIsEmpty(tile: TileDraft): boolean {
           s => !s.question.trim() && !s.answer.trim() && !s.questionUrl.trim() && !s.answerUrl.trim()
         )
       )
+    case 'timeline':
+      return (
+        !tile.title.trim() &&
+        [tile.anchor, ...tile.events].every(e => !e.label.trim() && !e.year.trim())
+      )
   }
 }
 
@@ -250,5 +288,15 @@ export function tileIsFilled(tile: TileDraft): boolean {
           youTubeUrlOk(s.questionUrl) &&
           youTubeUrlOk(s.answerUrl)
       )
+    case 'timeline': {
+      const anchorYear = parseTimelineYear(tile.anchor.year)
+      return (
+        Boolean(tile.anchor.label.trim()) &&
+        anchorYear !== null &&
+        tile.events.every(
+          e => Boolean(e.label.trim()) && parseTimelineYear(e.year) !== null && parseTimelineYear(e.year) !== anchorYear
+        )
+      )
+    }
   }
 }

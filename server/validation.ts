@@ -1,4 +1,4 @@
-import type { BeatColor, BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion, StepByStepStep, YouTubeRef } from '../src/types/game.js'
+import type { BeatColor, BoardBackgroundId, BoardDraft, BoardTileDraft, SimpleQuestion, StepByStepStep, TimelineEvent, YouTubeRef } from '../src/types/game.js'
 import {
   BFB_MAX_WORDS,
   BOARD_CATEGORY_MAX,
@@ -14,6 +14,9 @@ import {
   MC_OPTION_COUNT,
   STEP_COUNT,
   TENABLE_ITEM_COUNT,
+  TIMELINE_EVENT_COUNT,
+  TIMELINE_YEAR_MAX,
+  TIMELINE_YEAR_MIN,
   isUploadedImagePath,
   isYouTubeVideoId,
 } from '../src/types/game.js'
@@ -24,7 +27,7 @@ const MAX_TITLE = BOARD_TITLE_MAX
 const MAX_DESCRIPTION = 300
 const MAX_CATEGORY_NAME = 60
 
-const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower', 'beatForBeat', 'stepByStep'] as const
+const TILE_TYPES = ['simple', 'tenable', 'multipleChoice', 'higherLower', 'beatForBeat', 'stepByStep', 'timeline'] as const
 
 const BEAT_COLORS: readonly BeatColor[] = ['blue', 'red']
 
@@ -44,6 +47,8 @@ const MAX_ITEMS_BY_TYPE: Record<RichTileType, number> = {
   beatForBeat: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
   // stepByStep ignores `items`; its own array is `steps`, checked below.
   stepByStep: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
+  // timeline ignores `items`; its own array is `events`, checked below.
+  timeline: Math.max(TENABLE_ITEM_COUNT, HL_MAX_ITEMS),
 }
 
 /** Same idea for `options`, which only `multipleChoice` actually uses. */
@@ -53,6 +58,7 @@ const MAX_OPTIONS_BY_TYPE: Record<RichTileType, number> = {
   higherLower: TENABLE_ITEM_COUNT,
   beatForBeat: TENABLE_ITEM_COUNT,
   stepByStep: TENABLE_ITEM_COUNT,
+  timeline: TENABLE_ITEM_COUNT,
 }
 
 export type ValidationResult =
@@ -145,6 +151,12 @@ function richTileIsBlank(tile: Record<string, unknown>, type: RichTileType): boo
     if (steps.length > STEP_COUNT) return false
     if (steps.some(step => !isPlainObject(step) || asText(step.question) || asText(step.answer))) return false
   }
+  if (tile.anchor !== undefined && (!isPlainObject(tile.anchor) || itemHasContent(tile.anchor))) return false
+  const events: unknown = tile.events
+  if (Array.isArray(events)) {
+    if (events.length > TIMELINE_EVENT_COUNT) return false
+    if (events.some(event => itemHasContent(event))) return false
+  }
   return true
 }
 
@@ -154,8 +166,22 @@ function itemHasContent(item: unknown): boolean {
   return (
     asText(item.label).length > 0 ||
     asText(item.image).length > 0 ||
+    (item.year !== undefined && item.year !== null) ||
     (item.numericValue !== undefined && item.numericValue !== null)
   )
+}
+
+/** Validates one `{ label, year }` timeline event. Returns the event or an error. */
+function timelineEvent(raw: unknown, label: string): TimelineEvent | string {
+  if (!isPlainObject(raw)) return `${label} must be an object`
+  const text = asText(raw.label)
+  if (text.length === 0) return `${label} label must not be empty`
+  if (text.length > MAX_TILE_TEXT) return `${label} label must be at most ${MAX_TILE_TEXT} characters`
+  const year: unknown = raw.year
+  if (typeof year !== 'number' || !Number.isInteger(year) || year < TIMELINE_YEAR_MIN || year > TIMELINE_YEAR_MAX) {
+    return `${label} year must be a whole number between ${TIMELINE_YEAR_MIN} and ${TIMELINE_YEAR_MAX}`
+  }
+  return { label: text, year }
 }
 
 /**
@@ -402,6 +428,28 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
       })
     }
     return { type: 'stepByStep', ...(title ? { title } : {}), steps }
+  }
+
+  if (tileType === 'timeline') {
+    const title = asText(rawTile.title)
+    if (title.length > MAX_LABEL_TEXT) {
+      return `${tileLabel} title must be at most ${MAX_LABEL_TEXT} characters`
+    }
+    const anchor = timelineEvent(rawTile.anchor, `${tileLabel} anchor`)
+    if (typeof anchor === 'string') return anchor
+    if (!Array.isArray(rawTile.events) || rawTile.events.length !== TIMELINE_EVENT_COUNT) {
+      return `${tileLabel} must contain exactly ${TIMELINE_EVENT_COUNT} events`
+    }
+    const events: TimelineEvent[] = []
+    for (let i = 0; i < rawTile.events.length; i++) {
+      const event = timelineEvent(rawTile.events[i], `${tileLabel} event ${i + 1}`)
+      if (typeof event === 'string') return event
+      if (event.year === anchor.year) {
+        return `${tileLabel} event ${i + 1} must not share the anchor's year`
+      }
+      events.push(event)
+    }
+    return { type: 'timeline', ...(title ? { title } : {}), anchor, events }
   }
 
   if (tileType === 'beatForBeat') {

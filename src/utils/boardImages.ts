@@ -34,6 +34,7 @@ function contentImages(content: QuestionContent): { url: string; role: string }[
     case 'tenable':
     case 'beatForBeat':
     case 'stepByStep':
+    case 'timeline':
       return []
   }
 }

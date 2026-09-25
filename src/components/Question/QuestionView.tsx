@@ -10,6 +10,7 @@ import styles from './QuestionView.module.css'
 import SimpleQuestionDisplay from './SimpleQuestionDisplay'
 import StepByStepDisplay from './StepByStepDisplay'
 import TenableDisplay from './TenableDisplay'
+import TimelineDisplay from './TimelineDisplay'
 import YearCountryImageDisplay from './YearCountryImageDisplay'
 
 /**
@@ -20,6 +21,7 @@ const REVEAL_LABELS: Partial<Record<QuestionType, string>> = {
   overUnder: 'Vis alle svar',
   higherLower: 'Hopp til oppsummering',
   beatForBeat: 'Vis hele linja',
+  timeline: 'Vis tidslinja',
 }
 
 interface Props {
@@ -187,6 +189,8 @@ export default function QuestionView({
         return <BeatForBeatDisplay content={tile.content} revealed={revealed} />
       case 'stepByStep':
         return <StepByStepDisplay content={tile.content} shownCount={stepsShown} />
+      case 'timeline':
+        return <TimelineDisplay content={tile.content} revealed={revealed} />
       default:
         return <p>Ukjent spørsmålstype</p>
     }

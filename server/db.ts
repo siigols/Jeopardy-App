@@ -13,6 +13,7 @@ import {
   MC_OPTION_COUNT,
   STEP_COUNT,
   TENABLE_ITEM_COUNT,
+  TIMELINE_EVENT_COUNT,
 } from '../src/types/game.js'
 import { DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../src/data/boardThemes.js'
 import { draftToGame } from '../src/utils/draftToGame.js'
@@ -155,6 +156,9 @@ export function boardIsEditable(game: Game): boolean {
       }
       if (content.type === 'stepByStep') {
         return Array.isArray(content.steps) && content.steps.length === STEP_COUNT
+      }
+      if (content.type === 'timeline') {
+        return Array.isArray(content.events) && content.events.length === TIMELINE_EVENT_COUNT
       }
       if (content.type === 'beatForBeat') {
         const words: unknown = content.words
