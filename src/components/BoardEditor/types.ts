@@ -15,7 +15,6 @@ import type {
   EditableQuestionType,
   MultipleChoiceTileDraft,
   SimpleTileDraft,
-  StepByStepTileDraft,
   TenableTileDraft,
 } from '../../types/game'
 import { parseNumericInput } from '../../utils/parseNumber'
@@ -37,9 +36,24 @@ export interface HigherLowerEditorTile {
   items: HigherLowerEditorItem[]
 }
 
+/** One Steg for steg row while editing: the clips are kept as pasted URLs until `toPayload`. */
+export interface StepByStepEditorStep {
+  question: string
+  answer: string
+  questionUrl: string
+  answerUrl: string
+}
+
 /** Steg for steg while editing: the title is always a string, cleared on save. */
-export interface StepByStepEditorTile extends StepByStepTileDraft {
+export interface StepByStepEditorTile {
+  type: 'stepByStep'
   title: string
+  steps: StepByStepEditorStep[]
+}
+
+/** True when a pasted link is either blank or a valid YouTube link. */
+export function youTubeUrlOk(url: string): boolean {
+  return !url.trim() || parseYouTubeUrl(url) !== null
 }
 
 /** A tile the author has not picked a type for yet. */
@@ -141,7 +155,7 @@ export function makeEmptyTile(type: EditableQuestionType): TileDraft {
       return {
         type: 'stepByStep',
         title: '',
-        steps: Array.from({ length: STEP_COUNT }, () => ({ question: '', answer: '' })),
+        steps: Array.from({ length: STEP_COUNT }, () => ({ question: '', answer: '', questionUrl: '', answerUrl: '' })),
       }
   }
 }
@@ -196,7 +210,12 @@ export function tileIsEmpty(tile: TileDraft): boolean {
         !tile.line.trim() && !tile.songTitle.trim() && !tile.artist.trim() && !tile.youtubeUrl.trim()
       )
     case 'stepByStep':
-      return !tile.title.trim() && tile.steps.every(s => !s.question.trim() && !s.answer.trim())
+      return (
+        !tile.title.trim() &&
+        tile.steps.every(
+          s => !s.question.trim() && !s.answer.trim() && !s.questionUrl.trim() && !s.answerUrl.trim()
+        )
+      )
   }
 }
 
@@ -224,6 +243,12 @@ export function tileIsFilled(tile: TileDraft): boolean {
       return !tile.youtubeUrl.trim() || parseYouTubeUrl(tile.youtubeUrl) !== null
     }
     case 'stepByStep':
-      return tile.steps.every(s => Boolean(s.question.trim()) && Boolean(s.answer.trim()))
+      return tile.steps.every(
+        s =>
+          Boolean(s.question.trim()) &&
+          Boolean(s.answer.trim()) &&
+          youTubeUrlOk(s.questionUrl) &&
+          youTubeUrlOk(s.answerUrl)
+      )
   }
 }

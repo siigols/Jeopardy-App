@@ -98,6 +98,10 @@ export interface BeatForBeatQuestion {
 export interface StepByStepStep {
   question: string
   answer: string
+  /** Optional clip the host plays/pauses while the question is up. Only an id is stored. */
+  questionYoutube?: YouTubeRef
+  /** Optional song that starts with the answer and stops at the next question. */
+  answerYoutube?: YouTubeRef
 }
 
 /**

@@ -26,6 +26,7 @@
 }
 
 .step {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
@@ -65,6 +66,41 @@
   color: var(--color-accent);
   font-style: italic;
   animation: revealIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.withPlay {
+  padding-right: clamp(64px, 7vw, 84px);
+}
+
+.playBtn {
+  position: absolute;
+  top: 50%;
+  right: clamp(10px, 1.5vw, 18px);
+  transform: translateY(-50%);
+  width: clamp(40px, 4.5vw, 54px);
+  height: clamp(40px, 4.5vw, 54px);
+  border-radius: 50%;
+  border: 2px solid var(--color-accent);
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--color-accent);
+  font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.playBtn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Offscreen rather than display:none, which browsers may refuse to play. */
+.player {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 @keyframes revealIn {
