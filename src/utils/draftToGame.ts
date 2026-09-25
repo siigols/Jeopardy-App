@@ -67,6 +67,13 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
         ...(tile.title !== undefined ? { title: tile.title } : {}),
         steps: tile.steps,
       }
+    case 'timeline':
+      return {
+        type: 'timeline',
+        ...(tile.title !== undefined ? { title: tile.title } : {}),
+        anchor: tile.anchor,
+        events: tile.events,
+      }
     case 'simple':
       return { type: 'simple', question: tile.question, answer: tile.answer, ...imageFields(tile) }
   }

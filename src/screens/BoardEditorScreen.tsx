@@ -11,6 +11,7 @@ import {
   TYPE_LABELS,
   makeEmptyTile,
   parseHlNumber,
+  parseTimelineYear,
   splitLyricWords,
   syncColors,
   tileIsEmpty,
@@ -18,7 +19,7 @@ import {
   youTubeUrlOk,
   withOptionalField,
 } from '../components/BoardEditor/types'
-import type { HigherLowerEditorTile, RichTileDraft, TileDraft } from '../components/BoardEditor/types'
+import type { HigherLowerEditorTile, RichTileDraft, TileDraft, TimelineEditorEvent } from '../components/BoardEditor/types'
 import { BOARD_BACKGROUNDS, DEFAULT_BOARD_BACKGROUND_ID, isBoardBackgroundId } from '../data/boardBackgrounds'
 import { BOARD_THEMES, DEFAULT_BOARD_THEME_ID, getBoardTheme } from '../data/boardThemes'
 import { draftToGame } from '../utils/draftToGame'
@@ -36,6 +37,7 @@ import {
   MC_OPTION_COUNT,
   STEP_COUNT,
   TENABLE_ITEM_COUNT,
+  TIMELINE_EVENT_COUNT,
   parseYouTubeUrl,
   youTubeWatchUrl,
 } from '../types/game'
@@ -174,6 +176,16 @@ function contentToTile(content: QuestionContent): TileDraft {
           answerUrl: content.steps[i]?.answerYoutube ? youTubeWatchUrl(content.steps[i].answerYoutube!) : '',
         })),
       }
+    case 'timeline':
+      return {
+        type: 'timeline',
+        title: content.title ?? '',
+        anchor: { label: content.anchor.label, year: String(content.anchor.year) },
+        events: Array.from({ length: TIMELINE_EVENT_COUNT }, (_, i) => ({
+          label: content.events[i]?.label ?? '',
+          year: content.events[i] ? String(content.events[i].year) : '',
+        })),
+      }
     default:
       // Image-based types can't be authored here; the board is blocked anyway.
       return { type: null }
@@ -290,6 +302,17 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
         }),
       }
     }
+    case 'timeline': {
+      const title = tile.title.trim()
+      // Bad years are blocked by validateDraft before we ever get here.
+      const toEvent = (e: TimelineEditorEvent) => ({ label: e.label.trim(), year: parseTimelineYear(e.year) ?? Number.NaN })
+      return {
+        type: 'timeline',
+        ...(title ? { title } : {}),
+        anchor: toEvent(tile.anchor),
+        events: tile.events.map(toEvent),
+      }
+    }
   }
 }
 
@@ -400,6 +423,19 @@ function validateTile(tile: TileDraft): string | null {
       if (bad !== -1) return `Steg for steg, steg ${bad + 1} har en ugyldig YouTube-lenke.`
       return null
     }
+    case 'timeline': {
+      if (!tile.anchor.label.trim()) return 'Plasser hendelsen mangler hovedhendelse.'
+      const anchorYear = parseTimelineYear(tile.anchor.year)
+      if (anchorYear === null) return 'Plasser hendelsen: hovedhendelsen mangler gyldig årstall.'
+      for (let i = 0; i < tile.events.length; i++) {
+        const e = tile.events[i]
+        if (!e.label.trim()) return `Plasser hendelsen, hendelse ${i + 1} mangler tekst.`
+        const year = parseTimelineYear(e.year)
+        if (year === null) return `Plasser hendelsen, hendelse ${i + 1} mangler gyldig årstall.`
+        if (year === anchorYear) return `Plasser hendelsen, hendelse ${i + 1} har samme år som hovedhendelsen.`
+      }
+      return null
+    }
   }
 }
 
@@ -450,6 +486,10 @@ function tileSummary(tile: RichTileDraft): string {
     case 'stepByStep': {
       const done = tile.steps.filter(s => s.question.trim() && s.answer.trim()).length
       return `Steg for steg · ${done}/${STEP_COUNT}`
+    }
+    case 'timeline': {
+      const done = tile.events.filter(e => e.label.trim() && e.year.trim()).length
+      return `Plasser hendelsen · ${done}/${TIMELINE_EVENT_COUNT}`
     }
   }
 }
