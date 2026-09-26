@@ -158,7 +158,8 @@ export function boardIsEditable(game: Game): boolean {
         return Array.isArray(content.steps) && content.steps.length === STEP_COUNT
       }
       if (content.type === 'timeline') {
-        return Array.isArray(content.events) && content.events.length === TIMELINE_EVENT_COUNT
+        // Older tiles had 4 events plus an anchor; the editor pads them to the current count.
+        return Array.isArray(content.events) && content.events.length >= 1 && content.events.length <= TIMELINE_EVENT_COUNT
       }
       if (content.type === 'beatForBeat') {
         const words: unknown = content.words

@@ -122,14 +122,14 @@ export interface TimelineEvent {
 }
 
 /**
- * Plasser hendelsen: one anchor event is shown on the timeline with its year.
- * The players place {TIMELINE_EVENT_COUNT} other events before or after it, and
- * the host reveals the right order and years.
+ * Plasser hendelsen: the timeline shows the {TIMELINE_EVENT_COUNT} years as empty
+ * slots. The host drags each event to the year the players pick, and the reveal
+ * marks each placement right or wrong. {TIMELINE_POINTS_PER_EVENT} points per
+ * correct placement.
  */
 export interface TimelineQuestion {
   type: 'timeline'
   title?: string
-  anchor: TimelineEvent
   events: TimelineEvent[]
 }
 
@@ -218,8 +218,10 @@ export const HL_MAX_ITEMS = 6
 export const BFB_MAX_WORDS = 40
 /** Number of question/answer pairs in a Steg for steg tile. */
 export const STEP_COUNT = 4
-/** Number of events the players place around the anchor in a Plasser hendelsen tile. */
-export const TIMELINE_EVENT_COUNT = 4
+/** Number of events (and years) in a Plasser hendelsen tile. */
+export const TIMELINE_EVENT_COUNT = 5
+/** Points per correctly placed event in a Plasser hendelsen tile. */
+export const TIMELINE_POINTS_PER_EVENT = 100
 /** Year bounds for timeline events. */
 export const TIMELINE_YEAR_MIN = -100000
 export const TIMELINE_YEAR_MAX = 10000
@@ -404,7 +406,6 @@ export interface StepByStepTileDraft {
 export interface TimelineTileDraft {
   type: 'timeline'
   title?: string
-  anchor: TimelineEvent
   events: TimelineEvent[]
 }
 
@@ -502,6 +503,10 @@ export function tilePointsLabel(tile: Tile): { label: string; isRange: boolean }
     if (comparisons > 0) {
       return { label: `0-${comparisons * HL_POINTS_PER_COMPARISON}`, isRange: true }
     }
+  }
+
+  if (tile.content.type === 'timeline') {
+    return { label: `0-${tile.content.events.length * TIMELINE_POINTS_PER_EVENT}`, isRange: true }
   }
 
   return { label: String(tile.points), isRange: false }

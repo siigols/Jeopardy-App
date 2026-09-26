@@ -180,7 +180,6 @@ function contentToTile(content: QuestionContent): TileDraft {
       return {
         type: 'timeline',
         title: content.title ?? '',
-        anchor: { label: content.anchor.label, year: String(content.anchor.year) },
         events: Array.from({ length: TIMELINE_EVENT_COUNT }, (_, i) => ({
           label: content.events[i]?.label ?? '',
           year: content.events[i] ? String(content.events[i].year) : '',
@@ -309,7 +308,6 @@ function tileToPayload(tile: TileDraft): BoardTileDraft {
       return {
         type: 'timeline',
         ...(title ? { title } : {}),
-        anchor: toEvent(tile.anchor),
         events: tile.events.map(toEvent),
       }
     }
@@ -424,15 +422,14 @@ function validateTile(tile: TileDraft): string | null {
       return null
     }
     case 'timeline': {
-      if (!tile.anchor.label.trim()) return 'Plasser hendelsen mangler hovedhendelse.'
-      const anchorYear = parseTimelineYear(tile.anchor.year)
-      if (anchorYear === null) return 'Plasser hendelsen: hovedhendelsen mangler gyldig årstall.'
+      const years: number[] = []
       for (let i = 0; i < tile.events.length; i++) {
         const e = tile.events[i]
         if (!e.label.trim()) return `Plasser hendelsen, hendelse ${i + 1} mangler tekst.`
         const year = parseTimelineYear(e.year)
         if (year === null) return `Plasser hendelsen, hendelse ${i + 1} mangler gyldig årstall.`
-        if (year === anchorYear) return `Plasser hendelsen, hendelse ${i + 1} har samme år som hovedhendelsen.`
+        if (years.includes(year)) return `Plasser hendelsen, hendelse ${i + 1} har samme år som en annen hendelse.`
+        years.push(year)
       }
       return null
     }

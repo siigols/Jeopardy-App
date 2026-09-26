@@ -435,8 +435,6 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
     if (title.length > MAX_LABEL_TEXT) {
       return `${tileLabel} title must be at most ${MAX_LABEL_TEXT} characters`
     }
-    const anchor = timelineEvent(rawTile.anchor, `${tileLabel} anchor`)
-    if (typeof anchor === 'string') return anchor
     if (!Array.isArray(rawTile.events) || rawTile.events.length !== TIMELINE_EVENT_COUNT) {
       return `${tileLabel} must contain exactly ${TIMELINE_EVENT_COUNT} events`
     }
@@ -444,12 +442,12 @@ function validateTile(rawTile: Record<string, unknown>, tileLabel: string): Boar
     for (let i = 0; i < rawTile.events.length; i++) {
       const event = timelineEvent(rawTile.events[i], `${tileLabel} event ${i + 1}`)
       if (typeof event === 'string') return event
-      if (event.year === anchor.year) {
-        return `${tileLabel} event ${i + 1} must not share the anchor's year`
+      if (events.some(e => e.year === event.year)) {
+        return `${tileLabel} event ${i + 1} must not share another event's year`
       }
       events.push(event)
     }
-    return { type: 'timeline', ...(title ? { title } : {}), anchor, events }
+    return { type: 'timeline', ...(title ? { title } : {}), events }
   }
 
   if (tileType === 'beatForBeat') {

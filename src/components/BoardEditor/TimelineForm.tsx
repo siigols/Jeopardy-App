@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { TIMELINE_EVENT_COUNT } from '../../types/game'
+import { TIMELINE_EVENT_COUNT, TIMELINE_POINTS_PER_EVENT } from '../../types/game'
 import { BFB_LABEL_MAX, TEXT_MAX, type TimelineEditorEvent, type TimelineEditorTile } from './types'
 import styles from './TileEditorModal.module.css'
 import { Input } from '../ui'
@@ -9,7 +9,7 @@ interface Props {
   onChange: (tile: TimelineEditorTile) => void
 }
 
-/** Plasser hendelsen: one anchor event with its year, and events to place around it. */
+/** Plasser hendelsen: events with their years, placed on the timeline by the host. */
 export default function TimelineForm({ tile, onChange }: Props) {
   const titleId = useId()
 
@@ -20,9 +20,9 @@ export default function TimelineForm({ tile, onChange }: Props) {
   return (
     <div className={styles.body}>
       <p className={styles.note}>
-        Tidslinja viser én hendelse med årstall. Spillerne plasserer de {TIMELINE_EVENT_COUNT} andre
-        hendelsene før eller etter den, og verten viser riktig rekkefølge. Årstall skrives som hele tall
-        (negative for f.Kr.) og kan ikke være likt årstallet til hovedhendelsen.
+        Tidslinja viser de {TIMELINE_EVENT_COUNT} årstallene. Spillerne sier hvor hendelsene hører hjemme,
+        og verten drar dem på plass. {TIMELINE_POINTS_PER_EVENT} poeng per riktig plassert. Årstall skrives
+        som hele tall (negative for f.Kr.) og må være ulike. Temaet vises på tavla.
       </p>
       <div className={styles.field}>
         <label className={styles.label} htmlFor={titleId}>
@@ -38,25 +38,6 @@ export default function TimelineForm({ tile, onChange }: Props) {
         />
       </div>
       <div className={styles.rows}>
-        <div className={styles.row}>
-          <span className={styles.rowLabel}>Kjent</span>
-          <Input
-            className={styles.input}
-            value={tile.anchor.label}
-            maxLength={TEXT_MAX}
-            placeholder="Hovedhendelse, f.eks. «Månelandingen»"
-            aria-label="Hovedhendelse"
-            onChange={e => onChange({ ...tile, anchor: { ...tile.anchor, label: e.target.value } })}
-          />
-          <Input
-            className={`${styles.input} ${styles.hlValue}`}
-            value={tile.anchor.year}
-            inputMode="numeric"
-            placeholder="År"
-            aria-label="Hovedhendelse årstall"
-            onChange={e => onChange({ ...tile, anchor: { ...tile.anchor, year: e.target.value } })}
-          />
-        </div>
         {tile.events.map((event, i) => (
           <div className={styles.row} key={i}>
             <span className={styles.rowLabel}>{`Hendelse ${i + 1}`}</span>

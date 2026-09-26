@@ -71,7 +71,6 @@ function tileContent(tile: BoardDraft['categories'][number]['tiles'][number]): Q
       return {
         type: 'timeline',
         ...(tile.title !== undefined ? { title: tile.title } : {}),
-        anchor: tile.anchor,
         events: tile.events,
       }
     case 'simple':

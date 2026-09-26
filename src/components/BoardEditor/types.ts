@@ -63,7 +63,6 @@ export interface TimelineEditorEvent {
 export interface TimelineEditorTile {
   type: 'timeline'
   title: string
-  anchor: TimelineEditorEvent
   events: TimelineEditorEvent[]
 }
 
@@ -187,7 +186,6 @@ export function makeEmptyTile(type: EditableQuestionType): TileDraft {
       return {
         type: 'timeline',
         title: '',
-        anchor: { label: '', year: '' },
         events: Array.from({ length: TIMELINE_EVENT_COUNT }, () => ({ label: '', year: '' })),
       }
   }
@@ -252,7 +250,7 @@ export function tileIsEmpty(tile: TileDraft): boolean {
     case 'timeline':
       return (
         !tile.title.trim() &&
-        [tile.anchor, ...tile.events].every(e => !e.label.trim() && !e.year.trim())
+        tile.events.every(e => !e.label.trim() && !e.year.trim())
       )
   }
 }
@@ -289,13 +287,10 @@ export function tileIsFilled(tile: TileDraft): boolean {
           youTubeUrlOk(s.answerUrl)
       )
     case 'timeline': {
-      const anchorYear = parseTimelineYear(tile.anchor.year)
+      const years = tile.events.map(e => parseTimelineYear(e.year))
       return (
-        Boolean(tile.anchor.label.trim()) &&
-        anchorYear !== null &&
-        tile.events.every(
-          e => Boolean(e.label.trim()) && parseTimelineYear(e.year) !== null && parseTimelineYear(e.year) !== anchorYear
-        )
+        tile.events.every((e, i) => Boolean(e.label.trim()) && years[i] !== null) &&
+        new Set(years).size === years.length
       )
     }
   }

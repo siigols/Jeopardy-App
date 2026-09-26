@@ -17,8 +17,9 @@ export default function QuestionTile({ tile, tileBg, tileHover, onClick, seen = 
   const { label, isRange } = tilePointsLabel(tile)
   // Visible label stays compact ("0-1000"); screen readers get the spoken form.
   const spokenLabel = isRange ? label.replace('-', ' til ') : label
-  // Steg for steg shows its title instead of points (points are set when awarding).
-  const stepTitle = tile.content.type === 'stepByStep' ? tile.content.title?.trim() : undefined
+  // Steg for steg and Plasser hendelsen show their title instead of points (points are set when awarding).
+  const stepTitle =
+    tile.content.type === 'stepByStep' || tile.content.type === 'timeline' ? tile.content.title?.trim() : undefined
 
   return (
     <button
