@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useSounds } from '../../hooks/useSounds'
-import { HL_POINTS_PER_COMPARISON, higherLowerComparisons, type QuestionType, type Team, type Tile } from '../../types/game'
+import { HL_POINTS_PER_COMPARISON, TIMELINE_POINTS_PER_EVENT, higherLowerComparisons, type QuestionType, type Team, type Tile } from '../../types/game'
 import type { TeamInfo } from '../../types/socket-events'
 import BeatForBeatDisplay from './BeatForBeatDisplay'
 import MultipleChoiceDisplay from './MultipleChoiceDisplay'
@@ -21,7 +21,7 @@ const REVEAL_LABELS: Partial<Record<QuestionType, string>> = {
   overUnder: 'Vis alle svar',
   higherLower: 'Hopp til oppsummering',
   beatForBeat: 'Vis hele linja',
-  timeline: 'Vis tidslinja',
+  timeline: 'Vis svar',
 }
 
 interface Props {
@@ -54,6 +54,7 @@ export default function QuestionView({
   const [tenableAutoRevealActive, setTenableAutoRevealActive] = useState(false)
   const [selectedTenableData, setSelectedTenableData] = useState<{ tile: Tile | null; points: number | null }>({ tile: null, points: null })
   const [selectedHigherLowerData, setSelectedHigherLowerData] = useState<{ tile: Tile | null; correct: number | null }>({ tile: null, correct: null })
+  const [timelineData, setTimelineData] = useState<{ tile: Tile | null; correct: number }>({ tile: null, correct: 0 })
   const [stepData, setStepData] = useState<{ tile: Tile | null; shown: number }>({ tile: null, shown: 0 })
   const [manualPointsData, setManualPointsData] = useState<{ tile: Tile | null; value: string }>({ tile: null, value: '' })
   const { playAward, playSkip, playHover } = useSounds()
@@ -61,6 +62,7 @@ export default function QuestionView({
   // Auto-reset selected points when tile changes
   const selectedTenablePoints = selectedTenableData.tile === tile ? selectedTenableData.points : null
   const selectedCorrectCount = selectedHigherLowerData.tile === tile ? selectedHigherLowerData.correct : null
+  const timelineCorrect = timelineData.tile === tile ? timelineData.correct : 0
   const stepsShown = stepData.tile === tile ? stepData.shown : 0
   const manualPointsText = manualPointsData.tile === tile ? manualPointsData.value : String(tile.points)
   const manualPoints = /^-?\d+$/.test(manualPointsText.trim()) ? Number(manualPointsText.trim()) : null
@@ -140,6 +142,11 @@ export default function QuestionView({
       return
     }
 
+    if (tile.content.type === 'timeline') {
+      onAward(teamId, timelineCorrect * TIMELINE_POINTS_PER_EVENT)
+      return
+    }
+
     if (tile.content.type === 'higherLower' && comparisonCount > 0) {
       if (selectedCorrectCount == null) return
       // 100 poeng per riktig sammenligning. 0 is a valid award, so always pass a number.
@@ -190,7 +197,13 @@ export default function QuestionView({
       case 'stepByStep':
         return <StepByStepDisplay content={tile.content} shownCount={stepsShown} />
       case 'timeline':
-        return <TimelineDisplay content={tile.content} revealed={revealed} />
+        return (
+          <TimelineDisplay
+            content={tile.content}
+            revealed={revealed}
+            onCorrectCount={count => setTimelineData({ tile, correct: count })}
+          />
+        )
       default:
         return <p>Ukjent spørsmålstype</p>
     }
@@ -274,6 +287,11 @@ export default function QuestionView({
                   ))}
                 </div>
               </>
+            )}
+            {tile.content.type === 'timeline' && (
+              <p className={styles.awardLabel}>
+                {timelineCorrect} av {tile.content.events.length} riktige · {timelineCorrect * TIMELINE_POINTS_PER_EVENT} poeng
+              </p>
             )}
             {tile.content.type === 'stepByStep' && !previewMode && (
               <label className={styles.awardLabel}>
