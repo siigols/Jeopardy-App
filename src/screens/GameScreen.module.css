@@ -113,6 +113,29 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
   margin-right: 3px;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 5-6 teams: trim the chips so the whole row still fits a laptop screen
+   instead of scrolling sideways. */
+.scoresRowCompact {
+  gap: var(--sp-1);
+}
+
+.scoresRowCompact .teamChip {
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-2);
+}
+
+.scoresRowCompact .teamName {
+  max-width: 9ch;
+  letter-spacing: 0;
+}
+
+.scoresRowCompact .teamScore {
+  min-width: 26px;
 }
 
 @keyframes scorePulse {

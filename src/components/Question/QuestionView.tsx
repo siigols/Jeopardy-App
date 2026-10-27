@@ -310,7 +310,7 @@ export default function QuestionView({
             ) : (
               <>
                 <p className={styles.awardLabel}>Gi poeng til:</p>
-                <div className={styles.awardButtons}>
+                <div className={`${styles.awardButtons} ${teams.length > 4 ? styles.awardButtonsCompact : ''}`}>
                   {teams.map(team => (
                     <button
                       key={team.id}

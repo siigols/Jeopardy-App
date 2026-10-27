@@ -3,8 +3,7 @@ import type { Team, Game } from '../types/game'
 import BoardBackground from '../components/Backgrounds/BoardBackground'
 import { useSounds } from '../hooks/useSounds'
 import styles from './PodiumScreen.module.css'
-
-const TEAM_COLORS = ['#e74c3c', '#3b82f6', '#22c55e', '#f97316']
+import { teamColor } from '../data/teams'
 
 const CONFETTI_COLORS = [
   '#f5a623', '#e74c3c', '#3b82f6', '#22c55e', '#f97316',
@@ -41,7 +40,7 @@ export default function PodiumScreen({ teams, game, onPlayAgain, onNewBoard }: P
 
   // Build color map from original team order
   const teamColorMap = useMemo(
-    () => Object.fromEntries(teams.map((t, i) => [t.id, TEAM_COLORS[i % TEAM_COLORS.length]])),
+    () => Object.fromEntries(teams.map((t, i) => [t.id, teamColor(i)])),
     [teams]
   )
 
@@ -92,7 +91,7 @@ export default function PodiumScreen({ teams, game, onPlayAgain, onNewBoard }: P
   )
 
   return (
-    <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''}`}>
+    <div className={`${styles.screen} ${isFootball ? styles.footballScreen : ''} ${teams.length > 4 ? styles.manyTeams : ''}`}>
       <BoardBackground id={game.theme?.decorations} />
 
       {/* Spotlight glows */}

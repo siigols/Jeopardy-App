@@ -3,6 +3,7 @@ import type { Team } from '../types/game'
 import { useSounds } from '../hooks/useSounds'
 import styles from './SetupScreen.module.css'
 import { Input } from '../components/ui'
+import { MIN_TEAMS, MAX_TEAMS, DEFAULT_TEAM_NAMES } from '../data/teams'
 
 interface Props {
   gameTitle: string
@@ -10,11 +11,14 @@ interface Props {
   onBack: () => void
 }
 
-const DEFAULT_NAMES = ['Lag 1', 'Lag 2', 'Lag 3', 'Lag 4']
+const COUNT_OPTIONS = Array.from(
+  { length: MAX_TEAMS - MIN_TEAMS + 1 },
+  (_, i) => MIN_TEAMS + i
+)
 
 export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
-  const [teamCount, setTeamCount] = useState(2)
-  const [names, setNames] = useState<string[]>(DEFAULT_NAMES)
+  const [teamCount, setTeamCount] = useState(MIN_TEAMS)
+  const [names, setNames] = useState<string[]>(DEFAULT_TEAM_NAMES)
   const { playHover, playStart } = useSounds()
 
   function handleNameChange(index: number, value: string) {
@@ -48,7 +52,7 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
         <div className={styles.field}>
           <label className={styles.label}>Antall lag</label>
           <div className={styles.countBtns}>
-            {[2, 3, 4].map(n => (
+            {COUNT_OPTIONS.map(n => (
               <button
                 key={n}
                 className={`${styles.countBtn} ${teamCount === n ? styles.active : ''}`}
@@ -63,7 +67,7 @@ export default function SetupScreen({ gameTitle, onStart, onBack }: Props) {
 
         <div className={styles.field}>
           <label className={styles.label}>Lagnavn</label>
-          <div className={styles.inputs}>
+          <div className={`${styles.inputs} ${teamCount > 3 ? styles.inputsGrid : ''}`}>
             {Array.from({ length: teamCount }, (_, i) => (
               <Input
                 key={i}

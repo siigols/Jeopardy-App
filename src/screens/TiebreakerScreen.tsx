@@ -8,8 +8,7 @@ import TiebreakReveal, { type RevealTeam } from '../components/TiebreakReveal/Ti
 import type { RevealOutcome } from '../components/TiebreakReveal/revealMath'
 import TiebreakerClassic from './TiebreakerClassic'
 import styles from './TiebreakerScreen.module.css'
-
-const TEAM_COLORS = ['#e74c3c', '#3b82f6', '#22c55e', '#f97316']
+import { teamColor } from '../data/teams'
 
 const DEFAULT_TIEBREAKER: SimpleQuestion = {
   type: 'simple',
@@ -33,7 +32,7 @@ export default function TiebreakerScreen({ tiedTeams, allTeams, sessionCode, que
   const numericAnswer = parseTiebreakerAnswer(q.answer)
 
   const teamColorMap = Object.fromEntries(
-    allTeams.map((t, i) => [t.id, TEAM_COLORS[i % TEAM_COLORS.length]])
+    allTeams.map((t, i) => [t.id, teamColor(i)])
   )
 
   function handleAward(teamId: string) {
@@ -130,7 +129,7 @@ function NumericTiebreaker({
    * so a 3-way tie converges.
    *
    * The protocol is index-based against `allTeams` — the same order the phone
-   * links and TEAM_COLORS use. `tiedTeams` is a *sorted* copy, so taking an
+   * links and the team palette use. `tiedTeams` is a *sorted* copy, so taking an
    * index from its own order would arm the wrong phones, with nothing to show
    * for it in any log.
    */
@@ -250,7 +249,7 @@ function NumericTiebreaker({
   const revealTeams: RevealTeam[] = allTeams.map((team, index) => ({
     index,
     name: team.name,
-    color: TEAM_COLORS[index % TEAM_COLORS.length],
+    color: teamColor(index),
   }))
 
   const allIn = participants.length > 0 && submitted.length >= participants.length
@@ -460,6 +459,6 @@ function teamInfos(teams: Team[]): TeamInfo[] {
   return teams.map((team, index) => ({
     index,
     name: team.name,
-    color: TEAM_COLORS[index % TEAM_COLORS.length],
+    color: teamColor(index),
   }))
 }
