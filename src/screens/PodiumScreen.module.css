@@ -91,7 +91,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* `safe` keeps the top in view when a six-team ranking outgrows the
+     viewport — plain centring would push the trophy off-screen. */
+  justify-content: safe center;
   padding: var(--sp-10) var(--sp-5);
   background: var(--color-bg);
   background-image: radial-gradient(ellipse at 30% 20%, rgba(245, 197, 24, 0.04) 0%, transparent 50%),
@@ -99,7 +101,8 @@
                     radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
   background-size: 200% 200%;
   animation: bgShift 12s ease-in-out infinite;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ── Spotlight background ────────────────────────────── */
@@ -369,6 +372,42 @@
 .rankItem:hover {
   transform: translateX(4px);
   box-shadow: var(--shadow-md);
+}
+
+/* 5-6 teams: a longer ranking list, so tighten rows and the podium gap to
+   keep everything on one screen. */
+.manyTeams .podiumArea {
+  margin-bottom: var(--sp-5);
+}
+
+.manyTeams {
+  padding-block: var(--sp-6);
+}
+
+.manyTeams .title {
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  margin-bottom: 4px;
+}
+
+.manyTeams .podiumBlock {
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.manyTeams .rankItem {
+  padding: var(--sp-2) var(--sp-4);
+  margin-bottom: 6px;
+}
+
+.manyTeams .rankingSection {
+  max-width: 460px;
+}
+
+.manyTeams .first { min-height: 180px; }
+.manyTeams .second { min-height: 142px; }
+.manyTeams .third { min-height: 118px; }
+
+.manyTeams .actions {
+  margin-top: var(--sp-5);
 }
 
 .rankNumber {

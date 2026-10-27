@@ -10,8 +10,7 @@ import type { Game, Team, Tile } from '../types/game'
 import type { TeamInfo } from '../types/socket-events'
 import { loadGameState, saveGameState } from '../utils/sessionStore'
 import styles from './GameScreen.module.css'
-
-const TEAM_COLORS = ['#e74c3c', '#3b82f6', '#22c55e', '#f97316']
+import { teamColor } from '../data/teams'
 
 interface Props {
   game: Game
@@ -49,7 +48,7 @@ export default function GameScreen({ game, teams: initialTeams, sessionCode, the
   }, [categories, teams, sessionCode])
 
   const teamColors = Object.fromEntries(
-    teams.map((team, index) => [team.id, TEAM_COLORS[index % TEAM_COLORS.length]])
+    teams.map((team, index) => [team.id, teamColor(index)])
   )
 
   const activeTile: Tile | null = active
@@ -61,7 +60,7 @@ export default function GameScreen({ game, teams: initialTeams, sessionCode, the
     const teamInfos: TeamInfo[] = teams.map((team, index) => ({
       index,
       name: team.name,
-      color: TEAM_COLORS[index % TEAM_COLORS.length],
+      color: teamColor(index),
     }))
 
     function register() {
@@ -173,7 +172,7 @@ export default function GameScreen({ game, teams: initialTeams, sessionCode, the
 
   const sessionTeams = teams.map((team, index) => ({
     name: team.name,
-    color: TEAM_COLORS[index % TEAM_COLORS.length],
+    color: teamColor(index),
     index,
   }))
 
@@ -201,7 +200,7 @@ export default function GameScreen({ game, teams: initialTeams, sessionCode, the
           </div>
         </div>
 
-        <div className={styles.scoresRow}>
+        <div className={`${styles.scoresRow} ${teams.length > 4 ? styles.scoresRowCompact : ''}`}>
           {teams.map((team, index) => (
             <div
               key={team.id}

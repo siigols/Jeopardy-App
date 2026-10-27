@@ -123,6 +123,10 @@
 }
 
 .teamBtn {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   background: color-mix(in srgb, var(--team-color, var(--color-chip-bg)) 18%, var(--color-chip-bg));
   color: var(--color-text);
   font-size: var(--fs-md);
@@ -134,6 +138,17 @@
   transition: background-color var(--dur-base) var(--ease-out),
               border-color var(--dur-base) var(--ease-out),
               transform var(--dur-fast) var(--ease-out);
+}
+
+/* 5-6 teams: narrower pills keep the award row to two tidy lines. */
+.awardButtonsCompact {
+  gap: var(--sp-2);
+}
+
+.awardButtonsCompact .teamBtn {
+  font-size: var(--fs-base);
+  padding: var(--sp-2) var(--sp-5);
+  min-width: 96px;
 }
 
 .teamBtn:hover {
